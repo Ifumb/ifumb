@@ -1,0 +1,23 @@
+import { expect, type Page } from '@playwright/test'
+
+export const E2E_PASSWORD = 'E2e-password-123'
+
+export type TestAccount = { readonly email: string; readonly fullName: string }
+
+/** A fresh address per call, so tests running in parallel never share an account. */
+export function uniqueEmail(): string {
+  const suffix = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+  return `e2e+${suffix}@ifumb.test`
+}
+
+export async function registerThroughUi(page: Page): Promise<TestAccount> {
+  const email = uniqueEmail()
+  await page.goto('/register')
+  await page.getByLabel('Prénom', { exact: true }).fill('Awa')
+  await page.getByLabel('Nom', { exact: true }).fill('Diallo')
+  await page.getByLabel('Email', { exact: true }).fill(email)
+  await page.getByLabel('Mot de passe', { exact: true }).fill(E2E_PASSWORD)
+  await page.getByRole('button', { name: 'Créer mon compte' }).click()
+  await expect(page).toHaveURL(/\/dashboard$/)
+  return { email, fullName: 'Awa Diallo' }
+}

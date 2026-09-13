@@ -23,7 +23,11 @@ export default defineConfig({
   },
   resolve: {
     alias: {
+      '@tests': fileURLToPath(new URL('./tests', import.meta.url)),
       '@': fileURLToPath(new URL('./src', import.meta.url)),
+      // reason: `server-only` throws unless resolved under the `react-server` condition, which
+      // only Next.js applies. Unit tests run server code in plain Node, so they get its empty entry.
+      'server-only': fileURLToPath(new URL('./node_modules/server-only/empty.js', import.meta.url)),
     },
   },
 })

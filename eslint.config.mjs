@@ -5,6 +5,8 @@ import jsxA11y from 'eslint-plugin-jsx-a11y'
 
 const PARENT_IMPORT_MESSAGE =
   'Parent-relative imports are forbidden: use the "@/..." alias (see nextjs-conventions.md).'
+const SUBFOLDER_IMPORT_MESSAGE =
+  '"./" is only for a sibling file; importing from a sub-folder goes through the "@/..." alias.'
 
 export default defineConfig([
   ...nextVitals,
@@ -17,7 +19,12 @@ export default defineConfig([
     rules: {
       'no-restricted-imports': [
         'error',
-        { patterns: [{ group: ['../*', '../**'], message: PARENT_IMPORT_MESSAGE }] },
+        {
+          patterns: [
+            { group: ['../*', '../**', '@/../*', '@/../**'], message: PARENT_IMPORT_MESSAGE },
+            { group: ['./*/**'], message: SUBFOLDER_IMPORT_MESSAGE },
+          ],
+        },
       ],
       '@typescript-eslint/no-explicit-any': 'error',
     },

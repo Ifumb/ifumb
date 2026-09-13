@@ -14,9 +14,12 @@ d'architecture dans le skill `nextjs-clean-architect`.
 
 ```bash
 pnpm install
-cp .env.example .env.local   # renseigner DATABASE_URL et DIRECT_URL
+cp .env.example .env.local   # DATABASE_URL, DIRECT_URL, AUTH_SECRET, APP_URL, RESEND_*
 pnpm dev
 ```
+
+`AUTH_SECRET` se génère avec `pnpm dlx auth secret`. Sans les variables `RESEND_*`, la page
+« Mot de passe oublié » échoue à la soumission ; le reste de l'application fonctionne.
 
 ## Base de données — règle absolue
 
@@ -34,8 +37,18 @@ Les tests n'utilisent jamais cette base, mais le Postgres local de `docker-compo
 pnpm install && pnpm typecheck && pnpm lint && pnpm test && pnpm build
 ```
 
-`pnpm test` échoue si la couverture de `src/core/**` passe sous 90 %. Pour toute modification
-d'interface, `pnpm test:e2e` (contrôle axe inclus) doit aussi passer.
+`pnpm test` échoue si la couverture de `src/core/**` passe sous 90 %. Aucun secret n'est
+nécessaire pour ce gate : le build ne se connecte à rien.
+
+Avec Docker démarré, deux suites complètent le gate :
+
+```bash
+pnpm test:integration   # repositories Prisma contre le Postgres de test (migrations rejouées)
+pnpm test:e2e           # parcours navigateur + contrôle axe, serveur de test sur le port 3100
+```
+
+Les deux démarrent le conteneur et appliquent les migrations eux-mêmes. Leurs variables de base
+et d'auth sont forcées dans la configuration : elles ne peuvent pas atteindre la base partagée.
 
 ## Commits
 
