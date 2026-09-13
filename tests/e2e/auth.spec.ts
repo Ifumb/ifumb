@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test } from '@tests/e2e/support/fixtures'
 import { E2E_PASSWORD, registerThroughUi, uniqueEmail } from '@tests/e2e/support/accounts'
 
 test('a visitor registers, signs out, then signs back in', async ({ page }) => {

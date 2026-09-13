@@ -13,8 +13,14 @@ export type CurrentUser = {
  * since Server Actions are reachable by direct POST.
  */
 export async function requireCurrentUser(): Promise<CurrentUser> {
+  const currentUser = await currentUserOrNull()
+  if (!currentUser) redirect('/login')
+  return currentUser
+}
+
+/** The signed-in user on pages that anonymous visitors may also read; null when signed out. */
+export async function currentUserOrNull(): Promise<CurrentUser | null> {
   const session = await auth()
   const id = session?.user?.id
-  if (!id) redirect('/login')
-  return { id, name: session.user.name ?? null }
+  return id ? { id, name: session.user.name ?? null } : null
 }

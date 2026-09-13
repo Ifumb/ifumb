@@ -1,8 +1,5 @@
-import AxeBuilder from '@axe-core/playwright'
-import { expect, test, type Page } from '@playwright/test'
 import { registerThroughUi } from '@tests/e2e/support/accounts'
-
-const WCAG_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']
+import { expect, expectNoAccessibilityViolations, test } from '@tests/e2e/support/fixtures'
 
 const PUBLIC_PAGES = [
   { name: 'home', path: '/' },
@@ -13,16 +10,11 @@ const PUBLIC_PAGES = [
   { name: 'reset password', path: '/reset-password?token=sample-token' },
 ] as const
 
-async function expectNoViolations(page: Page): Promise<void> {
-  const results = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze()
-  expect(results.violations).toEqual([])
-}
-
 for (const { name, path } of PUBLIC_PAGES) {
   test(`the ${name} page has no detectable accessibility violation`, async ({ page }) => {
     await page.goto(path)
 
-    await expectNoViolations(page)
+    await expectNoAccessibilityViolations(page)
   })
 }
 
@@ -33,15 +25,15 @@ test('a form showing validation errors has no detectable accessibility violation
   await page.getByRole('button', { name: 'Créer mon compte' }).click()
   await expect(page.getByRole('alert').filter({ hasText: 'Le formulaire contient' })).toBeFocused()
 
-  await expectNoViolations(page)
+  await expectNoAccessibilityViolations(page)
 })
 
 test('the signed-in pages have no detectable accessibility violation', async ({ page }) => {
   await registerThroughUi(page)
-  await expectNoViolations(page)
+  await expectNoAccessibilityViolations(page)
 
   await page.goto('/account/password')
-  await expectNoViolations(page)
+  await expectNoAccessibilityViolations(page)
 })
 
 test('the skip link is the first focusable element and targets the main content', async ({

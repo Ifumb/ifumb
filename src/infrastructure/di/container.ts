@@ -1,6 +1,8 @@
 import 'server-only'
 import { AuthenticateUserUseCase } from '@/core/use-cases/authenticate-user'
 import { ChangePasswordUseCase } from '@/core/use-cases/change-password'
+import { GetTreeOverviewUseCase } from '@/core/use-cases/get-tree-overview'
+import { ListUserTreesUseCase } from '@/core/use-cases/list-user-trees'
 import { RegisterUserUseCase } from '@/core/use-cases/register-user'
 import { RequestPasswordResetUseCase } from '@/core/use-cases/request-password-reset'
 import type { RateLimiter } from '@/core/use-cases/ports/rate-limiter'
@@ -8,6 +10,7 @@ import { ResetPasswordUseCase } from '@/core/use-cases/reset-password'
 import { requireServerEnv } from '@/infrastructure/config/server-env'
 import { ResendPasswordResetMailer } from '@/infrastructure/mail/resend-password-reset-mailer'
 import { getPrismaClient } from '@/infrastructure/persistence/prisma/client'
+import { PrismaTreeReader } from '@/infrastructure/persistence/prisma/prisma-tree-reader'
 import { PrismaUserRepository } from '@/infrastructure/persistence/prisma/prisma-user-repository'
 import { isAttemptAllowed, type AttemptKey } from '@/infrastructure/rate-limiting/attempt-guard'
 import { InMemoryRateLimiter } from '@/infrastructure/rate-limiting/in-memory-rate-limiter'
@@ -31,6 +34,7 @@ const globalForRateLimiters = globalThis as unknown as { ifumbRateLimiters?: Rat
 type RateLimiters = Readonly<Record<RateLimitPolicyName, RateLimiter>>
 
 const users = lazy(() => new PrismaUserRepository(getPrismaClient()))
+const trees = lazy(() => new PrismaTreeReader(getPrismaClient()))
 const hasher = lazy(() => new BcryptjsPasswordHasher())
 const clock = lazy(() => new SystemClock())
 
@@ -88,4 +92,6 @@ export const container = {
   resetPassword: lazy(
     () => new ResetPasswordUseCase({ users: users(), hasher: hasher(), clock: clock() }),
   ),
+  listUserTrees: lazy(() => new ListUserTreesUseCase({ trees: trees() })),
+  getTreeOverview: lazy(() => new GetTreeOverviewUseCase({ trees: trees() })),
 }

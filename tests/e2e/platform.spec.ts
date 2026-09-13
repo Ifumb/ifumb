@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test } from '@tests/e2e/support/fixtures'
 
 const PUBLIC_PAGES = ['/', '/login', '/register', '/forgot-password'] as const
 
