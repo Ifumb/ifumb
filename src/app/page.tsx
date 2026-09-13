@@ -1,9 +1,14 @@
+import type { Metadata } from 'next'
 import { LinkList } from '@/presentation/views/link-list'
 
 const ENTRY_LINKS = [
   { href: '/register', label: 'Créer un compte' },
   { href: '/login', label: 'Se connecter' },
 ] as const
+
+export const metadata: Metadata = {
+  description: 'Reliez votre famille par les unions et préservez tribus, clans et ethnies.',
+}
 
 export default function HomePage() {
   return (

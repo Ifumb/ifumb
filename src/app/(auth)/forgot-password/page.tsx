@@ -4,7 +4,11 @@ import { ActionForm } from '@/presentation/components/forms/action-form'
 import { FORGOT_PASSWORD_FORM } from '@/presentation/forms/auth-forms'
 import { LinkList } from '@/presentation/views/link-list'
 
-export const metadata: Metadata = { title: 'Mot de passe oublié' }
+export const metadata: Metadata = {
+  title: 'Mot de passe oublié',
+  description:
+    'Recevez par email un lien pour réinitialiser le mot de passe de votre compte IFUMB.',
+}
 
 export default function ForgotPasswordPage() {
   return (

@@ -3,8 +3,8 @@
 import { useActionState } from 'react'
 import { FormErrorSummary } from '@/presentation/components/forms/form-error-summary'
 import { StatusMessage } from '@/presentation/components/forms/status-message'
-import { SubmitButton } from '@/presentation/components/forms/submit-button'
 import { TextField } from '@/presentation/components/forms/text-field'
+import { Button } from '@/presentation/components/ui/button'
 import type { FormAction } from '@/presentation/forms/form-action'
 import type { FormFieldConfig, SubmitLabels } from '@/presentation/forms/form-fields'
 import { INITIAL_FORM_STATE } from '@/presentation/forms/form-state'
@@ -34,8 +34,16 @@ export function ActionForm({ action, fields, submit, hiddenValues = {} }: Action
           defaultValue={state.values?.[field.name]}
         />
       ))}
-      <SubmitButton {...submit} pending={pending} />
+      <SubmitButton labels={submit} pending={pending} />
     </form>
+  )
+}
+
+function SubmitButton({ labels, pending }: Readonly<{ labels: SubmitLabels; pending: boolean }>) {
+  return (
+    <Button type="submit" loading={pending} className="w-full">
+      {pending ? labels.pendingLabel : labels.label}
+    </Button>
   )
 }
 

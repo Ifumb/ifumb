@@ -1,3 +1,4 @@
+import { Button } from '@/presentation/components/ui/button'
 import { LinkList } from '@/presentation/views/link-list'
 
 type AccountNavProps = Readonly<{
@@ -26,12 +27,9 @@ export function AccountNav({ userName, logoutAction }: AccountNavProps) {
 function LogoutButton({ logoutAction }: Pick<AccountNavProps, 'logoutAction'>) {
   return (
     <form action={logoutAction}>
-      <button
-        type="submit"
-        className="min-h-11 rounded-md border-2 border-brand-dark px-3 py-1 font-semibold text-brand-dark"
-      >
+      <Button type="submit" variant="secondary">
         Se déconnecter
-      </button>
+      </Button>
     </form>
   )
 }

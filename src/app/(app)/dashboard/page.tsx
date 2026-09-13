@@ -1,7 +1,10 @@
 import type { Metadata } from 'next'
 import { requireCurrentUser } from '@/infrastructure/auth/current-user'
 
-export const metadata: Metadata = { title: 'Mes arbres' }
+export const metadata: Metadata = {
+  title: 'Mes arbres',
+  description: 'Retrouvez les arbres généalogiques que vous possédez ou qui vous sont partagés.',
+}
 
 export default async function DashboardPage() {
   await requireCurrentUser()

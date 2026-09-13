@@ -4,7 +4,10 @@ import { requireCurrentUser } from '@/infrastructure/auth/current-user'
 import { ActionForm } from '@/presentation/components/forms/action-form'
 import { CHANGE_PASSWORD_FORM } from '@/presentation/forms/auth-forms'
 
-export const metadata: Metadata = { title: 'Changer le mot de passe' }
+export const metadata: Metadata = {
+  title: 'Changer le mot de passe',
+  description: 'Modifiez le mot de passe de votre compte IFUMB.',
+}
 
 export default async function ChangePasswordPage() {
   await requireCurrentUser()

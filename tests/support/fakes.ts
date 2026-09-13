@@ -28,6 +28,19 @@ export class FixedClock implements Clock {
   }
 }
 
+/** A clock the test moves forward explicitly, for time-window rules. */
+export class ManualClock implements Clock {
+  constructor(private instant: Date) {}
+
+  now(): Date {
+    return this.instant
+  }
+
+  advanceBy(milliseconds: number): void {
+    this.instant = new Date(this.instant.getTime() + milliseconds)
+  }
+}
+
 export class SequentialIdGenerator implements IdGenerator {
   private issued = 0
 

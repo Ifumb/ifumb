@@ -5,7 +5,10 @@ import { StatusMessage } from '@/presentation/components/forms/status-message'
 import { LOGIN_FORM } from '@/presentation/forms/auth-forms'
 import { LinkList } from '@/presentation/views/link-list'
 
-export const metadata: Metadata = { title: 'Connexion' }
+export const metadata: Metadata = {
+  title: 'Connexion',
+  description: 'Connectez-vous à IFUMB pour accéder à vos arbres généalogiques.',
+}
 
 const PASSWORD_RESET_DONE = 'success'
 const PASSWORD_RESET_DONE_MESSAGE = 'Mot de passe réinitialisé. Vous pouvez vous connecter.'

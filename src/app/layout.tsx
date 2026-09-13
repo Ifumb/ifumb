@@ -1,9 +1,11 @@
 import type { Metadata } from 'next'
 import type { ReactNode } from 'react'
 import '@/app/globals.css'
+import { appBaseUrl } from '@/infrastructure/config/app-url'
 import { SiteHeader } from '@/presentation/views/site-header'
 
 export const metadata: Metadata = {
+  metadataBase: appBaseUrl(),
   title: {
     default: 'IFUMB — Réseau généalogique culturel',
     template: '%s · IFUMB',

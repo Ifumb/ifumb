@@ -4,7 +4,12 @@ import { ActionForm } from '@/presentation/components/forms/action-form'
 import { RESET_PASSWORD_FORM } from '@/presentation/forms/auth-forms'
 import { LinkList } from '@/presentation/views/link-list'
 
-export const metadata: Metadata = { title: 'Nouveau mot de passe' }
+export const metadata: Metadata = {
+  title: 'Nouveau mot de passe',
+  description: 'Choisissez un nouveau mot de passe pour votre compte IFUMB.',
+  // The reset token travels in the URL: such pages must never be indexed.
+  robots: { index: false, follow: false },
+}
 
 type ResetPasswordPageProps = Readonly<{ searchParams: Promise<{ token?: string }> }>
 

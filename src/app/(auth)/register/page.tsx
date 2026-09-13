@@ -4,7 +4,11 @@ import { ActionForm } from '@/presentation/components/forms/action-form'
 import { REGISTER_FORM } from '@/presentation/forms/auth-forms'
 import { LinkList } from '@/presentation/views/link-list'
 
-export const metadata: Metadata = { title: 'Créer un compte' }
+export const metadata: Metadata = {
+  title: 'Créer un compte',
+  description:
+    'Créez gratuitement votre compte IFUMB et commencez votre arbre généalogique familial.',
+}
 
 export default function RegisterPage() {
   return (

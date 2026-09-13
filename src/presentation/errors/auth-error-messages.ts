@@ -7,6 +7,9 @@ export type ErrorPlacement = { readonly field?: string; readonly message: string
 
 export const INVALID_CREDENTIALS_MESSAGE = 'Email ou mot de passe incorrect'
 
+export const TOO_MANY_ATTEMPTS_MESSAGE =
+  'Trop de tentatives en peu de temps. Patientez quelques minutes avant de réessayer.'
+
 export const PASSWORD_RESET_REQUESTED_MESSAGE =
   'Si un compte correspond à cet email, un lien de réinitialisation vient de lui être envoyé.'
 

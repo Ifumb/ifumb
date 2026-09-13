@@ -5,8 +5,10 @@ import { container } from '@/infrastructure/di/container'
 import {
   CHANGE_PASSWORD_ERRORS,
   PASSWORD_CHANGED_MESSAGE,
+  TOO_MANY_ATTEMPTS_MESSAGE,
 } from '@/presentation/errors/auth-error-messages'
 import {
+  failed,
   failedAt,
   succeeded,
   textEntry,
@@ -27,6 +29,11 @@ export async function changePasswordAction(
     confirmPassword: textEntry(formData, 'confirmPassword'),
   })
   if (!parsed.success) return validationFailed(parsed.error)
+
+  const allowed = await container.allowsAttempt([
+    { policy: 'passwordChangeByUser', subject: currentUser.id },
+  ])
+  if (!allowed) return failed(TOO_MANY_ATTEMPTS_MESSAGE)
 
   const result = await container.changePassword().execute({
     userId: currentUser.id,

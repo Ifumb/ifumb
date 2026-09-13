@@ -6,7 +6,7 @@ d'architecture dans le skill `nextjs-clean-architect`.
 
 ## Prérequis
 
-- Node.js >= 20.9
+- Node.js >= 22.12 (Node 20 est en fin de vie)
 - **pnpm 12.3.4 exclusivement** (épinglé par `packageManager`) — npm, yarn et bun sont bloqués
 - Docker, pour la base Postgres des tests d'intégration et E2E
 
@@ -34,11 +34,12 @@ Les tests n'utilisent jamais cette base, mais le Postgres local de `docker-compo
 ## Gate de fin de module
 
 ```bash
-pnpm install && pnpm typecheck && pnpm lint && pnpm test && pnpm build
+pnpm install && pnpm typecheck && pnpm lint && pnpm test && pnpm run audit && pnpm build
 ```
 
-`pnpm test` échoue si la couverture de `src/core/**` passe sous 90 %. Aucun secret n'est
-nécessaire pour ce gate : le build ne se connecte à rien.
+`pnpm test` échoue si la couverture de `src/core/**` passe sous 90 %, `pnpm run audit` dès qu'une
+vulnérabilité `high` ou `critical` est connue. Aucun secret n'est nécessaire pour ce gate : le build
+ne se connecte à rien.
 
 Avec Docker démarré, deux suites complètent le gate :
 
@@ -49,6 +50,19 @@ pnpm test:e2e           # parcours navigateur + contrôle axe, serveur de test s
 
 Les deux démarrent le conteneur et appliquent les migrations eux-mêmes. Leurs variables de base
 et d'auth sont forcées dans la configuration : elles ne peuvent pas atteindre la base partagée.
+
+Après un déploiement, `SMOKE_BASE_URL=<url> pnpm test:smoke` vérifie la sonde de santé et l'accueil
+contre l'environnement déployé. La même chaîne tourne en CI (`.github/workflows/ci.yml`).
+
+## Sécurité et exploitation
+
+- En-têtes de sécurité (CSP, HSTS…) posés dans `next.config.ts`.
+- Limitation de débit sur connexion, inscription, mot de passe oublié, réinitialisation et changement
+  de mot de passe (`src/infrastructure/rate-limiting/`). L'implémentation en mémoire ne vaut que pour
+  une instance unique.
+- Sonde de vie : `GET /api/health`.
+- Les décisions structurantes sont consignées dans `docs/adr/` ; la cible d'hébergement est tranchée
+  au cutover (ADR 0004), d'où l'absence volontaire de `Dockerfile` à ce stade.
 
 ## Commits
 

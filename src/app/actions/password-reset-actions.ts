@@ -2,11 +2,15 @@
 import 'server-only'
 import { redirect } from 'next/navigation'
 import { container } from '@/infrastructure/di/container'
+import { currentClientIp } from '@/infrastructure/http/client-ip'
+import { accountKey } from '@/infrastructure/rate-limiting/account-key'
 import {
   PASSWORD_RESET_REQUESTED_MESSAGE,
   RESET_PASSWORD_ERRORS,
+  TOO_MANY_ATTEMPTS_MESSAGE,
 } from '@/presentation/errors/auth-error-messages'
 import {
+  failed,
   failedAt,
   succeeded,
   textEntry,
@@ -24,6 +28,13 @@ export async function requestPasswordResetAction(
   const parsed = forgotPasswordSchema.safeParse(values)
   if (!parsed.success) return validationFailed(parsed.error, values)
 
+  // The email budget applies to any typed address, registered or not, so it reveals nothing.
+  const allowed = await container.allowsAttempt([
+    { policy: 'passwordResetRequestByIp', subject: await currentClientIp() },
+    { policy: 'passwordResetRequestByEmail', subject: accountKey(parsed.data.email) },
+  ])
+  if (!allowed) return failed(TOO_MANY_ATTEMPTS_MESSAGE, values)
+
   await container.requestPasswordReset().execute({ email: parsed.data.email })
   return succeeded(PASSWORD_RESET_REQUESTED_MESSAGE)
 }
@@ -38,6 +49,11 @@ export async function resetPasswordAction(
     confirmPassword: textEntry(formData, 'confirmPassword'),
   })
   if (!parsed.success) return validationFailed(parsed.error)
+
+  const ip = await currentClientIp()
+  if (!(await container.allowsAttempt([{ policy: 'passwordResetByIp', subject: ip }]))) {
+    return failed(TOO_MANY_ATTEMPTS_MESSAGE)
+  }
 
   const result = await container.resetPassword().execute({
     token: parsed.data.token,

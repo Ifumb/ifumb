@@ -8,3 +8,12 @@ allowBuilds:
   prisma: true
   sharp: true
   unrs-resolver: true
+
+# Remove each override once `pnpm why <package>` shows the upstream dependency requiring it by itself.
+overrides:
+  # reason: only reached through the Prisma CLI 7.10.0, which still pins vulnerable versions.
+  mysql2: 3.24.4 # GHSA-rgwj-5xj2-c3m3 and the auth-plugin downgrade advisory
+  deepmerge-ts: 8.0.2 # stack exhaustion on recursive object graphs (via @prisma/config)
+  # reason: eslint-plugin-react-hooks resolves `zod@^4` to a release younger than pnpm's minimum
+  # release age; one pinned version everywhere avoids adding an exception to that supply-chain policy.
+  zod: 4.6.2

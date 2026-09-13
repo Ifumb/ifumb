@@ -23,6 +23,12 @@
   --radius-sm: calc(0.5rem - 4px);
 }
 
+/* Non-Tailwind design tokens. */
+:root {
+  --focus-ring-width: 3px;
+  --focus-ring-offset: 2px;
+}
+
 @layer base {
   body {
     @apply bg-earth-ivory text-foreground antialiased;
@@ -30,8 +36,8 @@
 
   /* Visible focus everywhere; brand-dark keeps a contrast above 3:1 on ivory (WCAG 1.4.11). */
   :focus-visible {
-    outline: 3px solid var(--color-brand-dark);
-    outline-offset: 2px;
+    outline: var(--focus-ring-width) solid var(--color-brand-dark);
+    outline-offset: var(--focus-ring-offset);
   }
 
   a {
