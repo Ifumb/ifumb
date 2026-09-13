@@ -1,0 +1,457 @@
+// reason: this schema is copied from the legacy app (ifumb/apps/api/prisma), which still writes to
+// the same database. It stays a single file above the 200-line threshold so that it can be diffed
+// against the legacy one; only the generator and datasource blocks differ (Prisma 7).
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/infrastructure/persistence/prisma/generated"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─────────────────────────────────────────────
+// USER
+// ─────────────────────────────────────────────
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  firstName    String
+  lastName     String
+  avatarUrl        String?
+  resetToken       String?   @unique
+  resetTokenExpiry DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  ownedTrees              Tree[]
+  invitations             Invitation[]
+  refreshTokens           RefreshToken[]
+  claimedMember           Member?         @relation("ClaimedBy")
+  pendingChangesAuthored  PendingChange[] @relation("PendingChangeAuthor")
+  pendingChangesResolved  PendingChange[] @relation("PendingChangeResolver")
+  auditLogsAuthored       AuditLog[]      @relation("AuditLogAuthor")
+  notifications           Notification[]
+  initiatedRequests       CrossTreeConnectionRequest[] @relation("RequestInitiator")
+  sentContactRequests     ContactRequest[]             @relation("SentContactRequests")
+}
+
+// ─────────────────────────────────────────────
+// TREE
+// ─────────────────────────────────────────────
+model Tree {
+  id          String     @id @default(cuid())
+  name        String
+  description String?
+  visibility  Visibility @default(PRIVATE)
+  archivedAt  DateTime?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  ownerId                String
+  owner                  User             @relation(fields: [ownerId], references: [id])
+  members                Member[]
+  unions                 Union[]
+  invitations            Invitation[]
+  pendingChanges         PendingChange[]
+  auditLogs              AuditLog[]
+  pendingNotifLastSentAt DateTime?
+
+  suggestionsAsSource  CrossTreeSuggestion[]        @relation("SuggestionSourceTree")
+  suggestionsAsTarget  CrossTreeSuggestion[]        @relation("SuggestionTargetTree")
+  requestsAsRequester  CrossTreeConnectionRequest[] @relation("RequestRequesterTree")
+  requestsAsTarget     CrossTreeConnectionRequest[] @relation("RequestTargetTree")
+  linksAsTree1         CrossTreeLink[]              @relation("LinkTree1")
+  linksAsTree2         CrossTreeLink[]              @relation("LinkTree2")
+  contactRequests      ContactRequest[]
+}
+
+// ─────────────────────────────────────────────
+// MEMBER
+// ─────────────────────────────────────────────
+model Member {
+  id              String    @id @default(cuid())
+  firstName       String
+  lastName        String?
+  nickname        String?
+  gender          Gender?
+  birthDate       String?
+  birthDateApprox Boolean   @default(false)
+  deathDate       String?
+  birthPlace      String?
+  tribe           String?
+  clan            String?
+  ethnicity       String?
+  originRegion    String?
+  photoUrl        String?
+  biography       String?
+  certainty       Certainty @default(CONFIRMED)
+  discoverable    Boolean   @default(false)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  treeId          String
+  tree            Tree      @relation(fields: [treeId], references: [id], onDelete: Cascade)
+
+  claimedByUserId String?   @unique
+  claimedBy       User?     @relation("ClaimedBy", fields: [claimedByUserId], references: [id], onDelete: SetNull)
+
+  unionsAsParent1 Union[]          @relation("Parent1")
+  unionsAsParent2 Union[]          @relation("Parent2")
+  unionChildren   UnionChild[]
+  mediaFiles      MediaFile[]
+  contactRequests ContactRequest[]
+}
+
+// ─────────────────────────────────────────────
+// UNION — entité centrale, toute filiation passe par elle
+// ─────────────────────────────────────────────
+model Union {
+  id        String    @id @default(cuid())
+  type      UnionType @default(BIOLOGICAL)
+  startDate String?
+  endDate   String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  treeId    String
+  tree      Tree      @relation(fields: [treeId], references: [id], onDelete: Cascade)
+
+  parent1Id String?
+  parent1   Member?   @relation("Parent1", fields: [parent1Id], references: [id])
+  parent2Id String?
+  parent2   Member?   @relation("Parent2", fields: [parent2Id], references: [id])
+
+  children  UnionChild[]
+}
+
+// ─────────────────────────────────────────────
+// UNION CHILD
+// ─────────────────────────────────────────────
+model UnionChild {
+  id            String    @id @default(cuid())
+  filiationType Filiation @default(BIOLOGICAL)
+  createdAt     DateTime  @default(now())
+
+  unionId String
+  union   Union  @relation(fields: [unionId], references: [id], onDelete: Cascade)
+  childId String
+  child   Member @relation(fields: [childId], references: [id])
+
+  @@unique([unionId, childId])
+}
+
+// ─────────────────────────────────────────────
+// INVITATION
+// ─────────────────────────────────────────────
+model Invitation {
+  id        String           @id @default(cuid())
+  role      InvitationRole   @default(VIEWER)
+  status    InvitationStatus @default(PENDING)
+  email     String
+  token     String?          @unique
+  expiresAt DateTime?
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  treeId  String
+  tree    Tree   @relation(fields: [treeId], references: [id], onDelete: Cascade)
+  userId  String?
+  user    User?  @relation(fields: [userId], references: [id])
+
+  @@unique([treeId, email])
+}
+
+// ─────────────────────────────────────────────
+// MEDIA FILE
+// ─────────────────────────────────────────────
+model MediaFile {
+  id        String    @id @default(cuid())
+  url       String
+  type      MediaType
+  caption   String?
+  createdAt DateTime  @default(now())
+
+  memberId String
+  member   Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+}
+
+// ─────────────────────────────────────────────
+// REFRESH TOKEN
+// ─────────────────────────────────────────────
+model RefreshToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  expiresAt DateTime
+  revoked   Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ─────────────────────────────────────────────
+// ENUMS
+// ─────────────────────────────────────────────
+enum Visibility {
+  PRIVATE
+  SHARED
+  PUBLIC
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+  UNKNOWN
+}
+
+enum Certainty {
+  CONFIRMED
+  APPROXIMATE
+  UNKNOWN
+}
+
+enum UnionType {
+  MARRIAGE
+  PARTNERSHIP
+  BIOLOGICAL
+}
+
+enum Filiation {
+  BIOLOGICAL
+  ADOPTIVE
+  RECOGNIZED
+}
+
+enum InvitationRole {
+  EDITOR
+  VIEWER
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+enum MediaType {
+  PHOTO
+  DOCUMENT
+}
+
+// ─────────────────────────────────────────────
+// PENDING CHANGE — modification EDITOR en attente de validation
+// ─────────────────────────────────────────────
+model PendingChange {
+  id               String            @id @default(cuid())
+  treeId           String
+  tree             Tree              @relation(fields: [treeId], references: [id], onDelete: Cascade)
+  authorId         String
+  author           User              @relation("PendingChangeAuthor", fields: [authorId], references: [id])
+  targetType       PendingTargetType
+  targetId         String
+  action           PendingAction
+  snapshotBefore   Json?
+  snapshotAfter    Json?
+  status           PendingStatus     @default(PENDING)
+  rejectionComment String?
+  resolvedAt       DateTime?
+  resolvedById     String?
+  resolvedBy       User?             @relation("PendingChangeResolver", fields: [resolvedById], references: [id])
+  createdAt        DateTime          @default(now())
+
+  notifications Notification[]
+}
+
+enum PendingTargetType {
+  MEMBER
+  UNION
+}
+
+enum PendingAction {
+  CREATE
+  UPDATE
+  DELETE
+}
+
+enum PendingStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+// ─────────────────────────────────────────────
+// AUDIT LOG — historique immuable
+// ─────────────────────────────────────────────
+model AuditLog {
+  id         String      @id @default(cuid())
+  treeId     String
+  tree       Tree        @relation(fields: [treeId], references: [id], onDelete: Cascade)
+  authorId   String
+  author     User        @relation("AuditLogAuthor", fields: [authorId], references: [id])
+  action     AuditAction
+  targetType String
+  targetId   String
+  diff       Json
+  createdAt  DateTime    @default(now())
+
+  @@index([treeId, createdAt(sort: Desc)])
+  @@index([treeId, authorId])
+  @@index([treeId, action])
+}
+
+enum AuditAction {
+  MEMBER_CREATED
+  MEMBER_UPDATED
+  MEMBER_DELETED
+  UNION_CREATED
+  UNION_UPDATED
+  UNION_DELETED
+  INVITATION_SENT
+  INVITATION_ACCEPTED
+  INVITATION_REJECTED
+  INVITATION_REVOKED
+  ROLE_CHANGED
+  TREE_CREATED
+  TREE_UPDATED
+  TREE_DELETED
+  PENDING_CHANGE_APPROVED
+  PENDING_CHANGE_REJECTED
+  MEMBER_CLAIMED
+}
+
+// ─────────────────────────────────────────────
+// CONTACT REQUEST — demande de contact inter-arbres
+// ─────────────────────────────────────────────
+model ContactRequest {
+  id          String               @id @default(cuid())
+  message     String?
+  status      ContactRequestStatus @default(PENDING)
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+
+  requesterId String
+  requester   User   @relation("SentContactRequests", fields: [requesterId], references: [id], onDelete: Cascade)
+  treeId      String
+  tree        Tree   @relation(fields: [treeId], references: [id], onDelete: Cascade)
+  memberId    String
+  member      Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  notifications Notification[]
+
+  @@unique([requesterId, memberId])
+}
+
+enum ContactRequestStatus {
+  PENDING
+  ACCEPTED
+  REFUSED
+  WITHDRAWN
+}
+
+// ─────────────────────────────────────────────
+// NOTIFICATION — alerte in-app
+// ─────────────────────────────────────────────
+model Notification {
+  id              String           @id @default(cuid())
+  userId          String
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type            NotificationType
+  pendingChangeId  String?
+  pendingChange    PendingChange?   @relation(fields: [pendingChangeId], references: [id], onDelete: SetNull)
+  contactRequestId String?
+  contactRequest   ContactRequest?  @relation(fields: [contactRequestId], references: [id], onDelete: SetNull)
+  read             Boolean          @default(false)
+  createdAt        DateTime         @default(now())
+
+  @@index([userId, read])
+}
+
+enum NotificationType {
+  PENDING_CHANGE_CREATED
+  CHANGE_REJECTED
+  CHANGE_APPROVED
+  CONTACT_REQUEST_RECEIVED
+  CONTACT_REQUEST_RESPONDED
+}
+
+// ─────────────────────────────────────────────
+// CROSS-TREE — suggestions et liens inter-arbres
+// ─────────────────────────────────────────────
+enum SuggestionConfidence {
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum SuggestionStatus {
+  NEW
+  ACCEPTED
+  REJECTED
+  EXPIRED
+}
+
+enum ConnectionRequestStatus {
+  PENDING
+  APPROVED
+  REFUSED
+  EXPIRED
+}
+
+model CrossTreeSuggestion {
+  id             String               @id @default(cuid())
+  treeId         String
+  memberId       String
+  targetTreeId   String
+  targetMemberId String
+  confidence     SuggestionConfidence
+  status         SuggestionStatus     @default(NEW)
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+
+  tree       Tree @relation("SuggestionSourceTree", fields: [treeId], references: [id], onDelete: Cascade)
+  targetTree Tree @relation("SuggestionTargetTree", fields: [targetTreeId], references: [id], onDelete: Cascade)
+
+  @@unique([memberId, targetMemberId])
+  @@index([treeId, status])
+}
+
+model CrossTreeConnectionRequest {
+  id                String                  @id @default(cuid())
+  requesterTreeId   String
+  requesterMemberId String
+  targetTreeId      String
+  targetMemberId    String
+  initiatedByUserId String
+  status            ConnectionRequestStatus @default(PENDING)
+  createdAt         DateTime                @default(now())
+  expiresAt         DateTime
+  resolvedAt        DateTime?
+  resolvedByUserId  String?
+
+  requesterTree Tree @relation("RequestRequesterTree", fields: [requesterTreeId], references: [id], onDelete: Cascade)
+  targetTree    Tree @relation("RequestTargetTree", fields: [targetTreeId], references: [id], onDelete: Cascade)
+  initiatedBy   User @relation("RequestInitiator", fields: [initiatedByUserId], references: [id])
+
+  @@unique([requesterMemberId, targetMemberId])
+  @@index([targetTreeId, status])
+}
+
+model CrossTreeLink {
+  id        String   @id @default(cuid())
+  tree1Id   String
+  member1Id String
+  tree2Id   String
+  member2Id String
+  createdAt DateTime @default(now())
+
+  tree1 Tree @relation("LinkTree1", fields: [tree1Id], references: [id], onDelete: Cascade)
+  tree2 Tree @relation("LinkTree2", fields: [tree2Id], references: [id], onDelete: Cascade)
+
+  @@unique([member1Id, member2Id])
+  @@index([tree1Id])
+  @@index([tree2Id])
+}

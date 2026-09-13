@@ -1,0 +1,62 @@
+@import 'tailwindcss';
+
+/* IFUMB palette — terracotta, gold, ivory, forest green (ported from the legacy Tailwind config). */
+@theme {
+  --color-foreground: #1e140a;
+
+  --color-brand: #c1440e;
+  --color-brand-dark: #8b2e06;
+  --color-brand-light: #e8835a;
+
+  --color-accent: #d4a017;
+  --color-accent-light: #f0c94d;
+
+  --color-earth-ivory: #f5f0e8;
+  --color-earth-sand: #d6c9a8;
+  --color-earth-bark: #6b4423;
+
+  --color-forest: #2d5a27;
+  --color-forest-light: #4a8c42;
+
+  --radius-lg: 0.5rem;
+  --radius-md: calc(0.5rem - 2px);
+  --radius-sm: calc(0.5rem - 4px);
+}
+
+@layer base {
+  body {
+    @apply bg-earth-ivory text-foreground antialiased;
+  }
+
+  /* Visible focus everywhere; brand-dark keeps a contrast above 3:1 on ivory (WCAG 1.4.11). */
+  :focus-visible {
+    outline: 3px solid var(--color-brand-dark);
+    outline-offset: 2px;
+  }
+
+  a {
+    @apply text-brand-dark underline underline-offset-2;
+  }
+}
+
+@layer components {
+  /* Skip link: off-screen until focused, then shown as the first thing on the page. */
+  .skip-link {
+    @apply absolute left-2 -translate-y-24 rounded-md bg-foreground px-4 py-2 text-earth-ivory no-underline;
+  }
+
+  .skip-link:focus-visible {
+    @apply translate-y-2;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -1,0 +1,8 @@
+# LF everywhere, whatever the contributor's core.autocrlf.
+# Prisma checksums each migration.sql: CRLF working copies would make `prisma migrate status`
+# report the migrations already applied to the shared database as modified.
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.ico binary

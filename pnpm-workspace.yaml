@@ -1,0 +1,10 @@
+# reason: pnpm 12 reads build-script approvals from `allowBuilds` (a name -> boolean map).
+# The `onlyBuiltDependencies` list documented by the skill is no longer honoured here.
+allowBuilds:
+  '@prisma/client': true
+  '@prisma/engines': true
+  '@tailwindcss/oxide': true
+  esbuild: true
+  prisma: true
+  sharp: true
+  unrs-resolver: true

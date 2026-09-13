@@ -1,0 +1,19 @@
+# Local, disposable Postgres for integration and E2E tests.
+# Tests never run against the shared Supabase database.
+services:
+  postgres-test:
+    image: postgres:16-alpine
+    container_name: ifumb-next-postgres-test
+    ports:
+      - '55432:5432'
+    environment:
+      POSTGRES_USER: ifumb_test
+      POSTGRES_PASSWORD: ifumb_test
+      POSTGRES_DB: ifumb_test
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ifumb_test -d ifumb_test']
+      interval: 2s
+      timeout: 3s
+      retries: 15
