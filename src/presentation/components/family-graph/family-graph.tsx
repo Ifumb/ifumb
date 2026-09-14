@@ -38,6 +38,9 @@ const ARIA_LABELS = {
 
 const BACKGROUND_DOT_COLOR = '#d6c9a8'
 
+// Forest green on white stays above the 3:1 contrast required for a graphical cue (WCAG 1.4.11).
+const EMPHASIS_CLASS_NAME = 'outline-4 outline-offset-4 outline-forest'
+
 /** A graph to read: nothing is dragged, connected or selected, and nodes are not focus stops. */
 const READ_ONLY_FLOW_PROPS = {
   nodeTypes: NODE_TYPES,
@@ -80,14 +83,16 @@ function FamilyGraphCanvas({ graph }: FamilyGraphProps) {
   )
 }
 
-type GraphCanvasProps = FamilyGraphProps &
-  Readonly<{ visible: ReadonlySet<string>; inFocus: ReadonlySet<string> | null }>
+type NodeSets = Readonly<{
+  visible: ReadonlySet<string>
+  inFocus: ReadonlySet<string> | null
+  emphasis: ReadonlySet<string> | null
+}>
+
+type GraphCanvasProps = FamilyGraphProps & Omit<NodeSets, 'emphasis'>
 
 function GraphCanvas({ graph, visible, inFocus }: GraphCanvasProps) {
-  const nodes = useMemo(
-    () => graph.nodes.map((node) => toFlowNode(node, visible, inFocus)),
-    [graph.nodes, visible, inFocus],
-  )
+  const nodes = useFlowNodes(graph, visible, inFocus)
   const edges = useMemo(() => graph.edges.map(toFlowEdge), [graph.edges])
 
   return (
@@ -103,24 +108,37 @@ function GraphCanvas({ graph, visible, inFocus }: GraphCanvasProps) {
   )
 }
 
+function useFlowNodes(
+  graph: FamilyGraphViewModel,
+  visible: NodeSets['visible'],
+  inFocus: NodeSets['inFocus'],
+) {
+  const emphasis = useMemo(
+    () => (graph.emphasis ? new Set(graph.emphasis) : null),
+    [graph.emphasis],
+  )
+  return useMemo(
+    () => graph.nodes.map((node) => toFlowNode(node, { visible, inFocus, emphasis })),
+    [graph.nodes, visible, inFocus, emphasis],
+  )
+}
+
 /**
  * Member nodes are reached through the link they contain, so the node itself is not focusable.
- * Nodes outside the centred neighbourhood are dimmed and made inert until the view is reset.
+ * Nodes outside the centred neighbourhood, or outside a result's emphasis, are dimmed and inert;
+ * the result itself is also written out in text above the graph.
  */
-function toFlowNode(
-  node: PositionedNode,
-  visible: ReadonlySet<string>,
-  inFocus: ReadonlySet<string> | null,
-): Node<GraphNodeData> {
-  const dimmed = inFocus !== null && !inFocus.has(node.id)
+function toFlowNode(node: PositionedNode, sets: NodeSets): Node<GraphNodeData> {
+  const outside = (set: ReadonlySet<string> | null) => set !== null && !set.has(node.id)
+  const dimmed = outside(sets.inFocus) || outside(sets.emphasis)
   const isMember = node.data.kind === 'member'
   return {
     id: node.id,
     type: node.data.kind,
     position: node.position,
     data: node.data,
-    hidden: !visible.has(node.id),
-    className: dimmed ? 'opacity-30' : undefined,
+    hidden: !sets.visible.has(node.id),
+    className: nodeClassName(dimmed, sets.emphasis?.has(node.id) ?? false, isMember),
     ariaRole: isMember ? 'group' : 'img',
     ariaLabel: node.data.kind === 'union' ? unionLabel(node.data) : undefined,
     domAttributes: {
@@ -128,6 +146,12 @@ function toFlowNode(
       inert: dimmed || undefined,
     },
   }
+}
+
+function nodeClassName(dimmed: boolean, emphasized: boolean, isMember: boolean) {
+  if (dimmed) return 'opacity-30'
+  if (!emphasized) return undefined
+  return [EMPHASIS_CLASS_NAME, isMember ? 'rounded-xl' : 'rounded-full'].join(' ')
 }
 
 function unionLabel({ typeLabel, pending }: Extract<GraphNodeData, { kind: 'union' }>): string {

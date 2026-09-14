@@ -1,14 +1,17 @@
 import 'server-only'
+import type { Family } from '@/core/entities/family'
 import { generationsOf } from '@/core/entities/family-generations'
+import { lineageOf, type LineageDepth } from '@/core/entities/lineage'
 import type { TreeRole } from '@/core/entities/tree'
-import { ok, type Result } from '@/core/shared/result'
+import { err, ok, type Result } from '@/core/shared/result'
+import { MemberId } from '@/core/shared/value-objects/member-id'
 import type { TreeId } from '@/core/shared/value-objects/tree-id'
 import {
-  toGraphMember,
-  toGraphUnion,
+  toFamilyGraph,
   type FamilyGraph,
-  type GraphContext,
+  type GraphScope,
 } from '@/core/use-cases/family-graph-views'
+import { toPersonReference } from '@/core/use-cases/member-views'
 import type { FamilyReader } from '@/core/use-cases/ports/family-reader'
 import type {
   PendingAction,
@@ -21,7 +24,14 @@ import {
   type TreeReadInput,
 } from '@/core/use-cases/tree-read-access'
 
-export type GetFamilyGraphError = TreeReadError
+export type LineageRequest = LineageDepth & { readonly memberId: string }
+
+export type GetFamilyGraphInput = TreeReadInput & {
+  /** Narrows the graph to the line of descent of one member. */
+  readonly lineage?: LineageRequest
+}
+
+export type GetFamilyGraphError = TreeReadError | { readonly kind: 'MEMBER_NOT_FOUND' }
 
 type GetFamilyGraphDeps = {
   readonly trees: TreeReader
@@ -39,7 +49,7 @@ export function canSeePendingChanges(role: TreeRole): boolean {
 export class GetFamilyGraphUseCase {
   constructor(private readonly deps: GetFamilyGraphDeps) {}
 
-  async execute(input: TreeReadInput): Promise<Result<FamilyGraph, GetFamilyGraphError>> {
+  async execute(input: GetFamilyGraphInput): Promise<Result<FamilyGraph, GetFamilyGraphError>> {
     const access = await readableTree(this.deps.trees, input)
     if (!access.ok) return access
 
@@ -48,16 +58,34 @@ export class GetFamilyGraphUseCase {
       this.deps.families.loadFamily(listing.tree.id),
       this.pendingChangesFor(listing.tree.id, role),
     ])
-    const context: GraphContext = { generations: generationsOf(family), pending }
-    return ok({
-      tree: { id: listing.tree.id.value, name: listing.tree.name },
-      members: family.members().map((member) => toGraphMember(member, context)),
-      unions: family.unions().map((union) => toGraphUnion(union, family, context)),
-    })
+    const scope = graphScope(family, input.lineage)
+    if (!scope.ok) return scope
+    const facts = { generations: generationsOf(family), pending }
+    return ok(toFamilyGraph(listing.tree, family, scope.value, facts))
   }
 
   private async pendingChangesFor(treeId: TreeId, role: TreeRole) {
     if (!canSeePendingChanges(role)) return NO_PENDING_CHANGES
     return this.deps.pendingChanges.pendingTargets(treeId)
   }
+}
+
+function graphScope(
+  family: Family,
+  request: LineageRequest | undefined,
+): Result<GraphScope, { readonly kind: 'MEMBER_NOT_FOUND' }> {
+  if (!request) return ok({ kind: 'whole' })
+  const pivotId = MemberId.fromString(request.memberId)
+  const pivot = family.findMember(pivotId)
+  if (!pivot) return err({ kind: 'MEMBER_NOT_FOUND' })
+
+  const { ancestors, descendants } = request
+  const lineage = lineageOf(family, pivotId, { ancestors, descendants })
+  const { hasDescendants, deepestDescendantShown } = lineage
+  const pivotView = { pivot: toPersonReference(pivot), ancestors, descendants }
+  return ok({
+    kind: 'lineage',
+    lineage,
+    view: { ...pivotView, hasDescendants, deepestDescendantShown },
+  })
 }

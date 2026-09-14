@@ -34,6 +34,9 @@ function ProfileHeader({ profile }: ProfileProps) {
         {profile.name}
       </h1>
       {profile.nickname && <p>Surnom : « {profile.nickname} »</p>}
+      <p>
+        <Link href={profile.lineageHref}>Voir sa descendance dans le graphe</Link>
+      </p>
     </header>
   )
 }

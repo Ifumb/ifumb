@@ -20,12 +20,15 @@ function member(id: string, firstName: string) {
     tribes: [],
     ethnicities: [],
     generation: 0,
+    relativeGeneration: null,
     pendingAction: null,
   }
 }
 
 const graph: FamilyGraph = {
   tree: { id: 'tree_1', name: 'Famille Diallo' },
+  people: [],
+  lineage: null,
   members: [member('child', 'Fatou'), member('mother', 'Awa'), member('father', 'Moussa')],
   unions: [
     {

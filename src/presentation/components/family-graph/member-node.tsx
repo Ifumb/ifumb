@@ -20,6 +20,11 @@ const CARD_CLASS_NAMES = [
   'text-center text-foreground no-underline',
 ]
 
+const GENERATION_TAG_CLASS_NAMES = [
+  'absolute -top-3 right-1 z-10 whitespace-nowrap rounded-full px-2 shadow-sm',
+  'bg-forest text-xs leading-5 font-semibold text-earth-ivory',
+]
+
 const INITIAL_CLASS_NAMES = [
   'flex size-10 shrink-0 items-center justify-center rounded-full',
   'bg-earth-sand font-semibold text-earth-bark',
@@ -35,6 +40,9 @@ export function MemberNode({
   return (
     <div style={MEMBER_NODE_SIZE} className="relative">
       {data.pending && <PendingBadgeTag badge={data.pending} />}
+      {data.relativeGenerationLabel && (
+        <RelativeGenerationTag label={data.relativeGenerationLabel} />
+      )}
       <Handle type="target" position={Position.Top} isConnectable={false} className="invisible" />
       <MemberCard data={data} onFocus={panToNode} />
       <Handle
@@ -93,6 +101,15 @@ function MemberDates({ data }: MemberDataProps) {
           <span className="sr-only"> (informations approximatives)</span>
         </>
       )}
+    </span>
+  )
+}
+
+function RelativeGenerationTag({ label }: Readonly<{ label: string }>) {
+  return (
+    <span className={GENERATION_TAG_CLASS_NAMES.join(' ')}>
+      {label !== 'Pivot' && <span className="sr-only">Génération relative : </span>}
+      {label}
     </span>
   )
 }

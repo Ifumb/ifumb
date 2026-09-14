@@ -24,6 +24,7 @@ function memberNode(id: string, overrides: Partial<MemberNodeData> = {}): Positi
       photoSrc: null,
       approximate: false,
       pending: null,
+      relativeGenerationLabel: null,
       tribes: [],
       ethnicities: [],
       gender: null,

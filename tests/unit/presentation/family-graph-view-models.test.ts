@@ -29,6 +29,7 @@ function aGraphMember(overrides: Partial<GraphMember> = {}): GraphMember {
     tribes: ['Peul', 'Malinké'],
     ethnicities: [],
     generation: 1,
+    relativeGeneration: null,
     pendingAction: null,
     ...overrides,
   }
@@ -46,6 +47,7 @@ describe('toMemberNodeData', () => {
       photoSrc: null,
       approximate: true,
       pending: null,
+      relativeGenerationLabel: null,
       tribes: ['Peul', 'Malinké'],
       ethnicities: [],
       gender: 'FEMALE',
@@ -98,6 +100,8 @@ describe('pendingBadge', () => {
 describe('toUnlaidGraph', () => {
   const graph: FamilyGraph = {
     tree: { id: 'tree_1', name: 'Famille Diallo' },
+    people: [],
+    lineage: null,
     members: [aGraphMember({ id: 'mbr_p' }), aGraphMember({ id: 'mbr_c' })],
     unions: [
       {

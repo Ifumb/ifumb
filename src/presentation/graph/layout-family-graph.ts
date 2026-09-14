@@ -27,6 +27,7 @@ export function toFamilyGraphViewModel(
     memberCount: graph.members.length,
     nodes: layoutNodes(nodes, edges),
     edges,
+    emphasis: null,
   }
 }
 

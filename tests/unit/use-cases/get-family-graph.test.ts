@@ -107,6 +107,60 @@ describe('GetFamilyGraphUseCase', () => {
     ])
   })
 
+  it('lists every member of the tree for the tools, in name order', async () => {
+    const graph = await graphFor(OWNER_ID)
+
+    expect(graph.people.map((p) => p.id)).toEqual(['mbr_awa', 'mbr_fatou', 'mbr_moussa'])
+  })
+
+  it('has no lineage and no relative generation without a pivot', async () => {
+    const graph = await graphFor(OWNER_ID)
+
+    expect([graph.lineage, graph.members[0]?.relativeGeneration]).toEqual([null, null])
+  })
+
+  it('narrows the graph to the lineage of the pivot', async () => {
+    const result = await buildGetFamilyGraph().execute({
+      treeId: 'tree_diallo',
+      viewerId: OWNER_ID,
+      lineage: { memberId: 'mbr_fatou', ancestors: 0, descendants: 4 },
+    })
+    const graph = result.ok ? result.value : null
+
+    expect(graph?.members.map((m) => [m.id, m.relativeGeneration])).toEqual([['mbr_fatou', 0]])
+    expect(graph?.unions).toEqual([])
+    expect(graph?.people).toHaveLength(3)
+    expect(graph?.lineage).toEqual({
+      pivot: { id: 'mbr_fatou', firstName: 'Fatou', lastName: 'Diallo' },
+      ancestors: 0,
+      descendants: 4,
+      hasDescendants: false,
+      deepestDescendantShown: 0,
+    })
+  })
+
+  it('keeps only the links between members of the lineage', async () => {
+    const result = await buildGetFamilyGraph().execute({
+      treeId: 'tree_diallo',
+      viewerId: OWNER_ID,
+      lineage: { memberId: 'mbr_fatou', ancestors: 1, descendants: 0 },
+    })
+
+    expect(result.ok && result.value.unions.map((u) => [u.parentIds, u.children])).toEqual([
+      [['mbr_moussa', 'mbr_awa'], [{ childId: 'mbr_fatou', filiation: 'ADOPTIVE' }]],
+    ])
+  })
+
+  it('fails with MEMBER_NOT_FOUND for an unknown pivot', async () => {
+    const result = await buildGetFamilyGraph().execute({
+      treeId: 'tree_diallo',
+      viewerId: OWNER_ID,
+      lineage: { memberId: 'mbr_unknown', ancestors: 1, descendants: 4 },
+    })
+
+    expect(result).toEqual({ ok: false, error: { kind: 'MEMBER_NOT_FOUND' } })
+  })
+
   it.each([
     [{ treeId: 'tree_unknown', viewerId: OWNER_ID }, 'TREE_NOT_FOUND'],
     [{ treeId: 'tree_diallo' }, 'AUTHENTICATION_REQUIRED'],

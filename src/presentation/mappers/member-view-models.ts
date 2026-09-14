@@ -2,6 +2,7 @@ import type { PartialDate } from '@/core/shared/value-objects/partial-date'
 import type { MemberDetails, MemberSummary } from '@/core/use-cases/member-views'
 import type { MemberProfile } from '@/core/use-cases/get-member-profile'
 import { formatPartialDate, lifespanLabel } from '@/presentation/formatting/partial-date-format'
+import { lineageHref, type GraphHref } from '@/presentation/graph/graph-view-urls'
 import type { Fact } from '@/presentation/mappers/fact'
 import { CERTAINTY_LABELS, GENDER_LABELS, NOT_RECORDED } from '@/presentation/labels/member-labels'
 import {
@@ -12,6 +13,7 @@ import {
   type ParentUnionViewModel,
   type PartnerUnionViewModel,
 } from '@/presentation/mappers/union-view-models'
+import { DEFAULT_LINEAGE_DEPTH } from '@/presentation/schemas/graph-view-schema'
 
 export type MemberListItemViewModel = {
   readonly id: string
@@ -26,6 +28,7 @@ export type MemberProfileViewModel = {
   readonly name: string
   readonly nickname: string | null
   readonly tree: { readonly name: string; readonly href: `/tree/${string}` }
+  readonly lineageHref: GraphHref
   readonly identity: readonly Fact[]
   readonly datesAndPlaces: readonly Fact[]
   readonly culture: readonly Fact[]
@@ -51,6 +54,7 @@ export function toMemberProfileViewModel(profile: MemberProfile): MemberProfileV
     name: memberLink(tree.id, member).name,
     nickname: member.nickname,
     tree: { name: tree.name, href: `/tree/${tree.id}` },
+    lineageHref: lineageHref(tree.id, member.id, DEFAULT_LINEAGE_DEPTH),
     identity: identityFacts(member),
     datesAndPlaces: datesAndPlacesFacts(member),
     culture: cultureFacts(member),

@@ -1,6 +1,8 @@
 import 'server-only'
 import { AuthenticateUserUseCase } from '@/core/use-cases/authenticate-user'
 import { ChangePasswordUseCase } from '@/core/use-cases/change-password'
+import { FindCommonAncestorsUseCase } from '@/core/use-cases/find-common-ancestors'
+import { FindKinshipUseCase } from '@/core/use-cases/find-kinship'
 import { GetFamilyGraphUseCase } from '@/core/use-cases/get-family-graph'
 import { GetMemberProfileUseCase } from '@/core/use-cases/get-member-profile'
 import { GetTreeOverviewUseCase } from '@/core/use-cases/get-tree-overview'
@@ -14,6 +16,7 @@ import { requireServerEnv } from '@/infrastructure/config/server-env'
 import { ResendPasswordResetMailer } from '@/infrastructure/mail/resend-password-reset-mailer'
 import { getPrismaClient } from '@/infrastructure/persistence/prisma/client'
 import { PrismaFamilyReader } from '@/infrastructure/persistence/prisma/prisma-family-reader'
+import { RequestScopedFamilyReader } from '@/infrastructure/persistence/request-scoped-family-reader'
 import { PrismaPendingChangeReader } from '@/infrastructure/persistence/prisma/prisma-pending-change-reader'
 import { PrismaTreeReader } from '@/infrastructure/persistence/prisma/prisma-tree-reader'
 import { PrismaUserRepository } from '@/infrastructure/persistence/prisma/prisma-user-repository'
@@ -40,7 +43,9 @@ type RateLimiters = Readonly<Record<RateLimitPolicyName, RateLimiter>>
 
 const users = lazy(() => new PrismaUserRepository(getPrismaClient()))
 const trees = lazy(() => new PrismaTreeReader(getPrismaClient()))
-const families = lazy(() => new PrismaFamilyReader(getPrismaClient()))
+const families = lazy(
+  () => new RequestScopedFamilyReader(new PrismaFamilyReader(getPrismaClient())),
+)
 const pendingChanges = lazy(() => new PrismaPendingChangeReader(getPrismaClient()))
 const hasher = lazy(() => new BcryptjsPasswordHasher())
 const clock = lazy(() => new SystemClock())
@@ -112,5 +117,9 @@ export const container = {
         families: families(),
         pendingChanges: pendingChanges(),
       }),
+  ),
+  findKinship: lazy(() => new FindKinshipUseCase({ trees: trees(), families: families() })),
+  findCommonAncestors: lazy(
+    () => new FindCommonAncestorsUseCase({ trees: trees(), families: families() }),
   ),
 }

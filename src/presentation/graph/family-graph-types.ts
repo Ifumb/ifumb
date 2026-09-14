@@ -17,6 +17,8 @@ export type MemberNodeData = {
   readonly photoSrc: string | null
   readonly approximate: boolean
   readonly pending: PendingBadge | null
+  /** "Pivot", "+1", "−1" in a lineage view; null otherwise. */
+  readonly relativeGenerationLabel: string | null
   readonly tribes: readonly string[]
   readonly ethnicities: readonly string[]
   readonly gender: Gender | null
@@ -47,6 +49,8 @@ export type FamilyGraphViewModel = {
   readonly memberCount: number
   readonly nodes: readonly PositionedNode[]
   readonly edges: readonly GraphEdge[]
+  /** Nodes a kinship or ancestors result puts forward; the others are dimmed. Null: no emphasis. */
+  readonly emphasis: readonly string[] | null
 }
 
 export function isMemberNode(

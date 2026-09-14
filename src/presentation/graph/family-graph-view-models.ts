@@ -10,6 +10,7 @@ import type {
   UnionNodeData,
 } from '@/presentation/graph/family-graph-types'
 import { UNION_TYPE_LABELS } from '@/presentation/labels/member-labels'
+import { relativeGenerationLabel } from '@/presentation/mappers/lineage-view-models'
 import { memberLink } from '@/presentation/mappers/union-view-models'
 
 /** Where member photos may come from; any other URL falls back to the initial. */
@@ -33,11 +34,12 @@ export const unionNodeId = (unionId: string) => `union_${unionId}`
 
 export function toUnlaidGraph(graph: FamilyGraph, photos: PhotoSourcePolicy | null): UnlaidGraph {
   const treeId = graph.tree.id
+  const pivotId = graph.lineage?.pivot.id ?? null
   return {
     nodes: [
       ...graph.members.map((member) => ({
         id: memberNodeId(member.id),
-        data: toMemberNodeData(treeId, member, photos),
+        data: toMemberNodeData(treeId, member, photos, pivotId),
       })),
       ...graph.unions.map((union) => ({ id: unionNodeId(union.id), data: toUnionNodeData(union) })),
     ],
@@ -49,6 +51,7 @@ export function toMemberNodeData(
   treeId: string,
   member: GraphMember,
   photos: PhotoSourcePolicy | null,
+  pivotId: string | null = null,
 ): MemberNodeData {
   const { href, name } = memberLink(treeId, member)
   return {
@@ -61,6 +64,10 @@ export function toMemberNodeData(
     photoSrc: photoSource(member.photoUrl, photos),
     approximate: member.certainty === 'APPROXIMATE',
     pending: pendingBadge(member.pendingAction),
+    relativeGenerationLabel: relativeGenerationLabel(
+      member.relativeGeneration,
+      member.id === pivotId,
+    ),
     tribes: member.tribes,
     ethnicities: member.ethnicities,
     gender: member.gender,
