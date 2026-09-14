@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto'
-import { Client } from 'pg'
-import { TEST_DATABASE_URL } from '@tests/support/test-database'
+import type { Client } from 'pg'
+import { withTestClient } from '@tests/support/test-database'
 
 export type SeedTreeInput = {
   readonly ownerEmail: string
@@ -11,9 +11,7 @@ export type SeedTreeInput = {
 
 /** Inserts a tree owned by an existing test account, straight into the test database. */
 export async function seedTree(input: SeedTreeInput): Promise<string> {
-  const client = new Client({ connectionString: TEST_DATABASE_URL })
-  await client.connect()
-  try {
+  return withTestClient(async (client) => {
     const ownerId = await findUserId(client, input.ownerEmail)
     const treeId = randomUUID()
     await client.query(
@@ -28,9 +26,7 @@ export async function seedTree(input: SeedTreeInput): Promise<string> {
       )
     }
     return treeId
-  } finally {
-    await client.end()
-  }
+  })
 }
 
 async function findUserId(client: Client, email: string): Promise<string> {

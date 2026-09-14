@@ -10,5 +10,5 @@ import { container } from '@/infrastructure/di/container'
 export const loadTreeOverview = cache(async (treeId: string) => {
   const viewer = await currentUserOrNull()
   const result = await container.getTreeOverview().execute({ treeId, viewerId: viewer?.id })
-  return { signedIn: viewer !== null, result }
+  return { viewerId: viewer?.id, signedIn: viewer !== null, result }
 })

@@ -32,11 +32,16 @@ export function prepareTestDatabase(): void {
 
 /** Empties the account table (and, by cascade, everything owned by accounts). */
 export async function clearTestAccounts(): Promise<void> {
+  await withTestClient((client) => client.query('TRUNCATE TABLE "User" CASCADE'))
+}
+
+/** Runs `work` with a connection to the local test database, always closed afterwards. */
+export async function withTestClient<T>(work: (client: Client) => Promise<T>): Promise<T> {
   assertLocalDatabase(TEST_DATABASE_URL)
   const client = new Client({ connectionString: TEST_DATABASE_URL })
   await client.connect()
   try {
-    await client.query('TRUNCATE TABLE "User" CASCADE')
+    return await work(client)
   } finally {
     await client.end()
   }

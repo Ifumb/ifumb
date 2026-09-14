@@ -45,7 +45,7 @@ Avec Docker démarré, deux suites complètent le gate :
 
 ```bash
 pnpm test:integration   # repositories Prisma contre le Postgres de test (migrations rejouées)
-pnpm test:e2e           # parcours navigateur + contrôle axe, serveur de test sur le port 3100
+pnpm test:e2e           # parcours navigateur + contrôle axe, serveur de test sur le port 3923 (E2E_PORT), jamais réutilisé
 ```
 
 Les deux démarrent le conteneur et appliquent les migrations eux-mêmes. Leurs variables de base

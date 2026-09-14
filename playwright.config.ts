@@ -1,9 +1,11 @@
 import { defineConfig, devices } from '@playwright/test'
 import { TEST_DATABASE_URL } from './tests/support/test-database'
 
-// reason: a dedicated port, because port 3000 is commonly taken by another local Next.js app and
-// `reuseExistingServer` would then silently run the suite against the wrong application.
-const E2E_PORT = 3100
+// reason: an uncommon port (override with E2E_PORT) and no server reuse. Another local Next.js app
+// was started on the previous dedicated port, and reusing "whatever answers" ran the whole suite
+// against it; now a taken port makes Playwright fail loudly instead.
+const DEFAULT_E2E_PORT = 3923
+const E2E_PORT = Number(process.env.E2E_PORT ?? DEFAULT_E2E_PORT)
 const BASE_URL = `http://localhost:${E2E_PORT}`
 const BUILD_AND_START_TIMEOUT_MS = 180_000
 
@@ -22,7 +24,7 @@ export default defineConfig({
   webServer: {
     command: `pnpm build && pnpm start --port ${E2E_PORT}`,
     url: BASE_URL,
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: false,
     timeout: BUILD_AND_START_TIMEOUT_MS,
     // Explicit values win over .env.local, so the suite can never reach the shared database.
     env: {

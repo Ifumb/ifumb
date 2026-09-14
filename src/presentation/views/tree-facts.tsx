@@ -1,24 +1,16 @@
 import type { TreeViewModel } from '@/presentation/mappers/tree-view-models'
+import { FactList } from '@/presentation/views/fact-list'
 
-type TreeFactsProps = Readonly<{ tree: TreeViewModel }>
-
-/** Owner, size, visibility and the reader's role, as a description list (text, never colour alone). */
-export function TreeFacts({ tree }: TreeFactsProps) {
-  const facts = [
-    { term: 'Propriétaire', detail: tree.ownerName },
-    { term: 'Membres', detail: tree.memberCountLabel },
-    { term: 'Visibilité', detail: tree.visibilityLabel },
-    { term: 'Votre rôle', detail: tree.roleLabel },
-  ]
-
+/** Owner, size, visibility and the reader's role of a tree. */
+export function TreeFacts({ tree }: Readonly<{ tree: TreeViewModel }>) {
   return (
-    <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm">
-      {facts.map(({ term, detail }) => (
-        <div key={term} className="contents">
-          <dt className="font-medium">{term}</dt>
-          <dd>{detail}</dd>
-        </div>
-      ))}
-    </dl>
+    <FactList
+      facts={[
+        { term: 'Propriétaire', detail: tree.ownerName },
+        { term: 'Membres', detail: tree.memberCountLabel },
+        { term: 'Visibilité', detail: tree.visibilityLabel },
+        { term: 'Votre rôle', detail: tree.roleLabel },
+      ]}
+    />
   )
 }
