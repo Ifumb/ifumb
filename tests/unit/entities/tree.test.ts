@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { TreeVisibility } from '@/core/entities/tree'
+import { canContribute, type TreeVisibility } from '@/core/entities/tree'
 import { DomainError } from '@/core/shared/errors/domain-error'
 import { UserId } from '@/core/shared/value-objects/user-id'
 import { aTree, EDITOR_ID, OWNER_ID, STRANGER_ID } from '@tests/support/tree-fixtures'
@@ -64,5 +64,13 @@ describe('Tree entity', () => {
     const archived = aTree({ archivedAt: new Date('2026-03-01T00:00:00Z') })
 
     expect([aTree().isArchived, archived.isArchived]).toEqual([false, true])
+  })
+
+  it.each([
+    ['OWNER', true],
+    ['EDITOR', true],
+    ['VIEWER', false],
+  ] as const)('tells whether %s contributes to the tree: %s', (role, contributes) => {
+    expect(canContribute(role)).toBe(contributes)
   })
 })

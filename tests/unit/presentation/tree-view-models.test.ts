@@ -33,6 +33,11 @@ describe('tree view models', () => {
       memberCountLabel: '3 membres',
       visibilityLabel: 'Partagé',
       roleLabel: 'Éditeur',
+      historyHref: '/tree/tree_diallo/history',
     })
+  })
+
+  it('offers the history to contributors only', () => {
+    expect(toTreeViewModel({ ...summary, role: 'VIEWER' }).historyHref).toBeNull()
   })
 })

@@ -2,7 +2,7 @@ import 'server-only'
 import type { Family } from '@/core/entities/family'
 import { generationsOf } from '@/core/entities/family-generations'
 import { lineageOf, type LineageDepth } from '@/core/entities/lineage'
-import type { TreeRole } from '@/core/entities/tree'
+import { canContribute, type TreeRole } from '@/core/entities/tree'
 import { err, ok, type Result } from '@/core/shared/result'
 import { MemberId } from '@/core/shared/value-objects/member-id'
 import type { TreeId } from '@/core/shared/value-objects/tree-id'
@@ -43,7 +43,7 @@ const NO_PENDING_CHANGES: ReadonlyMap<string, PendingAction> = new Map()
 
 /** Only those who may propose changes learn which members and unions have one waiting. */
 export function canSeePendingChanges(role: TreeRole): boolean {
-  return role === 'OWNER' || role === 'EDITOR'
+  return canContribute(role)
 }
 
 export class GetFamilyGraphUseCase {

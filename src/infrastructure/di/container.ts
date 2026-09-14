@@ -1,6 +1,7 @@
 import 'server-only'
 import { AuthenticateUserUseCase } from '@/core/use-cases/authenticate-user'
 import { ChangePasswordUseCase } from '@/core/use-cases/change-password'
+import { GetAuditLogUseCase } from '@/core/use-cases/get-audit-log'
 import { ExplorePublicTreesUseCase } from '@/core/use-cases/explore-public-trees'
 import { FindCommonAncestorsUseCase } from '@/core/use-cases/find-common-ancestors'
 import { FindKinshipUseCase } from '@/core/use-cases/find-kinship'
@@ -17,6 +18,7 @@ import { ResetPasswordUseCase } from '@/core/use-cases/reset-password'
 import { requireServerEnv } from '@/infrastructure/config/server-env'
 import { ResendPasswordResetMailer } from '@/infrastructure/mail/resend-password-reset-mailer'
 import { getPrismaClient } from '@/infrastructure/persistence/prisma/client'
+import { PrismaAuditLogReader } from '@/infrastructure/persistence/prisma/prisma-audit-log-reader'
 import { PrismaFamilyReader } from '@/infrastructure/persistence/prisma/prisma-family-reader'
 import { RequestScopedFamilyReader } from '@/infrastructure/persistence/request-scoped-family-reader'
 import { PrismaPublicMemberDirectory } from '@/infrastructure/persistence/prisma/prisma-public-member-directory'
@@ -123,6 +125,13 @@ export const container = {
       }),
   ),
   findKinship: lazy(() => new FindKinshipUseCase({ trees: trees(), families: families() })),
+  getAuditLog: lazy(
+    () =>
+      new GetAuditLogUseCase({
+        trees: trees(),
+        auditLog: new PrismaAuditLogReader(getPrismaClient()),
+      }),
+  ),
   exploreTrees: lazy(
     () =>
       new ExplorePublicTreesUseCase({ catalog: new PrismaPublicTreeCatalog(getPrismaClient()) }),

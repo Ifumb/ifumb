@@ -88,3 +88,8 @@ export class Tree {
 function granted(role: TreeRole): TreeAccess {
   return { kind: 'granted', role }
 }
+
+/** Owners and editors contribute to a tree: they see its pending changes and its history. */
+export function canContribute(role: TreeRole): boolean {
+  return role === 'OWNER' || role === 'EDITOR'
+}

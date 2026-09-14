@@ -1,3 +1,4 @@
+import { canContribute } from '@/core/entities/tree'
 import type { TreeSummary } from '@/core/use-cases/tree-summary'
 import { memberCountLabel, ROLE_LABELS, VISIBILITY_LABELS } from '@/presentation/labels/tree-labels'
 
@@ -11,6 +12,8 @@ export type TreeViewModel = {
   readonly memberCountLabel: string
   readonly visibilityLabel: string
   readonly roleLabel: string
+  /** The tree's history, for its contributors only. */
+  readonly historyHref: `/tree/${string}/history` | null
 }
 
 export function toTreeViewModel(summary: TreeSummary): TreeViewModel {
@@ -23,5 +26,6 @@ export function toTreeViewModel(summary: TreeSummary): TreeViewModel {
     memberCountLabel: memberCountLabel(summary.memberCount),
     visibilityLabel: VISIBILITY_LABELS[summary.visibility],
     roleLabel: ROLE_LABELS[summary.role],
+    historyHref: canContribute(summary.role) ? `/tree/${summary.id}/history` : null,
   }
 }
