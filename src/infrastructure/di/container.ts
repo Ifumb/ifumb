@@ -1,6 +1,7 @@
 import 'server-only'
 import { AuthenticateUserUseCase } from '@/core/use-cases/authenticate-user'
 import { ChangePasswordUseCase } from '@/core/use-cases/change-password'
+import { ExplorePublicTreesUseCase } from '@/core/use-cases/explore-public-trees'
 import { FindCommonAncestorsUseCase } from '@/core/use-cases/find-common-ancestors'
 import { FindKinshipUseCase } from '@/core/use-cases/find-kinship'
 import { GetFamilyGraphUseCase } from '@/core/use-cases/get-family-graph'
@@ -11,12 +12,15 @@ import { ListUserTreesUseCase } from '@/core/use-cases/list-user-trees'
 import { RegisterUserUseCase } from '@/core/use-cases/register-user'
 import { RequestPasswordResetUseCase } from '@/core/use-cases/request-password-reset'
 import type { RateLimiter } from '@/core/use-cases/ports/rate-limiter'
+import { SearchPublicMembersUseCase } from '@/core/use-cases/search-public-members'
 import { ResetPasswordUseCase } from '@/core/use-cases/reset-password'
 import { requireServerEnv } from '@/infrastructure/config/server-env'
 import { ResendPasswordResetMailer } from '@/infrastructure/mail/resend-password-reset-mailer'
 import { getPrismaClient } from '@/infrastructure/persistence/prisma/client'
 import { PrismaFamilyReader } from '@/infrastructure/persistence/prisma/prisma-family-reader'
 import { RequestScopedFamilyReader } from '@/infrastructure/persistence/request-scoped-family-reader'
+import { PrismaPublicMemberDirectory } from '@/infrastructure/persistence/prisma/prisma-public-member-directory'
+import { PrismaPublicTreeCatalog } from '@/infrastructure/persistence/prisma/prisma-public-tree-catalog'
 import { PrismaPendingChangeReader } from '@/infrastructure/persistence/prisma/prisma-pending-change-reader'
 import { PrismaTreeReader } from '@/infrastructure/persistence/prisma/prisma-tree-reader'
 import { PrismaUserRepository } from '@/infrastructure/persistence/prisma/prisma-user-repository'
@@ -119,6 +123,16 @@ export const container = {
       }),
   ),
   findKinship: lazy(() => new FindKinshipUseCase({ trees: trees(), families: families() })),
+  exploreTrees: lazy(
+    () =>
+      new ExplorePublicTreesUseCase({ catalog: new PrismaPublicTreeCatalog(getPrismaClient()) }),
+  ),
+  searchMembers: lazy(
+    () =>
+      new SearchPublicMembersUseCase({
+        directory: new PrismaPublicMemberDirectory(getPrismaClient()),
+      }),
+  ),
   findCommonAncestors: lazy(
     () => new FindCommonAncestorsUseCase({ trees: trees(), families: families() }),
   ),

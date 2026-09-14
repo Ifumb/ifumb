@@ -1,3 +1,4 @@
+import { culturalTokens } from '@/core/entities/cultural-tokens'
 import { DomainError } from '@/core/shared/errors/domain-error'
 import type { MemberId } from '@/core/shared/value-objects/member-id'
 import type { PartialDate } from '@/core/shared/value-objects/partial-date'
@@ -64,12 +65,12 @@ export class Member {
 
   /** Tribes, recorded by the legacy app as one comma-separated text. */
   get tribes(): readonly string[] {
-    return splitList(this.props.tribe)
+    return culturalTokens(this.props.tribe)
   }
 
   /** Ethnicities, recorded by the legacy app as one comma-separated text. */
   get ethnicities(): readonly string[] {
-    return splitList(this.props.ethnicity)
+    return culturalTokens(this.props.ethnicity)
   }
 
   /** The fields a tree search looks into. */
@@ -77,12 +78,4 @@ export class Member {
     const { firstName, lastName, tribe, ethnicity, clan } = this.props
     return [firstName, lastName, tribe, ethnicity, clan].filter((text): text is string => !!text)
   }
-}
-
-function splitList(raw: string | null): readonly string[] {
-  if (raw === null) return []
-  return raw
-    .split(',')
-    .map((item) => item.trim())
-    .filter((item) => item !== '')
 }

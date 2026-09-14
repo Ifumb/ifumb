@@ -16,6 +16,8 @@ export const RATE_LIMIT_POLICIES = {
   passwordResetRequestByIp: { limit: 10, windowMs: HOUR_MS },
   passwordResetByIp: { limit: 10, windowMs: 15 * MINUTE_MS },
   passwordChangeByUser: { limit: 5, windowMs: 15 * MINUTE_MS },
+  // Anonymous public searches: generous for a person, a brake on bulk harvesting of public data.
+  publicSearchByIp: { limit: 60, windowMs: MINUTE_MS },
 } as const satisfies Record<string, RateLimitPolicy>
 
 export type RateLimitPolicyName = keyof typeof RATE_LIMIT_POLICIES

@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { firstValue } from '@/presentation/schemas/search-param-fields'
 
 /** Upper bound of the generations a lineage view may reach, above or below the pivot. */
 export const MAX_LINEAGE_GENERATIONS = 20
@@ -34,8 +35,6 @@ export type GraphViewRequest =
       readonly view: 'lineage' | PairView
       readonly problem: 'MISSING_MEMBER' | 'SAME_MEMBER'
     }
-
-const firstValue = (value: unknown) => (Array.isArray(value) ? value[0] : value)
 
 const memberIdParam = z
   .preprocess(firstValue, z.string().trim().min(1).max(MEMBER_ID_MAX_LENGTH).optional())

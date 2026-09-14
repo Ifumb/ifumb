@@ -4,6 +4,7 @@ import { LinkList } from '@/presentation/views/link-list'
 const ENTRY_LINKS = [
   { href: '/register', label: 'Créer un compte' },
   { href: '/login', label: 'Se connecter' },
+  { href: '/explore', label: 'Explorer les arbres publics' },
 ] as const
 
 export const metadata: Metadata = {

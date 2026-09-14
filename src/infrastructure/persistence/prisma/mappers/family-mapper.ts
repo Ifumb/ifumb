@@ -53,7 +53,7 @@ export function toDomainUnion(row: UnionWithChildrenRow): Union {
  * reason: a stored date in none of the known formats is shown as unknown rather than failing the
  * whole page — legacy data was never validated consistently (see the plan of module 1.1).
  */
-function optionalPartialDate(raw: string | null): PartialDate | null {
+export function optionalPartialDate(raw: string | null): PartialDate | null {
   if (raw === null) return null
   const parsed = PartialDate.parse(raw)
   return parsed.ok ? parsed.value : null
