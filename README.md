@@ -61,6 +61,9 @@ contre l'environnement déployé. La même chaîne tourne en CI (`.github/workfl
   de mot de passe (`src/infrastructure/rate-limiting/`). L'implémentation en mémoire ne vaut que pour
   une instance unique.
 - Sonde de vie : `GET /api/health`.
+- Écritures métier (arbres, puis membres et unions) : refusées tant que `BUSINESS_WRITES_ENABLED`
+  ne vaut pas `true`. À n'activer que sur une base de staging ou de test (ADR 0005) ; les Server
+  Actions et leur protection CSRF sont décrites dans l'ADR 0006.
 - Photos des membres : servies par `next/image` depuis le bucket public Supabase `member-photos`,
   seule origine distante autorisée (`SUPABASE_URL`, lue au build). Sans elle, les initiales
   remplacent les photos.

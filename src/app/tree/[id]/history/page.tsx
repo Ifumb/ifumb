@@ -6,7 +6,7 @@ import type { GetAuditLogError } from '@/core/use-cases/get-audit-log'
 import { toAuditLogViewModel } from '@/presentation/mappers/audit-log-view-models'
 import { parseAuditLogRequest } from '@/presentation/schemas/audit-log-schema'
 import { AuditLogView } from '@/presentation/views/audit-log-view'
-import { ContributorsOnlyView } from '@/presentation/views/contributors-only-view'
+import { RestrictedTreeView } from '@/presentation/views/restricted-tree-view'
 import { PrivateTreeView } from '@/presentation/views/private-tree-view'
 
 type HistoryPageProps = Readonly<{
@@ -41,7 +41,14 @@ function unreadableHistory(treeId: string, error: GetAuditLogError, signedIn: bo
     case 'TREE_NOT_FOUND':
       notFound()
     case 'AUDIT_LOG_FORBIDDEN':
-      return <ContributorsOnlyView treeHref={`/tree/${treeId}`} signedIn={signedIn} />
+      return (
+        <RestrictedTreeView
+          title="Journal réservé"
+          message="Le journal est réservé aux contributeurs de l’arbre : son propriétaire et ses éditeurs."
+          treeHref={`/tree/${treeId}`}
+          signedIn={signedIn}
+        />
+      )
     default:
       return <PrivateTreeView signedIn={signedIn} />
   }

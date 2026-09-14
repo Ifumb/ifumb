@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { ButtonLink } from '@/presentation/components/ui/button-link'
 import type { TreeViewModel } from '@/presentation/mappers/tree-view-models'
 import { TreeFacts } from '@/presentation/views/tree-facts'
 
@@ -18,13 +19,12 @@ export function TreeListView({ trees }: TreeListViewProps) {
   )
 }
 
-// reason: the design system asks for an action in an empty state; creating a tree is ported with
-// the tree mutations (Phase 1), so this empty state has only its message until then.
 function EmptyTreeList() {
   return (
-    <p className="rounded-lg border border-earth-sand bg-white p-8 text-center text-lg">
-      Aucun arbre généalogique pour l’instant.
-    </p>
+    <div className="space-y-4 rounded-lg border border-earth-sand bg-white p-8 text-center">
+      <p className="text-lg">Aucun arbre généalogique pour l’instant.</p>
+      <ButtonLink href="/trees/new">Créer un arbre</ButtonLink>
+    </div>
   )
 }
 

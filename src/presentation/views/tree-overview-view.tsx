@@ -18,16 +18,28 @@ export function TreeOverviewView({ tree, backLink }: TreeOverviewViewProps) {
       </h1>
       {tree.description && <p className="max-w-prose text-lg">{tree.description}</p>}
       <TreeFacts tree={tree} />
-      <ul className="flex flex-wrap gap-x-6 gap-y-2">
-        <li>
-          <Link href={`${tree.href}/graph`}>Voir le graphe</Link>
-        </li>
-        {tree.historyHref && (
-          <li>
-            <Link href={tree.historyHref}>Journal de l’arbre</Link>
-          </li>
-        )}
-      </ul>
+      <TreeLinks tree={tree} />
     </section>
+  )
+}
+
+/** The tree's other pages; editing and history only appear for those allowed to use them. */
+function TreeLinks({ tree }: Readonly<{ tree: TreeViewModel }>) {
+  return (
+    <ul className="flex flex-wrap gap-x-6 gap-y-2">
+      <li>
+        <Link href={`${tree.href}/graph`}>Voir le graphe</Link>
+      </li>
+      {tree.settingsHref && (
+        <li>
+          <Link href={tree.settingsHref}>Modifier l’arbre</Link>
+        </li>
+      )}
+      {tree.historyHref && (
+        <li>
+          <Link href={tree.historyHref}>Journal de l’arbre</Link>
+        </li>
+      )}
+    </ul>
   )
 }

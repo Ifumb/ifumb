@@ -32,6 +32,8 @@ export default defineConfig({
       AUTH_SECRET: 'e2e-only-secret-never-used-outside-the-local-test-server',
       AUTH_TRUST_HOST: 'true',
       APP_URL: BASE_URL,
+      // The test database is disposable: the suite exercises every business write.
+      BUSINESS_WRITES_ENABLED: 'true',
     },
   },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],

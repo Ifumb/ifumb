@@ -1,3 +1,4 @@
+import { FieldError } from '@/presentation/components/forms/field-error'
 import type { FormFieldConfig } from '@/presentation/forms/form-fields'
 
 type TextFieldProps = FormFieldConfig & Readonly<{ error?: string; defaultValue?: string }>
@@ -43,14 +44,5 @@ export function TextField({
       />
       {error && <FieldError id={errorId} message={error} />}
     </div>
-  )
-}
-
-function FieldError({ id, message }: Readonly<{ id: string; message: string }>) {
-  return (
-    <p id={id} className="flex items-start gap-1 text-sm font-medium text-brand-dark">
-      <span aria-hidden="true">⚠</span>
-      {message}
-    </p>
   )
 }

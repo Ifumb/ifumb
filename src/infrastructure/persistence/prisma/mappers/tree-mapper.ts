@@ -43,3 +43,15 @@ export function toTreeListing(row: TreeListingRow): TreeListing {
     invitationRole: row.invitations[0]?.role,
   }
 }
+
+/** The stored row of a tree entity. */
+export function toTreeRow(tree: Tree): Prisma.TreeUncheckedCreateInput {
+  return {
+    id: tree.id.value,
+    ...tree.details,
+    ownerId: tree.ownerId.value,
+    archivedAt: tree.archivedAt,
+    createdAt: tree.createdAt,
+    updatedAt: tree.updatedAt,
+  }
+}

@@ -18,6 +18,8 @@ export const RATE_LIMIT_POLICIES = {
   passwordChangeByUser: { limit: 5, windowMs: 15 * MINUTE_MS },
   // Anonymous public searches: generous for a person, a brake on bulk harvesting of public data.
   publicSearchByIp: { limit: 60, windowMs: MINUTE_MS },
+  // Creating or editing trees: far above normal use, a brake on scripted writes from one account.
+  treeWriteByUser: { limit: 30, windowMs: 15 * MINUTE_MS },
 } as const satisfies Record<string, RateLimitPolicy>
 
 export type RateLimitPolicyName = keyof typeof RATE_LIMIT_POLICIES

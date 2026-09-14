@@ -29,6 +29,36 @@ export type TreeProps = {
   readonly updatedAt: Date
 }
 
+/** The editable details of a tree; limits carried over from the legacy API. */
+export type TreeDetails = {
+  readonly name: string
+  readonly description: string | null
+  readonly visibility: TreeVisibility
+}
+
+/** Details as a form sends them: raw text, trimmed and checked by the entity. */
+export type TreeDetailsInput = {
+  readonly name: string
+  readonly description: string | null
+  readonly visibility: TreeVisibility
+}
+
+export type TreeDetailChange = {
+  readonly field: keyof TreeDetails
+  readonly before: string | null
+  readonly after: string | null
+}
+
+export type TreeStart = TreeDetailsInput & {
+  readonly id: TreeId
+  readonly ownerId: UserId
+  readonly now: Date
+}
+
+export const TREE_NAME_MAX_LENGTH = 200
+export const TREE_DESCRIPTION_MAX_LENGTH = 2000
+const DETAIL_FIELDS: readonly (keyof TreeDetails)[] = ['name', 'description', 'visibility']
+
 const AUTHENTICATION_REQUIRED: TreeAccess = { kind: 'authentication-required' }
 const DENIED: TreeAccess = { kind: 'denied' }
 
@@ -43,6 +73,28 @@ export class Tree {
       throw new DomainError('Tree.name cannot be blank', { treeId: props.id.value })
     }
     return new Tree({ ...props, name })
+  }
+
+  /** A new tree, owned by its creator. */
+  static start({ id, ownerId, now, ...input }: TreeStart): Tree {
+    const details = validDetails(input, id)
+    return new Tree({ id, ownerId, ...details, archivedAt: null, createdAt: now, updatedAt: now })
+  }
+
+  /** The tree with new details, and the fields that actually changed; itself when none did. */
+  revise(input: TreeDetailsInput, now: Date): { tree: Tree; changes: TreeDetailChange[] } {
+    const details = validDetails(input, this.props.id)
+    const changes = DETAIL_FIELDS.flatMap((field) => {
+      const [before, after] = [this.props[field], details[field]]
+      return before === after ? [] : [{ field, before, after }]
+    })
+    if (changes.length === 0) return { tree: this, changes }
+    return { tree: new Tree({ ...this.props, ...details, updatedAt: now }), changes }
+  }
+
+  get details(): TreeDetails {
+    const { name, description, visibility } = this.props
+    return { name, description, visibility }
   }
 
   get id(): TreeId {
@@ -69,6 +121,14 @@ export class Tree {
     return this.props.archivedAt !== null
   }
 
+  get archivedAt(): Date | null {
+    return this.props.archivedAt
+  }
+
+  get createdAt(): Date {
+    return this.props.createdAt
+  }
+
   get updatedAt(): Date {
     return this.props.updatedAt
   }
@@ -92,4 +152,21 @@ function granted(role: TreeRole): TreeAccess {
 /** Owners and editors contribute to a tree: they see its pending changes and its history. */
 export function canContribute(role: TreeRole): boolean {
   return role === 'OWNER' || role === 'EDITOR'
+}
+
+/** Only the owner changes what a tree is: its name, description and visibility. */
+export function canManage(role: TreeRole): boolean {
+  return role === 'OWNER'
+}
+
+function validDetails(input: TreeDetailsInput, id: TreeId): TreeDetails {
+  const name = input.name.trim()
+  const description = input.description?.trim() || null
+  if (name === '' || name.length > TREE_NAME_MAX_LENGTH) {
+    throw new DomainError('Tree.name must hold 1 to 200 characters', { treeId: id.value })
+  }
+  if (description && description.length > TREE_DESCRIPTION_MAX_LENGTH) {
+    throw new DomainError('Tree.description cannot exceed 2000 characters', { treeId: id.value })
+  }
+  return { name, description, visibility: input.visibility }
 }

@@ -2,10 +2,12 @@ import 'server-only'
 import { AuthenticateUserUseCase } from '@/core/use-cases/authenticate-user'
 import { ChangePasswordUseCase } from '@/core/use-cases/change-password'
 import { GetAuditLogUseCase } from '@/core/use-cases/get-audit-log'
+import { CreateTreeUseCase } from '@/core/use-cases/create-tree'
 import { ExplorePublicTreesUseCase } from '@/core/use-cases/explore-public-trees'
 import { FindCommonAncestorsUseCase } from '@/core/use-cases/find-common-ancestors'
 import { FindKinshipUseCase } from '@/core/use-cases/find-kinship'
 import { GetFamilyGraphUseCase } from '@/core/use-cases/get-family-graph'
+import { GetTreeSettingsUseCase } from '@/core/use-cases/get-tree-settings'
 import { GetMemberProfileUseCase } from '@/core/use-cases/get-member-profile'
 import { GetTreeOverviewUseCase } from '@/core/use-cases/get-tree-overview'
 import { ListTreeMembersUseCase } from '@/core/use-cases/list-tree-members'
@@ -14,13 +16,16 @@ import { RegisterUserUseCase } from '@/core/use-cases/register-user'
 import { RequestPasswordResetUseCase } from '@/core/use-cases/request-password-reset'
 import type { RateLimiter } from '@/core/use-cases/ports/rate-limiter'
 import { SearchPublicMembersUseCase } from '@/core/use-cases/search-public-members'
+import { UpdateTreeUseCase } from '@/core/use-cases/update-tree'
 import { ResetPasswordUseCase } from '@/core/use-cases/reset-password'
+import { businessWritesEnabled } from '@/infrastructure/config/business-writes'
 import { requireServerEnv } from '@/infrastructure/config/server-env'
 import { ResendPasswordResetMailer } from '@/infrastructure/mail/resend-password-reset-mailer'
 import { getPrismaClient } from '@/infrastructure/persistence/prisma/client'
 import { PrismaAuditLogReader } from '@/infrastructure/persistence/prisma/prisma-audit-log-reader'
 import { PrismaFamilyReader } from '@/infrastructure/persistence/prisma/prisma-family-reader'
 import { RequestScopedFamilyReader } from '@/infrastructure/persistence/request-scoped-family-reader'
+import { PrismaUnitOfWork } from '@/infrastructure/persistence/prisma/prisma-unit-of-work'
 import { PrismaPublicMemberDirectory } from '@/infrastructure/persistence/prisma/prisma-public-member-directory'
 import { PrismaPublicTreeCatalog } from '@/infrastructure/persistence/prisma/prisma-public-tree-catalog'
 import { PrismaPendingChangeReader } from '@/infrastructure/persistence/prisma/prisma-pending-change-reader'
@@ -53,6 +58,10 @@ const families = lazy(
   () => new RequestScopedFamilyReader(new PrismaFamilyReader(getPrismaClient())),
 )
 const pendingChanges = lazy(() => new PrismaPendingChangeReader(getPrismaClient()))
+const unitOfWork = lazy(
+  () => new PrismaUnitOfWork(getPrismaClient(), { writesEnabled: businessWritesEnabled() }),
+)
+const ids = lazy(() => new UuidIdGenerator())
 const hasher = lazy(() => new BcryptjsPasswordHasher())
 const clock = lazy(() => new SystemClock())
 
@@ -92,7 +101,7 @@ export const container = {
       new RegisterUserUseCase({
         users: users(),
         hasher: hasher(),
-        ids: new UuidIdGenerator(),
+        ids: ids(),
         clock: clock(),
       }),
   ),
@@ -125,6 +134,19 @@ export const container = {
       }),
   ),
   findKinship: lazy(() => new FindKinshipUseCase({ trees: trees(), families: families() })),
+  createTree: lazy(
+    () => new CreateTreeUseCase({ unitOfWork: unitOfWork(), ids: ids(), clock: clock() }),
+  ),
+  updateTree: lazy(
+    () =>
+      new UpdateTreeUseCase({
+        trees: trees(),
+        unitOfWork: unitOfWork(),
+        ids: ids(),
+        clock: clock(),
+      }),
+  ),
+  getTreeSettings: lazy(() => new GetTreeSettingsUseCase({ trees: trees() })),
   getAuditLog: lazy(
     () =>
       new GetAuditLogUseCase({

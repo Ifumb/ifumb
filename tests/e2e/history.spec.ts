@@ -36,8 +36,8 @@ async function seedHistory(page: Page) {
   return { owner, treeId }
 }
 
-const entries = (page: Page) =>
-  page.getByRole('main').getByRole('listitem').filter({ hasText: ' par ' })
+// Entries are the items of the ordered list; their changes are nested lists of their own.
+const entries = (page: Page) => page.getByRole('main').locator('ol > li')
 
 test('the owner reads the history from the tree page, with honest changes', async ({ page }) => {
   const { treeId } = await seedHistory(page)

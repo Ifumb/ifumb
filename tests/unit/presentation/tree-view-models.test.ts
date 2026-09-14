@@ -34,10 +34,17 @@ describe('tree view models', () => {
       visibilityLabel: 'Partagé',
       roleLabel: 'Éditeur',
       historyHref: '/tree/tree_diallo/history',
+      settingsHref: null,
     })
   })
 
   it('offers the history to contributors only', () => {
     expect(toTreeViewModel({ ...summary, role: 'VIEWER' }).historyHref).toBeNull()
+  })
+
+  it('offers the settings to the owner only', () => {
+    expect(toTreeViewModel({ ...summary, role: 'OWNER' }).settingsHref).toBe(
+      '/tree/tree_diallo/settings',
+    )
   })
 })

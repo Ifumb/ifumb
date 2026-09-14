@@ -22,6 +22,14 @@ const SIZE_CLASS_NAMES: Readonly<Record<ButtonSize, string>> = {
 }
 
 /** A native `<button>`: every native attribute (type, aria-*, handlers) passes through. */
+/** The classes of a button, for links that must look like one. */
+export function buttonClassName(
+  variant: ButtonVariant = 'primary',
+  size: ButtonSize = 'md',
+): string {
+  return [BASE_CLASS_NAME, VARIANT_CLASS_NAMES[variant], SIZE_CLASS_NAMES[size]].join(' ')
+}
+
 export function Button({
   variant = 'primary',
   size = 'md',
@@ -30,14 +38,12 @@ export function Button({
   className,
   ...rest
 }: ButtonProps) {
-  const classNames = [BASE_CLASS_NAME, VARIANT_CLASS_NAMES[variant], SIZE_CLASS_NAMES[size]]
-
   return (
     <button
       {...rest}
       disabled={disabled || loading}
       aria-busy={loading || undefined}
-      className={[...classNames, className].filter(Boolean).join(' ')}
+      className={[buttonClassName(variant, size), className].filter(Boolean).join(' ')}
     />
   )
 }
