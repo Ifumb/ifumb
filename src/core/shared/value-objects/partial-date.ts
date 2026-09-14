@@ -39,6 +39,12 @@ export class PartialDate {
     return ok(new PartialDate(year, month, day))
   }
 
+  /** The stored form: `YYYY`, `YYYY-MM` or `YYYY-MM-DD`. */
+  toString(): string {
+    const pad = (value: number | null) => (value === null ? [] : [String(value).padStart(2, '0')])
+    return [String(this.year).padStart(4, '0'), ...pad(this.month), ...pad(this.day)].join('-')
+  }
+
   get precision(): DatePrecision {
     if (this.day !== null) return 'day'
     return this.month !== null ? 'month' : 'year'

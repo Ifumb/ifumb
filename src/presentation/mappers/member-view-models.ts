@@ -29,6 +29,10 @@ export type MemberProfileViewModel = {
   readonly nickname: string | null
   readonly tree: { readonly name: string; readonly href: `/tree/${string}` }
   readonly lineageHref: GraphHref
+  /** The edit form, for those allowed to change this member. */
+  readonly editHref: `${MemberHref}/edit` | null
+  /** The deletion confirmation, for the tree's owner only. */
+  readonly deleteHref: `${MemberHref}/delete` | null
   readonly identity: readonly Fact[]
   readonly datesAndPlaces: readonly Fact[]
   readonly culture: readonly Fact[]
@@ -49,12 +53,15 @@ export function toMemberListItem(treeId: string, member: MemberSummary): MemberL
 }
 
 export function toMemberProfileViewModel(profile: MemberProfile): MemberProfileViewModel {
-  const { member, tree } = profile
+  const { member, tree, permissions } = profile
+  const href = memberLink(tree.id, member).href
   return {
     name: memberLink(tree.id, member).name,
     nickname: member.nickname,
     tree: { name: tree.name, href: `/tree/${tree.id}` },
     lineageHref: lineageHref(tree.id, member.id, DEFAULT_LINEAGE_DEPTH),
+    editHref: permissions.canEdit ? `${href}/edit` : null,
+    deleteHref: permissions.canDelete ? `${href}/delete` : null,
     identity: identityFacts(member),
     datesAndPlaces: datesAndPlacesFacts(member),
     culture: cultureFacts(member),

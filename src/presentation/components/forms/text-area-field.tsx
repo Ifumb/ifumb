@@ -1,4 +1,5 @@
 import { FieldError } from '@/presentation/components/forms/field-error'
+import { FieldHint } from '@/presentation/components/forms/field-hint'
 import { fieldId } from '@/presentation/components/forms/text-field'
 
 type TextAreaFieldProps = Readonly<{
@@ -35,13 +36,5 @@ export function TextAreaField({ name, label, hint, error, defaultValue }: TextAr
       />
       {error && <FieldError id={errorId} message={error} />}
     </div>
-  )
-}
-
-function FieldHint({ id, hint }: Readonly<{ id: string; hint: string }>) {
-  return (
-    <p id={id} className="text-sm text-earth-bark">
-      {hint}
-    </p>
   )
 }

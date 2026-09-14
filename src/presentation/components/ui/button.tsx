@@ -21,7 +21,6 @@ const SIZE_CLASS_NAMES: Readonly<Record<ButtonSize, string>> = {
   md: 'min-h-11 px-4 py-2',
 }
 
-/** A native `<button>`: every native attribute (type, aria-*, handlers) passes through. */
 /** The classes of a button, for links that must look like one. */
 export function buttonClassName(
   variant: ButtonVariant = 'primary',
@@ -30,6 +29,7 @@ export function buttonClassName(
   return [BASE_CLASS_NAME, VARIANT_CLASS_NAMES[variant], SIZE_CLASS_NAMES[size]].join(' ')
 }
 
+/** A native `<button>`: every native attribute (type, aria-*, handlers) passes through. */
 export function Button({
   variant = 'primary',
   size = 'md',

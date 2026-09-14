@@ -34,10 +34,29 @@ function ProfileHeader({ profile }: ProfileProps) {
         {profile.name}
       </h1>
       {profile.nickname && <p>Surnom : « {profile.nickname} »</p>}
-      <p>
-        <Link href={profile.lineageHref}>Voir sa descendance dans le graphe</Link>
-      </p>
+      <ProfileLinks profile={profile} />
     </header>
+  )
+}
+
+/** Editing and deletion only appear for those allowed to use them. */
+function ProfileLinks({ profile }: ProfileProps) {
+  return (
+    <ul className="flex flex-wrap gap-x-6 gap-y-2">
+      <li>
+        <Link href={profile.lineageHref}>Voir sa descendance dans le graphe</Link>
+      </li>
+      {profile.editHref && (
+        <li>
+          <Link href={profile.editHref}>Modifier la fiche</Link>
+        </li>
+      )}
+      {profile.deleteHref && (
+        <li>
+          <Link href={profile.deleteHref}>Supprimer ce membre</Link>
+        </li>
+      )}
+    </ul>
   )
 }
 

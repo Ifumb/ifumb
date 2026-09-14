@@ -35,6 +35,7 @@ describe('tree view models', () => {
       roleLabel: 'Éditeur',
       historyHref: '/tree/tree_diallo/history',
       settingsHref: null,
+      newMemberHref: null,
     })
   })
 
@@ -42,9 +43,10 @@ describe('tree view models', () => {
     expect(toTreeViewModel({ ...summary, role: 'VIEWER' }).historyHref).toBeNull()
   })
 
-  it('offers the settings to the owner only', () => {
-    expect(toTreeViewModel({ ...summary, role: 'OWNER' }).settingsHref).toBe(
-      '/tree/tree_diallo/settings',
-    )
+  it('offers the settings and the member form to the owner only', () => {
+    expect(toTreeViewModel({ ...summary, role: 'OWNER' })).toMatchObject({
+      settingsHref: '/tree/tree_diallo/settings',
+      newMemberHref: '/tree/tree_diallo/members/new',
+    })
   })
 })

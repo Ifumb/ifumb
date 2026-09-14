@@ -1,10 +1,12 @@
 import 'server-only'
 import type { AuditLogWriter } from '@/core/use-cases/ports/audit-log-writer'
+import type { MemberWriter } from '@/core/use-cases/ports/member-writer'
 import type { TreeWriter } from '@/core/use-cases/ports/tree-writer'
 
 /** The writers available inside one transaction. */
 export type UnitOfWorkContext = {
   readonly trees: TreeWriter
+  readonly members: MemberWriter
   readonly auditLog: AuditLogWriter
 }
 

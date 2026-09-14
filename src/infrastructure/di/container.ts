@@ -2,12 +2,15 @@ import 'server-only'
 import { AuthenticateUserUseCase } from '@/core/use-cases/authenticate-user'
 import { ChangePasswordUseCase } from '@/core/use-cases/change-password'
 import { GetAuditLogUseCase } from '@/core/use-cases/get-audit-log'
+import { CreateMemberUseCase } from '@/core/use-cases/create-member'
 import { CreateTreeUseCase } from '@/core/use-cases/create-tree'
+import { DeleteMemberUseCase } from '@/core/use-cases/delete-member'
 import { ExplorePublicTreesUseCase } from '@/core/use-cases/explore-public-trees'
 import { FindCommonAncestorsUseCase } from '@/core/use-cases/find-common-ancestors'
 import { FindKinshipUseCase } from '@/core/use-cases/find-kinship'
 import { GetFamilyGraphUseCase } from '@/core/use-cases/get-family-graph'
 import { GetTreeSettingsUseCase } from '@/core/use-cases/get-tree-settings'
+import { GetMemberFormUseCase } from '@/core/use-cases/get-member-form'
 import { GetMemberProfileUseCase } from '@/core/use-cases/get-member-profile'
 import { GetTreeOverviewUseCase } from '@/core/use-cases/get-tree-overview'
 import { ListTreeMembersUseCase } from '@/core/use-cases/list-tree-members'
@@ -16,6 +19,7 @@ import { RegisterUserUseCase } from '@/core/use-cases/register-user'
 import { RequestPasswordResetUseCase } from '@/core/use-cases/request-password-reset'
 import type { RateLimiter } from '@/core/use-cases/ports/rate-limiter'
 import { SearchPublicMembersUseCase } from '@/core/use-cases/search-public-members'
+import { UpdateMemberUseCase } from '@/core/use-cases/update-member'
 import { UpdateTreeUseCase } from '@/core/use-cases/update-tree'
 import { ResetPasswordUseCase } from '@/core/use-cases/reset-password'
 import { businessWritesEnabled } from '@/infrastructure/config/business-writes'
@@ -62,6 +66,13 @@ const unitOfWork = lazy(
   () => new PrismaUnitOfWork(getPrismaClient(), { writesEnabled: businessWritesEnabled() }),
 )
 const ids = lazy(() => new UuidIdGenerator())
+const memberWrites = () => ({
+  trees: trees(),
+  families: families(),
+  unitOfWork: unitOfWork(),
+  ids: ids(),
+  clock: clock(),
+})
 const hasher = lazy(() => new BcryptjsPasswordHasher())
 const clock = lazy(() => new SystemClock())
 
@@ -147,6 +158,10 @@ export const container = {
       }),
   ),
   getTreeSettings: lazy(() => new GetTreeSettingsUseCase({ trees: trees() })),
+  createMember: lazy(() => new CreateMemberUseCase(memberWrites())),
+  updateMember: lazy(() => new UpdateMemberUseCase(memberWrites())),
+  deleteMember: lazy(() => new DeleteMemberUseCase(memberWrites())),
+  getMemberForm: lazy(() => new GetMemberFormUseCase({ trees: trees(), families: families() })),
   getAuditLog: lazy(
     () =>
       new GetAuditLogUseCase({

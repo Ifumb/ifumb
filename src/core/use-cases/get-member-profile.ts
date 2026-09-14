@@ -1,4 +1,5 @@
 import 'server-only'
+import { canDeleteMember, canEditMember } from '@/core/entities/member-access'
 import { err, ok, type Result } from '@/core/shared/result'
 import { MemberId } from '@/core/shared/value-objects/member-id'
 import {
@@ -26,6 +27,8 @@ export type MemberProfile = {
   readonly member: MemberDetails
   readonly parentUnions: readonly ParentUnionView[]
   readonly partnerUnions: readonly PartnerUnionView[]
+  /** What the viewer may do with this member, so that only those actions are offered. */
+  readonly permissions: { readonly canEdit: boolean; readonly canDelete: boolean }
 }
 
 type GetMemberProfileDeps = {
@@ -42,7 +45,8 @@ export class GetMemberProfileUseCase {
     const access = await readableTree(this.deps.trees, input)
     if (!access.ok) return access
 
-    const { tree } = access.value.listing
+    const { listing, role } = access.value
+    const { tree } = listing
     const family = await this.deps.families.loadFamily(tree.id)
     const memberId = MemberId.fromString(input.memberId)
     const member = family.findMember(memberId)
@@ -53,6 +57,10 @@ export class GetMemberProfileUseCase {
       member: toMemberDetails(member),
       parentUnions: family.parentUnionsOf(memberId).map(toParentUnionView),
       partnerUnions: family.partnerUnionsOf(memberId).map(toPartnerUnionView),
+      permissions: {
+        canEdit: canEditMember(role, member, input.viewerId),
+        canDelete: canDeleteMember(role),
+      },
     })
   }
 }

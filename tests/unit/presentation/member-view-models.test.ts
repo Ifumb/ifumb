@@ -53,6 +53,7 @@ const profile: MemberProfile = {
       ],
     },
   ],
+  permissions: { canEdit: false, canDelete: false },
 }
 
 describe('member view models', () => {
@@ -80,6 +81,21 @@ describe('member view models', () => {
       { term: 'Lieu de naissance', detail: 'Non renseigné' },
       { term: 'Décès', detail: 'Non renseigné' },
     ])
+  })
+
+  it.each([
+    [{ canEdit: false, canDelete: false }, null, null],
+    [{ canEdit: true, canDelete: false }, '/tree/tree_1/member/mbr_awa/edit', null],
+    [
+      { canEdit: true, canDelete: true },
+      '/tree/tree_1/member/mbr_awa/edit',
+      '/tree/tree_1/member/mbr_awa/delete',
+    ],
+  ])('offers only the permitted actions for %o', (permissions, editHref, deleteHref) => {
+    expect(toMemberProfileViewModel({ ...profile, permissions })).toMatchObject({
+      editHref,
+      deleteHref,
+    })
   })
 
   it('describes partner unions with links, dates and filiation', () => {

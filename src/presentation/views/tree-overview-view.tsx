@@ -30,6 +30,19 @@ function TreeLinks({ tree }: Readonly<{ tree: TreeViewModel }>) {
       <li>
         <Link href={`${tree.href}/graph`}>Voir le graphe</Link>
       </li>
+      <ContributorLinks tree={tree} />
+    </ul>
+  )
+}
+
+function ContributorLinks({ tree }: Readonly<{ tree: TreeViewModel }>) {
+  return (
+    <>
+      {tree.newMemberHref && (
+        <li>
+          <Link href={tree.newMemberHref}>Ajouter un membre</Link>
+        </li>
+      )}
       {tree.settingsHref && (
         <li>
           <Link href={tree.settingsHref}>Modifier l’arbre</Link>
@@ -40,6 +53,6 @@ function TreeLinks({ tree }: Readonly<{ tree: TreeViewModel }>) {
           <Link href={tree.historyHref}>Journal de l’arbre</Link>
         </li>
       )}
-    </ul>
+    </>
   )
 }

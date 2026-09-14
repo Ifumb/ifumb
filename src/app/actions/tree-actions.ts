@@ -2,8 +2,8 @@
 import 'server-only'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
+import { whenWritesEnabled, withinWriteBudget } from '@/app/actions/write-guards'
 import { requireCurrentUser } from '@/infrastructure/auth/current-user'
-import { BusinessWritesDisabledError } from '@/infrastructure/config/business-writes'
 import { container } from '@/infrastructure/di/container'
 import {
   TOO_MANY_TREE_WRITES_MESSAGE,
@@ -66,19 +66,9 @@ async function acceptTreeForm(formData: FormData, userId: string): Promise<Accep
   const values = valuesOf(formData)
   const parsed = treeFormSchema.safeParse(values)
   if (!parsed.success) return { ok: false, state: validationFailed(parsed.error, values) }
-  const allowed = await container.allowsAttempt([{ policy: 'treeWriteByUser', subject: userId }])
-  if (!allowed) return { ok: false, state: failed(TOO_MANY_TREE_WRITES_MESSAGE, values) }
+  if (!(await withinWriteBudget(userId)))
+    return { ok: false, state: failed(TOO_MANY_TREE_WRITES_MESSAGE, values) }
   return { ok: true, data: parsed.data }
-}
-
-/** Runs a write; null when this environment has business writes turned off (ADR 0005). */
-async function whenWritesEnabled<T>(write: () => Promise<T>): Promise<T | null> {
-  try {
-    return await write()
-  } catch (error) {
-    if (error instanceof BusinessWritesDisabledError) return null
-    throw error
-  }
 }
 
 function valuesOf(formData: FormData): Record<string, string> {

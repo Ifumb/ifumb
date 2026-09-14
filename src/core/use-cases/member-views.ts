@@ -1,5 +1,5 @@
 import 'server-only'
-import type { Member, MemberProps } from '@/core/entities/member'
+import type { Member, MemberFacts } from '@/core/entities/member'
 import type { ParentUnion, PartnerUnion } from '@/core/entities/family'
 import type { Filiation, UnionType } from '@/core/entities/union'
 import type { PartialDate } from '@/core/shared/value-objects/partial-date'
@@ -20,7 +20,7 @@ export type MemberSummary = PersonReference & {
   readonly ethnicity: string | null
 }
 
-export type MemberDetails = Omit<MemberProps, 'id'> & { readonly id: string }
+export type MemberDetails = Omit<MemberFacts, 'id'> & { readonly id: string }
 
 type UnionFacts = {
   readonly id: string
@@ -56,6 +56,7 @@ export function toMemberSummary(member: Member): MemberSummary {
   }
 }
 
+/** Every fact of a member, without who claimed it: that stays a matter of access rules. */
 export function toMemberDetails(member: Member): MemberDetails {
   return { ...member.details, id: member.id.value }
 }

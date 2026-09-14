@@ -53,4 +53,16 @@ describe('PartialDate', () => {
 
     expect(parsed.ok && Object.isFrozen(parsed.value)).toBe(true)
   })
+
+  it.each(['1954', '1954-03', '1954-03-07'])('writes %s back in its stored form', (raw) => {
+    const parsed = PartialDate.parse(raw)
+
+    expect(parsed.ok && parsed.value.toString()).toBe(raw)
+  })
+
+  it('writes a legacy timestamp as its day', () => {
+    const parsed = PartialDate.parse('1954-03-07 00:00:00')
+
+    expect(parsed.ok && parsed.value.toString()).toBe('1954-03-07')
+  })
 })

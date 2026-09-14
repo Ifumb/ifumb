@@ -31,6 +31,7 @@ export function toDomainMember(row: MemberRow): Member {
     biography: row.biography,
     certainty: row.certainty,
     photoUrl: row.photoUrl,
+    claimedById: row.claimedByUserId,
   })
 }
 

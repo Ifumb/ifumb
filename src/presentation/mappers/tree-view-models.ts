@@ -16,6 +16,8 @@ export type TreeViewModel = {
   readonly historyHref: `/tree/${string}/history` | null
   /** The tree's settings, for its owner only. */
   readonly settingsHref: `/tree/${string}/settings` | null
+  /** The form adding a member, for its owner only. */
+  readonly newMemberHref: `/tree/${string}/members/new` | null
 }
 
 export function toTreeViewModel(summary: TreeSummary): TreeViewModel {
@@ -30,5 +32,6 @@ export function toTreeViewModel(summary: TreeSummary): TreeViewModel {
     roleLabel: ROLE_LABELS[summary.role],
     historyHref: canContribute(summary.role) ? `/tree/${summary.id}/history` : null,
     settingsHref: canManage(summary.role) ? `/tree/${summary.id}/settings` : null,
+    newMemberHref: canManage(summary.role) ? `/tree/${summary.id}/members/new` : null,
   }
 }
