@@ -76,6 +76,15 @@ describe('PrismaFamilyReader', () => {
     expect(family.findMember(MemberId.fromString('mbr_odd'))?.details.birthDate).toBeNull()
   })
 
+  it('reads the photo URL of a member', async () => {
+    const photoUrl = 'https://example.supabase.co/storage/v1/object/public/member-photos/a.jpg'
+    await createMember('tree_family', 'mbr_photo', { photoUrl })
+
+    const family = await reader.loadFamily(TREE)
+
+    expect(family.findMember(MemberId.fromString('mbr_photo'))?.details.photoUrl).toBe(photoUrl)
+  })
+
   it('leaves out the members of another tree', async () => {
     await createMember('tree_family', 'mbr_here')
     await createMember('tree_other', 'mbr_elsewhere')

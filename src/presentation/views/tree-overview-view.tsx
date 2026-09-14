@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import type { TreeViewModel } from '@/presentation/mappers/tree-view-models'
 import { LinkList, type LinkItem } from '@/presentation/views/link-list'
 import { TreeFacts } from '@/presentation/views/tree-facts'
@@ -17,6 +18,9 @@ export function TreeOverviewView({ tree, backLink }: TreeOverviewViewProps) {
       </h1>
       {tree.description && <p className="max-w-prose text-lg">{tree.description}</p>}
       <TreeFacts tree={tree} />
+      <p>
+        <Link href={`${tree.href}/graph`}>Voir le graphe</Link>
+      </p>
     </section>
   )
 }

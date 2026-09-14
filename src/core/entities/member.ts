@@ -21,6 +21,7 @@ export type MemberProps = {
   readonly originRegion: string | null
   readonly biography: string | null
   readonly certainty: Certainty
+  readonly photoUrl: string | null
 }
 
 /**
@@ -61,9 +62,27 @@ export class Member {
     return [this.props.firstName, this.props.lastName].filter(Boolean).join(' ')
   }
 
+  /** Tribes, recorded by the legacy app as one comma-separated text. */
+  get tribes(): readonly string[] {
+    return splitList(this.props.tribe)
+  }
+
+  /** Ethnicities, recorded by the legacy app as one comma-separated text. */
+  get ethnicities(): readonly string[] {
+    return splitList(this.props.ethnicity)
+  }
+
   /** The fields a tree search looks into. */
   get searchableTexts(): readonly string[] {
     const { firstName, lastName, tribe, ethnicity, clan } = this.props
     return [firstName, lastName, tribe, ethnicity, clan].filter((text): text is string => !!text)
   }
+}
+
+function splitList(raw: string | null): readonly string[] {
+  if (raw === null) return []
+  return raw
+    .split(',')
+    .map((item) => item.trim())
+    .filter((item) => item !== '')
 }

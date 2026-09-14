@@ -30,6 +30,7 @@ export function aMember(overrides: Partial<MemberProps> = {}): Member {
     originRegion: null,
     biography: null,
     certainty: 'CONFIRMED',
+    photoUrl: null,
     ...overrides,
   })
 }

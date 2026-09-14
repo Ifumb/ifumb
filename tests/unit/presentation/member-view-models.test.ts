@@ -38,6 +38,7 @@ const profile: MemberProfile = {
     originRegion: null,
     biography: null,
     certainty: 'APPROXIMATE',
+    photoUrl: null,
   },
   parentUnions: [],
   partnerUnions: [

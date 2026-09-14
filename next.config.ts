@@ -1,4 +1,5 @@
 import type { NextConfig } from 'next'
+import { memberPhotoSource } from './src/infrastructure/config/member-photos'
 
 const isDevelopment = process.env.NODE_ENV === 'development'
 
@@ -34,9 +35,19 @@ const securityHeaders = [
   },
 ]
 
+// Member photos stay in the legacy Supabase Storage bucket. `next/image` serves them from this
+// origin (so the CSP keeps `img-src 'self'`), and only fetches that bucket. SUPABASE_URL is read at
+// BUILD time here; without it, photos show as initials.
+const memberPhotos = memberPhotoSource(process.env.SUPABASE_URL)
+
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   typedRoutes: true,
+  images: {
+    remotePatterns: memberPhotos
+      ? [new URL(`${memberPhotos.origin}${memberPhotos.pathPrefix}**`)]
+      : [],
+  },
   async headers() {
     return [{ source: '/(.*)', headers: securityHeaders }]
   },

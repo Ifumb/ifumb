@@ -1,6 +1,7 @@
 import 'server-only'
 import { AuthenticateUserUseCase } from '@/core/use-cases/authenticate-user'
 import { ChangePasswordUseCase } from '@/core/use-cases/change-password'
+import { GetFamilyGraphUseCase } from '@/core/use-cases/get-family-graph'
 import { GetMemberProfileUseCase } from '@/core/use-cases/get-member-profile'
 import { GetTreeOverviewUseCase } from '@/core/use-cases/get-tree-overview'
 import { ListTreeMembersUseCase } from '@/core/use-cases/list-tree-members'
@@ -13,6 +14,7 @@ import { requireServerEnv } from '@/infrastructure/config/server-env'
 import { ResendPasswordResetMailer } from '@/infrastructure/mail/resend-password-reset-mailer'
 import { getPrismaClient } from '@/infrastructure/persistence/prisma/client'
 import { PrismaFamilyReader } from '@/infrastructure/persistence/prisma/prisma-family-reader'
+import { PrismaPendingChangeReader } from '@/infrastructure/persistence/prisma/prisma-pending-change-reader'
 import { PrismaTreeReader } from '@/infrastructure/persistence/prisma/prisma-tree-reader'
 import { PrismaUserRepository } from '@/infrastructure/persistence/prisma/prisma-user-repository'
 import { isAttemptAllowed, type AttemptKey } from '@/infrastructure/rate-limiting/attempt-guard'
@@ -39,6 +41,7 @@ type RateLimiters = Readonly<Record<RateLimitPolicyName, RateLimiter>>
 const users = lazy(() => new PrismaUserRepository(getPrismaClient()))
 const trees = lazy(() => new PrismaTreeReader(getPrismaClient()))
 const families = lazy(() => new PrismaFamilyReader(getPrismaClient()))
+const pendingChanges = lazy(() => new PrismaPendingChangeReader(getPrismaClient()))
 const hasher = lazy(() => new BcryptjsPasswordHasher())
 const clock = lazy(() => new SystemClock())
 
@@ -101,5 +104,13 @@ export const container = {
   listTreeMembers: lazy(() => new ListTreeMembersUseCase({ trees: trees(), families: families() })),
   getMemberProfile: lazy(
     () => new GetMemberProfileUseCase({ trees: trees(), families: families() }),
+  ),
+  getFamilyGraph: lazy(
+    () =>
+      new GetFamilyGraphUseCase({
+        trees: trees(),
+        families: families(),
+        pendingChanges: pendingChanges(),
+      }),
   ),
 }

@@ -61,6 +61,9 @@ contre l'environnement déployé. La même chaîne tourne en CI (`.github/workfl
   de mot de passe (`src/infrastructure/rate-limiting/`). L'implémentation en mémoire ne vaut que pour
   une instance unique.
 - Sonde de vie : `GET /api/health`.
+- Photos des membres : servies par `next/image` depuis le bucket public Supabase `member-photos`,
+  seule origine distante autorisée (`SUPABASE_URL`, lue au build). Sans elle, les initiales
+  remplacent les photos.
 - Les décisions structurantes sont consignées dans `docs/adr/` ; la cible d'hébergement est tranchée
   au cutover (ADR 0004), d'où l'absence volontaire de `Dockerfile` à ce stade.
 

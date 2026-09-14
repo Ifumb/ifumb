@@ -30,6 +30,7 @@ export function toDomainMember(row: MemberRow): Member {
     originRegion: row.originRegion,
     biography: row.biography,
     certainty: row.certainty,
+    photoUrl: row.photoUrl,
   })
 }
 

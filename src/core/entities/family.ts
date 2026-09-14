@@ -23,7 +23,7 @@ export class Family {
 
   private constructor(
     members: readonly Member[],
-    private readonly unions: readonly Union[],
+    private readonly unionList: readonly Union[],
   ) {
     this.membersById = new Map(members.map((member) => [member.id.value, member]))
     Object.freeze(this)
@@ -51,13 +51,17 @@ export class Family {
     )
   }
 
+  unions(): readonly Union[] {
+    return this.unionList
+  }
+
   findMember(memberId: MemberId): Member | null {
     return this.membersById.get(memberId.value) ?? null
   }
 
   /** Unions the member was born or adopted into. */
   parentUnionsOf(memberId: MemberId): ParentUnion[] {
-    return this.unions.flatMap((union) => {
+    return this.unionList.flatMap((union) => {
       const child = union.children.find(({ childId }) => childId.value === memberId.value)
       if (!child) return []
       return [{ union, parents: this.resolve(union.parentIds), filiation: child.filiation }]
@@ -66,7 +70,7 @@ export class Family {
 
   /** Unions in which the member is a parent. */
   partnerUnionsOf(memberId: MemberId): PartnerUnion[] {
-    return this.unions
+    return this.unionList
       .filter((union) => union.hasParent(memberId))
       .map((union) => {
         const partnerId = union.otherParentOf(memberId)

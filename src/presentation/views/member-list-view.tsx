@@ -12,7 +12,7 @@ type MemberListViewProps = Readonly<{
 /** The accessible, text alternative to the family graph: every member, searchable. */
 export function MemberListView({ treeHref, members, query }: MemberListViewProps) {
   return (
-    <section aria-labelledby="members-title" className="space-y-4">
+    <section id="members" aria-labelledby="members-title" className="space-y-4">
       <h2 id="members-title" className="text-2xl font-bold">
         Membres
       </h2>
