@@ -17,6 +17,8 @@ export function formatAuditValue(value: AuditValue, field?: string): string {
   if (value === null || value === '') return NOT_RECORDED
   if (typeof value === 'boolean') return value ? 'Oui' : 'Non'
   if (typeof value === 'number') return String(value)
+  // A photo is stored by its address, which means nothing to a reader of the history.
+  if (field === 'photoUrl') return 'Enregistrée'
   const fieldLabel = field === undefined ? undefined : AUDIT_FIELD_VALUE_LABELS[field]?.[value]
   if (fieldLabel) return fieldLabel
   const date = PartialDate.parse(value)

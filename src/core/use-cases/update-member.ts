@@ -1,6 +1,5 @@
 import 'server-only'
 import type { Member, MemberDetailChange, MemberDetailsInput } from '@/core/entities/member'
-import { canEditMember } from '@/core/entities/member-access'
 import { memberRevisionDiff } from '@/core/entities/member-audit'
 import { datesInOrder } from '@/core/entities/member-dates'
 import { err, ok, type Result } from '@/core/shared/result'
@@ -8,6 +7,7 @@ import type { Clock } from '@/core/use-cases/ports/clock'
 import type { IdGenerator } from '@/core/use-cases/ports/id-generator'
 import type { UnitOfWork } from '@/core/use-cases/ports/unit-of-work'
 import {
+  EDIT_MEMBER_RULE,
   writableMember,
   type MemberReadDeps,
   type MemberTarget,
@@ -24,8 +24,6 @@ type UpdateMemberDeps = MemberReadDeps & {
   readonly clock: Clock
 }
 
-const EDIT_RULE = { allows: canEditMember, refusal: { kind: 'MEMBER_EDIT_FORBIDDEN' } } as const
-
 /** The owner, or the account that claimed the member, revises it; only real changes are stored. */
 export class UpdateMemberUseCase {
   constructor(private readonly deps: UpdateMemberDeps) {}
@@ -34,7 +32,7 @@ export class UpdateMemberUseCase {
     input: UpdateMemberInput,
   ): Promise<Result<{ changed: boolean }, UpdateMemberError>> {
     const { treeId, memberId, viewerId, ...details } = input
-    const target = await writableMember(this.deps, { treeId, memberId, viewerId }, EDIT_RULE)
+    const target = await writableMember(this.deps, { treeId, memberId, viewerId }, EDIT_MEMBER_RULE)
     if (!target.ok) return target
     if (!datesInOrder(details.birthDate, details.deathDate))
       return err({ kind: 'DEATH_BEFORE_BIRTH' })

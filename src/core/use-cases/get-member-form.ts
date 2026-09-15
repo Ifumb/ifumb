@@ -1,8 +1,9 @@
 import 'server-only'
-import { canDeleteMember, canEditMember } from '@/core/entities/member-access'
+import { canDeleteMember } from '@/core/entities/member-access'
 import { ok, type Result } from '@/core/shared/result'
 import { toMemberDetails, type MemberDetails } from '@/core/use-cases/member-views'
 import {
+  EDIT_MEMBER_RULE,
   writableMember,
   type MemberReadDeps,
   type MemberTarget,
@@ -15,14 +16,12 @@ export type MemberForm = {
   readonly canDelete: boolean
 }
 
-const EDIT_RULE = { allows: canEditMember, refusal: { kind: 'MEMBER_EDIT_FORBIDDEN' } } as const
-
 /** The current details of a member, for those allowed to edit it. */
 export class GetMemberFormUseCase {
   constructor(private readonly deps: MemberReadDeps) {}
 
   async execute(target: MemberTarget): Promise<Result<MemberForm, MemberWriteError>> {
-    const found = await writableMember(this.deps, target, EDIT_RULE)
+    const found = await writableMember(this.deps, target, EDIT_MEMBER_RULE)
     if (!found.ok) return found
 
     const { tree, role, member } = found.value

@@ -2,6 +2,7 @@ import { PrismaPg } from '@prisma/adapter-pg'
 import { afterAll, beforeEach, describe, expect, it } from 'vitest'
 import { MemberId } from '@/core/shared/value-objects/member-id'
 import { TreeId } from '@/core/shared/value-objects/tree-id'
+import { ChangeMemberPhotoUseCase } from '@/core/use-cases/change-member-photo'
 import { CreateMemberUseCase } from '@/core/use-cases/create-member'
 import { DeleteMemberUseCase } from '@/core/use-cases/delete-member'
 import { UpdateMemberUseCase } from '@/core/use-cases/update-member'
@@ -11,8 +12,11 @@ import { PrismaTreeReader } from '@/infrastructure/persistence/prisma/prisma-tre
 import { PrismaUnitOfWork } from '@/infrastructure/persistence/prisma/prisma-unit-of-work'
 import { SystemClock } from '@/infrastructure/system/system-clock'
 import { UuidIdGenerator } from '@/infrastructure/system/uuid-id-generator'
+import { InMemoryPhotoStorage } from '@/infrastructure/storage/in-memory-photo-storage'
 import { dateOf } from '@tests/support/family-fixtures'
 import { memberInput } from '@tests/support/member-inputs'
+import { JPEG_BYTES } from '@tests/support/photo-bytes'
+import { FakePhotoProcessor } from '@tests/support/photo-doubles'
 import { TEST_DATABASE_URL } from '@tests/support/test-database'
 
 const prisma = new PrismaClient({ adapter: new PrismaPg(TEST_DATABASE_URL) })
@@ -23,6 +27,7 @@ const deps = {
   unitOfWork: new PrismaUnitOfWork(prisma, { writesEnabled: true }),
   ids: new UuidIdGenerator(),
   clock: new SystemClock(),
+  storage: null,
 }
 const TREE = 'tree_members'
 const byOwner = { treeId: TREE, viewerId: 'usr_owner' }
@@ -115,6 +120,27 @@ describe('member writes through Prisma', () => {
       'usr_claimer',
       'Née au Fouta',
     ])
+  })
+})
+
+describe('member photos through Prisma', () => {
+  it('points the member at its new photo and records the change', async () => {
+    const memberId = await addMember('Awa')
+    const storage = new InMemoryPhotoStorage()
+    const photos = new FakePhotoProcessor()
+
+    const result = await new ChangeMemberPhotoUseCase({ ...deps, storage, photos }).execute({
+      ...byOwner,
+      memberId,
+      photo: JPEG_BYTES,
+    })
+
+    const row = await prisma.member.findUniqueOrThrow({ where: { id: memberId } })
+    const entry = await prisma.auditLog.findFirstOrThrow({
+      where: { targetId: memberId, action: 'MEMBER_UPDATED' },
+    })
+    expect(result.ok && row.photoUrl).toBe(result.ok ? result.value.photoUrl : 'refused')
+    expect(entry.diff).toEqual({ before: { photoUrl: null }, after: { photoUrl: row.photoUrl } })
   })
 })
 

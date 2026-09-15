@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { loadMemberProfile } from '@/app/tree/[id]/member/[memberId]/load-member-profile'
+import { configuredMemberPhotoSource } from '@/infrastructure/config/member-photos'
 import { toMemberProfileViewModel } from '@/presentation/mappers/member-view-models'
 import { MemberProfileView } from '@/presentation/views/member-profile-view'
 import { PrivateTreeView } from '@/presentation/views/private-tree-view'
@@ -30,7 +31,10 @@ export default async function MemberPage({ params }: MemberPageProps) {
   const { id, memberId } = await params
   const { signedIn, result } = await loadMemberProfile(id, memberId)
 
-  if (result.ok) return <MemberProfileView profile={toMemberProfileViewModel(result.value)} />
+  if (result.ok) {
+    const profile = toMemberProfileViewModel(result.value, configuredMemberPhotoSource())
+    return <MemberProfileView profile={profile} />
+  }
   if (NOT_FOUND_KINDS.has(result.error.kind)) notFound()
   return <PrivateTreeView signedIn={signedIn} />
 }

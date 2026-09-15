@@ -66,7 +66,8 @@ contre l'environnement déployé. La même chaîne tourne en CI (`.github/workfl
   Actions et leur protection CSRF sont décrites dans l'ADR 0006.
 - Photos des membres : servies par `next/image` depuis le bucket public Supabase `member-photos`,
   seule origine distante autorisée (`SUPABASE_URL`, lue au build). Sans elle, les initiales
-  remplacent les photos.
+  remplacent les photos. L'envoi passe par le serveur, qui ré-encode la photo sans métadonnées et
+  la stocke avec la clé de service `SUPABASE_SERVICE_ROLE_KEY` (secret, runtime) — ADR 0007.
 - Les décisions structurantes sont consignées dans `docs/adr/` ; la cible d'hébergement est tranchée
   au cutover (ADR 0004), d'où l'absence volontaire de `Dockerfile` à ce stade.
 

@@ -3,6 +3,7 @@ import type { UnionType } from '@/core/entities/union'
 import type { FamilyGraph, GraphMember, GraphUnion } from '@/core/use-cases/family-graph-views'
 import type { PendingAction } from '@/core/use-cases/ports/pending-change-reader'
 import { lifespanLabel } from '@/presentation/formatting/partial-date-format'
+import { photoSource, type PhotoSourcePolicy } from '@/presentation/formatting/photo-source'
 import type {
   GraphEdge,
   MemberNodeData,
@@ -12,9 +13,6 @@ import type {
 import { UNION_TYPE_LABELS } from '@/presentation/labels/member-labels'
 import { relativeGenerationLabel } from '@/presentation/mappers/lineage-view-models'
 import { memberLink, unionHref } from '@/presentation/mappers/union-view-models'
-
-/** Where member photos may come from; any other URL falls back to the initial. */
-export type PhotoSourcePolicy = { readonly origin: string; readonly pathPrefix: string }
 
 export type UnlaidNode = { readonly id: string; readonly data: MemberNodeData | UnionNodeData }
 
@@ -115,12 +113,4 @@ export function pendingBadge(action: PendingAction | null): PendingBadge | null 
   return action === 'DELETE'
     ? { label: 'Suppression en attente', tone: 'deletion' }
     : { label: 'En attente', tone: 'pending' }
-}
-
-/** The photo URL when it points into the allowed bucket, so `next/image` accepts it. */
-export function photoSource(url: string | null, policy: PhotoSourcePolicy | null): string | null {
-  if (url === null || policy === null || !URL.canParse(url)) return null
-  const parsed = new URL(url)
-  const allowed = parsed.origin === policy.origin && parsed.pathname.startsWith(policy.pathPrefix)
-  return allowed ? parsed.href : null
 }

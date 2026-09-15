@@ -20,6 +20,8 @@ export const RATE_LIMIT_POLICIES = {
   publicSearchByIp: { limit: 60, windowMs: MINUTE_MS },
   // Creating or editing trees: far above normal use, a brake on scripted writes from one account.
   treeWriteByUser: { limit: 30, windowMs: 15 * MINUTE_MS },
+  // Each photo is decoded and re-encoded on the server: a tighter budget than other writes.
+  photoUploadByUser: { limit: 10, windowMs: HOUR_MS },
 } as const satisfies Record<string, RateLimitPolicy>
 
 export type RateLimitPolicyName = keyof typeof RATE_LIMIT_POLICIES

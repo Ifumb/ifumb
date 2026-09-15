@@ -77,6 +77,7 @@ export const AUDIT_FIELD_LABELS: Readonly<Record<string, string>> = {
   ethnicity: 'Ethnie',
   originRegion: 'Région d’origine',
   biography: 'Biographie',
+  photoUrl: 'Photo',
   certainty: 'Certitude',
   name: 'Nom de l’arbre',
   description: 'Description',

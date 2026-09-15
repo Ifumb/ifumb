@@ -1,4 +1,5 @@
 import 'server-only'
+import type { PhotoSourcePolicy } from '@/presentation/formatting/photo-source'
 import dagre from '@dagrejs/dagre'
 import type { FamilyGraph } from '@/core/use-cases/family-graph-views'
 import type {
@@ -7,11 +8,7 @@ import type {
   PositionedNode,
 } from '@/presentation/graph/family-graph-types'
 import { MEMBER_NODE_SIZE, UNION_NODE_SIZE } from '@/presentation/graph/graph-dimensions'
-import {
-  toUnlaidGraph,
-  type PhotoSourcePolicy,
-  type UnlaidNode,
-} from '@/presentation/graph/family-graph-view-models'
+import { toUnlaidGraph, type UnlaidNode } from '@/presentation/graph/family-graph-view-models'
 
 // Spacing carried over from the legacy layout (top to bottom, generations as ranks).
 const LAYOUT_OPTIONS = { rankdir: 'TB', nodesep: 50, ranksep: 60, marginx: 40, marginy: 40 }

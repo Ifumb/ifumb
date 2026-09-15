@@ -104,6 +104,7 @@ describe('member view models', () => {
         editHref,
         deleteHref,
         newUnionHref,
+        photoHref: editHref && '/tree/tree_1/member/mbr_awa/photo',
       })
     },
   )

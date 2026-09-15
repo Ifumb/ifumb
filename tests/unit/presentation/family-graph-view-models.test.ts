@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
+import { photoSource } from '@/presentation/formatting/photo-source'
 import type { FamilyGraph, GraphMember } from '@/core/use-cases/family-graph-views'
 import { memberPhotoSource } from '@/infrastructure/config/member-photos'
 import {
   pendingBadge,
-  photoSource,
   toMemberNodeData,
   toUnlaidGraph,
 } from '@/presentation/graph/family-graph-view-models'

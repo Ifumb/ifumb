@@ -25,6 +25,8 @@ import { ResetPasswordUseCase } from '@/core/use-cases/reset-password'
 import { businessWritesEnabled } from '@/infrastructure/config/business-writes'
 import { requireServerEnv } from '@/infrastructure/config/server-env'
 import { lazy } from '@/infrastructure/di/lazy'
+import { configuredPhotoStorage, photoUseCases } from '@/infrastructure/di/photo-use-cases'
+import { SharpPhotoProcessor } from '@/infrastructure/images/sharp-photo-processor'
 import { unionUseCases, type TreeContentWriteDeps } from '@/infrastructure/di/union-use-cases'
 import { ResendPasswordResetMailer } from '@/infrastructure/mail/resend-password-reset-mailer'
 import { getPrismaClient } from '@/infrastructure/persistence/prisma/client'
@@ -68,7 +70,9 @@ const treeContentWrites = (): TreeContentWriteDeps => ({
   unitOfWork: unitOfWork(),
   ids: ids(),
   clock: clock(),
+  storage: configuredPhotoStorage(),
 })
+const photoProcessor = lazy(() => new SharpPhotoProcessor())
 const hasher = lazy(() => new BcryptjsPasswordHasher())
 const clock = lazy(() => new SystemClock())
 
@@ -159,6 +163,7 @@ export const container = {
   deleteMember: lazy(() => new DeleteMemberUseCase(treeContentWrites())),
   getMemberForm: lazy(() => new GetMemberFormUseCase({ trees: trees(), families: families() })),
   ...unionUseCases(treeContentWrites),
+  ...photoUseCases(() => ({ ...treeContentWrites(), photos: photoProcessor() })),
   getAuditLog: lazy(
     () =>
       new GetAuditLogUseCase({

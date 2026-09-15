@@ -26,3 +26,8 @@ export function memberRevisionDiff(changes: readonly MemberDetailChange[]): Audi
 export function memberDeletionDiff(member: Member): AuditDiff {
   return { before: filledValues(member), after: null }
 }
+
+/** A photo is recorded by its URL; the history shows whether one is set, never the address. */
+export function memberPhotoDiff(before: string | null, after: string | null): AuditDiff {
+  return { before: { photoUrl: before }, after: { photoUrl: after } }
+}

@@ -4,6 +4,8 @@ import type { MemberProfile } from '@/core/use-cases/get-member-profile'
 import { formatPartialDate, lifespanLabel } from '@/presentation/formatting/partial-date-format'
 import { lineageHref, type GraphHref } from '@/presentation/graph/graph-view-urls'
 import type { Fact } from '@/presentation/mappers/fact'
+import { toPortrait, type PortraitViewModel } from '@/presentation/mappers/portrait'
+import type { PhotoSourcePolicy } from '@/presentation/formatting/photo-source'
 import { CERTAINTY_LABELS, GENDER_LABELS, NOT_RECORDED } from '@/presentation/labels/member-labels'
 import {
   memberLink,
@@ -33,6 +35,9 @@ export type MemberProfileViewModel = {
   readonly editHref: `${MemberHref}/edit` | null
   /** The deletion confirmation, for the tree's owner only. */
   readonly deleteHref: `${MemberHref}/delete` | null
+  /** The photo page, for those allowed to change this member. */
+  readonly photoHref: `${MemberHref}/photo` | null
+  readonly portrait: PortraitViewModel
   /** The union form with this member as first parent, for the owner only. */
   readonly newUnionHref: `/tree/${string}/unions/new?parent=${string}` | null
   readonly identity: readonly Fact[]
@@ -54,25 +59,37 @@ export function toMemberListItem(treeId: string, member: MemberSummary): MemberL
   }
 }
 
-export function toMemberProfileViewModel(profile: MemberProfile): MemberProfileViewModel {
-  const { member, tree, permissions } = profile
-  const href = memberLink(tree.id, member).href
+export function toMemberProfileViewModel(
+  profile: MemberProfile,
+  photos: PhotoSourcePolicy | null = null,
+): MemberProfileViewModel {
+  const { member, tree } = profile
   return {
     name: memberLink(tree.id, member).name,
     nickname: member.nickname,
     tree: { name: tree.name, href: `/tree/${tree.id}` },
     lineageHref: lineageHref(tree.id, member.id, DEFAULT_LINEAGE_DEPTH),
-    editHref: permissions.canEdit ? `${href}/edit` : null,
-    deleteHref: permissions.canDelete ? `${href}/delete` : null,
-    newUnionHref: permissions.canManageUnions
-      ? `/tree/${tree.id}/unions/new?parent=${encodeURIComponent(member.id)}`
-      : null,
+    ...actionLinks(profile),
+    portrait: toPortrait(member, member.photoUrl, photos),
     identity: identityFacts(member),
     datesAndPlaces: datesAndPlacesFacts(member),
     culture: cultureFacts(member),
     biography: member.biography,
     parentUnions: profile.parentUnions.map((union) => toParentUnionViewModel(tree.id, union)),
     partnerUnions: profile.partnerUnions.map((union) => toPartnerUnionViewModel(tree.id, union)),
+  }
+}
+
+/** The pages acting on this member, each only for those allowed to use it. */
+function actionLinks({ member, tree, permissions }: MemberProfile) {
+  const href = memberLink(tree.id, member).href
+  return {
+    editHref: permissions.canEdit ? (`${href}/edit` as const) : null,
+    deleteHref: permissions.canDelete ? (`${href}/delete` as const) : null,
+    photoHref: permissions.canEdit ? (`${href}/photo` as const) : null,
+    newUnionHref: permissions.canManageUnions
+      ? (`/tree/${tree.id}/unions/new?parent=${encodeURIComponent(member.id)}` as const)
+      : null,
   }
 }
 

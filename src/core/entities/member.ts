@@ -125,6 +125,15 @@ export class Member {
     return { member: changes.length === 0 ? this : next, changes }
   }
 
+  /** The member with another photo, or none, and whether it changed; itself when it did not. */
+  withPhoto(photoUrl: string | null): { member: Member; changed: boolean } {
+    if (photoUrl === this.props.photoUrl) return { member: this, changed: false }
+    return {
+      member: new Member({ ...this.props, photoUrl, claimedById: this.claimedById }),
+      changed: true,
+    }
+  }
+
   /** Every recorded fact, read-only. */
   get details(): MemberFacts {
     return this.props

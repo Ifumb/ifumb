@@ -13,6 +13,7 @@ type AddedUnionChild = {
   readonly childId: string
   readonly filiation: Filiation
 }
+type UpdatedPhoto = { readonly memberId: string; readonly photoUrl: string | null }
 type RemovedUnionChild = { readonly unionId: string; readonly childId: string }
 
 type Writes = {
@@ -21,6 +22,7 @@ type Writes = {
   insertedMembers: InsertedMember[]
   updatedMembers: Member[]
   deletedMemberIds: string[]
+  updatedPhotos: UpdatedPhoto[]
   insertedUnions: InsertedUnion[]
   updatedUnions: Union[]
   deletedUnionIds: string[]
@@ -35,6 +37,7 @@ const noWrites = (): Writes => ({
   insertedMembers: [],
   updatedMembers: [],
   deletedMemberIds: [],
+  updatedPhotos: [],
   insertedUnions: [],
   updatedUnions: [],
   deletedUnionIds: [],
@@ -66,6 +69,9 @@ export class InMemoryUnitOfWork implements UnitOfWork, Readonly<Writes> {
   }
   get deletedMemberIds() {
     return this.committed.deletedMemberIds
+  }
+  get updatedPhotos() {
+    return this.committed.updatedPhotos
   }
   get insertedUnions() {
     return this.committed.insertedUnions
@@ -111,6 +117,8 @@ export class InMemoryUnitOfWork implements UnitOfWork, Readonly<Writes> {
         insert: async (treeId, member) => void staged.insertedMembers.push({ treeId, member }),
         update: async (member) => void staged.updatedMembers.push(member),
         delete: async (memberId) => void staged.deletedMemberIds.push(memberId.value),
+        updatePhoto: async (memberId, photoUrl) =>
+          void staged.updatedPhotos.push({ memberId: memberId.value, photoUrl }),
       },
       unions: unionWriterFor(staged),
       auditLog: { record: async (entry) => this.stageRecord(staged, entry) },

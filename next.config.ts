@@ -43,6 +43,10 @@ const memberPhotos = memberPhotoSource(process.env.SUPABASE_URL)
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   typedRoutes: true,
+  experimental: {
+    // A member photo may weigh 5 MB; the form around it adds a few kilobytes (ADR 0007).
+    serverActions: { bodySizeLimit: '6mb' },
+  },
   images: {
     remotePatterns: memberPhotos
       ? [new URL(`${memberPhotos.origin}${memberPhotos.pathPrefix}**`)]

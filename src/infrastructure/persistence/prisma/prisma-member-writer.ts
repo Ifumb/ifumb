@@ -17,6 +17,10 @@ export class PrismaMemberWriter implements MemberWriter {
     await this.db.member.update({ where: { id: member.id.value }, data: detailColumns(member) })
   }
 
+  async updatePhoto(memberId: MemberId, photoUrl: string | null): Promise<void> {
+    await this.db.member.update({ where: { id: memberId.value }, data: { photoUrl } })
+  }
+
   /**
    * reason: the database refuses to delete a member still listed as a child (UnionChild.childId is
    * ON DELETE RESTRICT), which made the legacy deletion fail with a 500. Those links go first, in

@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { MemberPortrait } from '@/presentation/components/ui/member-portrait'
 import type { Fact } from '@/presentation/mappers/fact'
 import type { MemberProfileViewModel } from '@/presentation/mappers/member-view-models'
 import { FactList } from '@/presentation/views/fact-list'
@@ -30,9 +31,12 @@ function ProfileHeader({ profile }: ProfileProps) {
       <p>
         <Link href={profile.tree.href}>Retour à {profile.tree.name}</Link>
       </p>
-      <h1 id="member-title" className="text-3xl font-bold">
-        {profile.name}
-      </h1>
+      <div className="flex flex-wrap items-center gap-4">
+        <MemberPortrait portrait={profile.portrait} size="md" priority />
+        <h1 id="member-title" className="text-3xl font-bold">
+          {profile.name}
+        </h1>
+      </div>
       {profile.nickname && <p>Surnom : « {profile.nickname} »</p>}
       <ProfileLinks profile={profile} />
     </header>
@@ -44,6 +48,7 @@ function ProfileLinks({ profile }: ProfileProps) {
   const links = [
     { href: profile.lineageHref, label: 'Voir sa descendance dans le graphe' },
     ...optionalLink(profile.editHref, 'Modifier la fiche'),
+    ...optionalLink(profile.photoHref, 'Changer la photo'),
     ...optionalLink(profile.deleteHref, 'Supprimer ce membre'),
     ...optionalLink(profile.newUnionHref, 'Ajouter une union'),
   ]

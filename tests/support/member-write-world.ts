@@ -2,9 +2,14 @@ import { TreeId } from '@/core/shared/value-objects/tree-id'
 import { InMemoryFamilyReader } from '@/infrastructure/persistence/in-memory/in-memory-family-reader'
 import { InMemoryTreeReader } from '@/infrastructure/persistence/in-memory/in-memory-tree-reader'
 import { InMemoryUnitOfWork } from '@/infrastructure/persistence/in-memory/in-memory-unit-of-work'
+import { InMemoryPhotoStorage } from '@/infrastructure/storage/in-memory-photo-storage'
 import { FixedClock, SequentialIdGenerator } from '@tests/support/fakes'
+import { FakePhotoProcessor } from '@tests/support/photo-doubles'
 import { aMember, dateOf, memberId } from '@tests/support/family-fixtures'
 import { aStoredTree, aTree, EDITOR_ID } from '@tests/support/tree-fixtures'
+
+/** Awa's current photo, stored before the tests run. */
+export const AWA_PHOTO_URL = `${InMemoryPhotoStorage.PUBLIC_BASE}tree_diallo/mbr_awa.jpg`
 
 export const MEMBER_WRITES_NOW = new Date('2026-09-14T10:00:00Z')
 export const CLAIMER_ID = 'usr_claimer'
@@ -26,16 +31,21 @@ export function memberWriteWorld() {
   )
   const families = seededFamilies()
   const unitOfWork = new InMemoryUnitOfWork()
+  const storage = new InMemoryPhotoStorage()
+  const photos = new FakePhotoProcessor()
   const deps = () => ({
-    ...{ trees, families, unitOfWork },
+    ...{ trees, families, unitOfWork, storage, photos },
     ...{ ids: new SequentialIdGenerator(), clock: new FixedClock(MEMBER_WRITES_NOW) },
   })
-  return { trees, families, unitOfWork, deps }
+  return { trees, families, unitOfWork, storage, photos, deps }
 }
 
 function seededFamilies(): InMemoryFamilyReader {
   const families = new InMemoryFamilyReader()
-  const awa = { id: memberId('mbr_awa'), tribe: 'Peul', birthDate: dateOf('1932-05') }
+  const awa = {
+    ...{ id: memberId('mbr_awa'), tribe: 'Peul', birthDate: dateOf('1932-05') },
+    photoUrl: AWA_PHOTO_URL,
+  }
   families.seed('tree_diallo', {
     members: [
       aMember({ ...awa, claimedById: CLAIMER_ID }),

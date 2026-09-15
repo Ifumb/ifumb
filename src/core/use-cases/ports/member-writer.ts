@@ -7,6 +7,8 @@ export interface MemberWriter {
   insert(treeId: string, member: Member): Promise<void>
   /** Stores the editable details of an existing member. */
   update(member: Member): Promise<void>
+  /** Points the member at another photo, or at none. */
+  updatePhoto(memberId: MemberId, photoUrl: string | null): Promise<void>
   /** Removes the member and its links as a child; unions keep their other people. */
   delete(memberId: MemberId): Promise<void>
 }

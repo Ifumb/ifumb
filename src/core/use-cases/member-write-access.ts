@@ -1,5 +1,6 @@
 import 'server-only'
 import type { Member } from '@/core/entities/member'
+import { canEditMember } from '@/core/entities/member-access'
 import type { Tree, TreeRole } from '@/core/entities/tree'
 import { err, ok, type Result } from '@/core/shared/result'
 import { MemberId } from '@/core/shared/value-objects/member-id'
@@ -28,6 +29,12 @@ export type WritableMember = {
 export type MemberReadDeps = { readonly trees: TreeReader; readonly families: FamilyReader }
 
 type MemberRule = (role: TreeRole, member: Member, viewerId: string) => boolean
+
+/** The owner edits any member; an account edits the member it claimed. */
+export const EDIT_MEMBER_RULE = {
+  allows: canEditMember,
+  refusal: { kind: 'MEMBER_EDIT_FORBIDDEN' },
+} as const
 
 /** A member of a readable tree that the rule lets the viewer act on; the tree is checked first. */
 export async function writableMember(
