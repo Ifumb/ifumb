@@ -78,9 +78,9 @@ describe('member deletion and permissions', () => {
 
   describe('member profile permissions', () => {
     it.each([
-      [OWNER_ID, { canEdit: true, canDelete: true }],
-      [CLAIMER_ID, { canEdit: true, canDelete: false }],
-      [EDITOR_ID, { canEdit: false, canDelete: false }],
+      [OWNER_ID, { canEdit: true, canDelete: true, canManageUnions: true }],
+      [CLAIMER_ID, { canEdit: true, canDelete: false, canManageUnions: false }],
+      [EDITOR_ID, { canEdit: false, canDelete: false, canManageUnions: false }],
     ])('gives %s the actions they may take', async (viewerId, permissions) => {
       const result = await new GetMemberProfileUseCase({ trees, families }).execute({
         treeId: 'tree_diallo',

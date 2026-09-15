@@ -1,5 +1,5 @@
 import type { Gender } from '@/core/entities/member'
-import type { MemberHref } from '@/presentation/mappers/union-view-models'
+import type { MemberHref, UnionHref } from '@/presentation/mappers/union-view-models'
 
 /** A marker telling owners and editors that a change waits for review. */
 export type PendingBadge = {
@@ -28,6 +28,10 @@ export type MemberNodeData = {
 export type UnionNodeData = {
   readonly kind: 'union'
   readonly typeLabel: string
+  /** The union's own page, which the node links to. */
+  readonly href: UnionHref
+  /** The accessible name of that link: the type and the parents' names. */
+  readonly label: string
   readonly icon: 'heart' | 'rings' | 'branch'
   readonly pending: PendingBadge | null
 }

@@ -1,5 +1,8 @@
 import 'server-only'
+import type { Member } from '@/core/entities/member'
 import { canDeleteMember, canEditMember } from '@/core/entities/member-access'
+import type { TreeRole } from '@/core/entities/tree'
+import { canManageUnions } from '@/core/entities/union-access'
 import { err, ok, type Result } from '@/core/shared/result'
 import { MemberId } from '@/core/shared/value-objects/member-id'
 import {
@@ -28,7 +31,11 @@ export type MemberProfile = {
   readonly parentUnions: readonly ParentUnionView[]
   readonly partnerUnions: readonly PartnerUnionView[]
   /** What the viewer may do with this member, so that only those actions are offered. */
-  readonly permissions: { readonly canEdit: boolean; readonly canDelete: boolean }
+  readonly permissions: {
+    readonly canEdit: boolean
+    readonly canDelete: boolean
+    readonly canManageUnions: boolean
+  }
 }
 
 type GetMemberProfileDeps = {
@@ -57,10 +64,15 @@ export class GetMemberProfileUseCase {
       member: toMemberDetails(member),
       parentUnions: family.parentUnionsOf(memberId).map(toParentUnionView),
       partnerUnions: family.partnerUnionsOf(memberId).map(toPartnerUnionView),
-      permissions: {
-        canEdit: canEditMember(role, member, input.viewerId),
-        canDelete: canDeleteMember(role),
-      },
+      permissions: permissionsOf(role, member, input.viewerId),
     })
+  }
+}
+
+function permissionsOf(role: TreeRole, member: Member, viewerId: string | undefined) {
+  return {
+    canEdit: canEditMember(role, member, viewerId),
+    canDelete: canDeleteMember(role),
+    canManageUnions: canManageUnions(role),
   }
 }

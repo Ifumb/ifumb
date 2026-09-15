@@ -36,6 +36,7 @@ describe('tree view models', () => {
       historyHref: '/tree/tree_diallo/history',
       settingsHref: null,
       newMemberHref: null,
+      newUnionHref: null,
     })
   })
 
@@ -47,6 +48,7 @@ describe('tree view models', () => {
     expect(toTreeViewModel({ ...summary, role: 'OWNER' })).toMatchObject({
       settingsHref: '/tree/tree_diallo/settings',
       newMemberHref: '/tree/tree_diallo/members/new',
+      newUnionHref: '/tree/tree_diallo/unions/new',
     })
   })
 })

@@ -55,6 +55,10 @@ export class Family {
     return this.unionList
   }
 
+  findUnion(unionId: string): Union | null {
+    return this.unionList.find((union) => union.id === unionId) ?? null
+  }
+
   findMember(memberId: MemberId): Member | null {
     return this.membersById.get(memberId.value) ?? null
   }

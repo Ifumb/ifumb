@@ -121,6 +121,8 @@ describe('toUnlaidGraph', () => {
     expect(nodes[2]?.data).toEqual({
       kind: 'union',
       typeLabel: 'Union libre',
+      href: '/tree/tree_1/union/uni_1',
+      label: 'Union libre : awa Diallo',
       icon: 'rings',
       pending: { label: 'Suppression en attente', tone: 'deletion' },
     })

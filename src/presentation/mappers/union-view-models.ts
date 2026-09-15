@@ -9,10 +9,13 @@ import { FILIATION_LABELS, UNION_TYPE_LABELS } from '@/presentation/labels/membe
 
 export type MemberHref = `/tree/${string}/member/${string}`
 
+export type UnionHref = `/tree/${string}/union/${string}`
+
 export type MemberLink = { readonly href: MemberHref; readonly name: string }
 
 export type ParentUnionViewModel = {
   readonly id: string
+  readonly href: UnionHref
   readonly typeLabel: string
   readonly datesLabel: string | null
   readonly parents: readonly MemberLink[]
@@ -21,10 +24,15 @@ export type ParentUnionViewModel = {
 
 export type PartnerUnionViewModel = {
   readonly id: string
+  readonly href: UnionHref
   readonly typeLabel: string
   readonly datesLabel: string | null
   readonly partner: MemberLink | null
   readonly children: readonly (MemberLink & { readonly filiationLabel: string })[]
+}
+
+export function unionHref(treeId: string, unionId: string): UnionHref {
+  return `/tree/${treeId}/union/${unionId}`
 }
 
 export function memberLink(treeId: string, person: PersonReference): MemberLink {
@@ -40,6 +48,7 @@ export function toParentUnionViewModel(
 ): ParentUnionViewModel {
   return {
     id: union.id,
+    href: unionHref(treeId, union.id),
     typeLabel: UNION_TYPE_LABELS[union.type],
     datesLabel: unionDatesLabel(union.startDate, union.endDate),
     parents: union.parents.map((parent) => memberLink(treeId, parent)),
@@ -53,6 +62,7 @@ export function toPartnerUnionViewModel(
 ): PartnerUnionViewModel {
   return {
     id: union.id,
+    href: unionHref(treeId, union.id),
     typeLabel: UNION_TYPE_LABELS[union.type],
     datesLabel: unionDatesLabel(union.startDate, union.endDate),
     partner: union.partner ? memberLink(treeId, union.partner) : null,

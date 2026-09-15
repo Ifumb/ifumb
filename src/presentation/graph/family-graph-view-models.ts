@@ -11,7 +11,7 @@ import type {
 } from '@/presentation/graph/family-graph-types'
 import { UNION_TYPE_LABELS } from '@/presentation/labels/member-labels'
 import { relativeGenerationLabel } from '@/presentation/mappers/lineage-view-models'
-import { memberLink } from '@/presentation/mappers/union-view-models'
+import { memberLink, unionHref } from '@/presentation/mappers/union-view-models'
 
 /** Where member photos may come from; any other URL falls back to the initial. */
 export type PhotoSourcePolicy = { readonly origin: string; readonly pathPrefix: string }
@@ -41,7 +41,10 @@ export function toUnlaidGraph(graph: FamilyGraph, photos: PhotoSourcePolicy | nu
         id: memberNodeId(member.id),
         data: toMemberNodeData(treeId, member, photos, pivotId),
       })),
-      ...graph.unions.map((union) => ({ id: unionNodeId(union.id), data: toUnionNodeData(union) })),
+      ...graph.unions.map((union) => ({
+        id: unionNodeId(union.id),
+        data: toUnionNodeData(graph, union),
+      })),
     ],
     edges: graph.unions.flatMap(unionEdges),
   }
@@ -75,10 +78,17 @@ export function toMemberNodeData(
   }
 }
 
-function toUnionNodeData(union: GraphUnion): UnionNodeData {
+function toUnionNodeData(graph: FamilyGraph, union: GraphUnion): UnionNodeData {
+  const typeLabel = UNION_TYPE_LABELS[union.type]
+  const names = union.parentIds.flatMap((id) => {
+    const parent = graph.members.find((member) => member.id === id)
+    return parent ? [memberLink(graph.tree.id, parent).name] : []
+  })
   return {
     kind: 'union',
-    typeLabel: UNION_TYPE_LABELS[union.type],
+    typeLabel,
+    href: unionHref(graph.tree.id, union.id),
+    label: names.length > 0 ? `${typeLabel} : ${names.join(' et ')}` : typeLabel,
     icon: UNION_ICONS[union.type],
     pending: pendingBadge(union.pendingAction),
   }

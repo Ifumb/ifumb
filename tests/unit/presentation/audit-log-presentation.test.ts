@@ -69,6 +69,12 @@ describe('formatAuditValue', () => {
   ])('formats %o as %s', (value, label) => {
     expect(formatAuditValue(value)).toBe(label)
   })
+
+  it('reads a value through the labels of its field first', () => {
+    expect(formatAuditValue('BIOLOGICAL', 'type')).toBe('Lien biologique')
+    expect(formatAuditValue('BIOLOGICAL', 'filiation')).toBe('Biologique')
+    expect(formatAuditValue('Fatou Sow, Binta', 'childrenNames')).toBe('Fatou Sow, Binta')
+  })
 })
 
 describe('formatDateTime', () => {

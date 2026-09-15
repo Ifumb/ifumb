@@ -25,7 +25,11 @@ type LabelledSelectProps = Readonly<{
   ref?: Ref<HTMLSelectElement>
 }>
 
-/** A native `<select>` with its visible `<label>`: keyboard and screen readers work as-is. */
+/**
+ * A native `<select>` with its visible `<label>`: keyboard and screen readers work as-is.
+ * reason: the select is keyed by its default value. React applies `defaultValue` to a select only
+ * when it mounts, so after a Server Action resets the form, the value echoed back would be lost.
+ */
 export function LabelledSelect(props: LabelledSelectProps) {
   const { label, placeholder, options, onChange, describedBy, invalid, ...select } = props
   return (
@@ -34,8 +38,6 @@ export function LabelledSelect(props: LabelledSelectProps) {
         {label}
       </label>
       <select
-        // reason: React applies `defaultValue` to a select only when it mounts, so after a Server
-        // Action resets the form, the value echoed back would be lost; a new key remounts it.
         key={select.defaultValue}
         {...select}
         aria-describedby={describedBy}

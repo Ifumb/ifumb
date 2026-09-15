@@ -4,6 +4,7 @@ import type {
   MemberLink,
   ParentUnionViewModel,
   PartnerUnionViewModel,
+  UnionHref,
 } from '@/presentation/mappers/union-view-models'
 
 type UnionRelationsViewProps = Readonly<{
@@ -33,7 +34,7 @@ export function UnionRelationsView({ parentUnions, partnerUnions }: UnionRelatio
 function ParentUnionItem({ union }: Readonly<{ union: ParentUnionViewModel }>) {
   return (
     <li className={UNION_ITEM_CLASS_NAME}>
-      <UnionHeading typeLabel={union.typeLabel} datesLabel={union.datesLabel} />
+      <UnionHeading {...union} />
       <PeopleLine label="Parents" people={union.parents} fallback="Parents non renseignés" />
       <p className="text-sm">Filiation : {union.filiationLabel}</p>
     </li>
@@ -44,7 +45,7 @@ function PartnerUnionItem({ union }: Readonly<{ union: PartnerUnionViewModel }>)
   const partners = union.partner ? [union.partner] : []
   return (
     <li className={UNION_ITEM_CLASS_NAME}>
-      <UnionHeading typeLabel={union.typeLabel} datesLabel={union.datesLabel} />
+      <UnionHeading {...union} />
       <PeopleLine label="Avec" people={partners} fallback="Seul parent renseigné" />
       <ChildrenLine childrenLinks={union.children} />
     </li>
@@ -69,13 +70,13 @@ function RelationSection({ id, title, empty, children }: RelationSectionProps) {
   )
 }
 
-function UnionHeading({
-  typeLabel,
-  datesLabel,
-}: Readonly<{ typeLabel: string; datesLabel: string | null }>) {
+type UnionHeadingProps = Readonly<{ href: UnionHref; typeLabel: string; datesLabel: string | null }>
+
+/** The union's type and dates, linking to the union itself. */
+function UnionHeading({ href, typeLabel, datesLabel }: UnionHeadingProps) {
   return (
     <p className="font-semibold">
-      {typeLabel}
+      <Link href={href}>{typeLabel}</Link>
       {datesLabel && <span className="font-normal"> ({datesLabel})</span>}
     </p>
   )

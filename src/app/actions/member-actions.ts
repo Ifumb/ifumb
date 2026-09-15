@@ -2,8 +2,7 @@
 import 'server-only'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
-import { whenWritesEnabled, withinWriteBudget } from '@/app/actions/write-guards'
-import type { MemberDetailsInput } from '@/core/entities/member'
+import { acceptWrite, whenWritesEnabled, withinWriteBudget } from '@/app/actions/write-guards'
 import { requireCurrentUser } from '@/infrastructure/auth/current-user'
 import { container } from '@/infrastructure/di/container'
 import {
@@ -17,22 +16,10 @@ import {
   WRITES_DISABLED_MESSAGE,
 } from '@/presentation/errors/tree-error-messages'
 import { MEMBER_FORM_ENTRIES } from '@/presentation/forms/member-form'
-import {
-  failed,
-  failedAt,
-  succeeded,
-  textEntry,
-  validationFailed,
-  type FormState,
-} from '@/presentation/forms/form-state'
+import { failed, failedAt, succeeded, type FormState } from '@/presentation/forms/form-state'
 import { memberFormSchema } from '@/presentation/schemas/member-form-schema'
 
-type Accepted = {
-  readonly ok: true
-  readonly details: MemberDetailsInput
-  readonly viewerId: string
-}
-type Refused = { readonly ok: false; readonly state: FormState }
+const MEMBER_FORM = { schema: memberFormSchema, entries: MEMBER_FORM_ENTRIES }
 
 /** Bound to its tree by the page; the owner's role is checked again by the use case. */
 export async function createMemberAction(
@@ -40,15 +27,15 @@ export async function createMemberAction(
   _previous: FormState,
   formData: FormData,
 ): Promise<FormState> {
-  const accepted = await acceptMemberForm(formData)
+  const accepted = await acceptWrite(formData, MEMBER_FORM)
   if (!accepted.ok) return accepted.state
 
-  const { details, viewerId } = accepted
+  const { data: details, viewerId, values } = accepted
   const result = await whenWritesEnabled(() =>
     container.createMember().execute({ treeId, viewerId, ...details }),
   )
-  if (!result) return failed(WRITES_DISABLED_MESSAGE, valuesOf(formData))
-  if (!result.ok) return failedAt(CREATE_MEMBER_ERRORS[result.error.kind], valuesOf(formData))
+  if (!result) return failed(WRITES_DISABLED_MESSAGE, values)
+  if (!result.ok) return failedAt(CREATE_MEMBER_ERRORS[result.error.kind], values)
   revalidatePath(`/tree/${treeId}`, 'layout')
   redirect(`/tree/${treeId}/member/${result.value.memberId}`)
 }
@@ -59,15 +46,15 @@ export async function updateMemberAction(
   _previous: FormState,
   formData: FormData,
 ): Promise<FormState> {
-  const accepted = await acceptMemberForm(formData)
+  const accepted = await acceptWrite(formData, MEMBER_FORM)
   if (!accepted.ok) return accepted.state
 
-  const { details, viewerId } = accepted
+  const { data: details, viewerId, values } = accepted
   const result = await whenWritesEnabled(() =>
     container.updateMember().execute({ ...target, viewerId, ...details }),
   )
-  if (!result) return failed(WRITES_DISABLED_MESSAGE, valuesOf(formData))
-  if (!result.ok) return failedAt(UPDATE_MEMBER_ERRORS[result.error.kind], valuesOf(formData))
+  if (!result) return failed(WRITES_DISABLED_MESSAGE, values)
+  if (!result.ok) return failedAt(UPDATE_MEMBER_ERRORS[result.error.kind], values)
   if (!result.value.changed) return succeeded(MEMBER_UNCHANGED_MESSAGE)
   revalidatePath(`/tree/${target.treeId}`, 'layout')
   redirect(`/tree/${target.treeId}/member/${target.memberId}`)
@@ -88,20 +75,4 @@ export async function deleteMemberAction(target: {
   if (!result.ok) return failed(MEMBER_WRITE_ERRORS[result.error.kind].message)
   revalidatePath(`/tree/${target.treeId}`, 'layout')
   redirect(`/tree/${target.treeId}`)
-}
-
-/** The signed-in user, valid details, then the write budget: nothing is stored before all pass. */
-async function acceptMemberForm(formData: FormData): Promise<Accepted | Refused> {
-  const currentUser = await requireCurrentUser()
-  const values = valuesOf(formData)
-  const parsed = memberFormSchema.safeParse(values)
-  if (!parsed.success) return { ok: false, state: validationFailed(parsed.error, values) }
-  if (!(await withinWriteBudget(currentUser.id))) {
-    return { ok: false, state: failed(TOO_MANY_TREE_WRITES_MESSAGE, values) }
-  }
-  return { ok: true, details: parsed.data, viewerId: currentUser.id }
-}
-
-function valuesOf(formData: FormData): Record<string, string> {
-  return Object.fromEntries(MEMBER_FORM_ENTRIES.map((name) => [name, textEntry(formData, name)]))
 }

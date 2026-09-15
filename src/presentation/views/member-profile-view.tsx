@@ -39,25 +39,27 @@ function ProfileHeader({ profile }: ProfileProps) {
   )
 }
 
-/** Editing and deletion only appear for those allowed to use them. */
+/** Editing, deletion and new unions only appear for those allowed to use them. */
 function ProfileLinks({ profile }: ProfileProps) {
+  const links = [
+    { href: profile.lineageHref, label: 'Voir sa descendance dans le graphe' },
+    ...optionalLink(profile.editHref, 'Modifier la fiche'),
+    ...optionalLink(profile.deleteHref, 'Supprimer ce membre'),
+    ...optionalLink(profile.newUnionHref, 'Ajouter une union'),
+  ]
   return (
     <ul className="flex flex-wrap gap-x-6 gap-y-2">
-      <li>
-        <Link href={profile.lineageHref}>Voir sa descendance dans le graphe</Link>
-      </li>
-      {profile.editHref && (
-        <li>
-          <Link href={profile.editHref}>Modifier la fiche</Link>
+      {links.map((link) => (
+        <li key={link.label}>
+          <Link href={link.href}>{link.label}</Link>
         </li>
-      )}
-      {profile.deleteHref && (
-        <li>
-          <Link href={profile.deleteHref}>Supprimer ce membre</Link>
-        </li>
-      )}
+      ))}
     </ul>
   )
+}
+
+function optionalLink<H extends string>(href: H | null, label: string) {
+  return href ? [{ href, label }] : []
 }
 
 function BiographySection({ biography }: Readonly<{ biography: string | null }>) {

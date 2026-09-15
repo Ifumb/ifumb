@@ -33,6 +33,8 @@ export type MemberProfileViewModel = {
   readonly editHref: `${MemberHref}/edit` | null
   /** The deletion confirmation, for the tree's owner only. */
   readonly deleteHref: `${MemberHref}/delete` | null
+  /** The union form with this member as first parent, for the owner only. */
+  readonly newUnionHref: `/tree/${string}/unions/new?parent=${string}` | null
   readonly identity: readonly Fact[]
   readonly datesAndPlaces: readonly Fact[]
   readonly culture: readonly Fact[]
@@ -62,6 +64,9 @@ export function toMemberProfileViewModel(profile: MemberProfile): MemberProfileV
     lineageHref: lineageHref(tree.id, member.id, DEFAULT_LINEAGE_DEPTH),
     editHref: permissions.canEdit ? `${href}/edit` : null,
     deleteHref: permissions.canDelete ? `${href}/delete` : null,
+    newUnionHref: permissions.canManageUnions
+      ? `/tree/${tree.id}/unions/new?parent=${encodeURIComponent(member.id)}`
+      : null,
     identity: identityFacts(member),
     datesAndPlaces: datesAndPlacesFacts(member),
     culture: cultureFacts(member),

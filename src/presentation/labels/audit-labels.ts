@@ -1,6 +1,7 @@
 import type { AuditAction } from '@/core/entities/audit-change'
 import {
   CERTAINTY_LABELS,
+  FILIATION_LABELS,
   GENDER_LABELS,
   UNION_TYPE_LABELS,
 } from '@/presentation/labels/member-labels'
@@ -90,6 +91,8 @@ export const AUDIT_FIELD_LABELS: Readonly<Record<string, string>> = {
   parent2Name: 'Parent 2',
   addedChildName: 'Enfant ajouté',
   removedChildName: 'Enfant retiré',
+  childrenNames: 'Enfants',
+  filiation: 'Filiation',
 }
 
 const STATUS_LABELS: Readonly<Record<string, string>> = {
@@ -108,3 +111,9 @@ export const AUDIT_VALUE_LABELS: Readonly<Record<string, string>> = {
   ...ROLE_LABELS,
   ...STATUS_LABELS,
 }
+
+/** Values whose label depends on the field that records them. */
+export const AUDIT_FIELD_VALUE_LABELS: Readonly<Record<string, Readonly<Record<string, string>>>> =
+  {
+    filiation: FILIATION_LABELS,
+  }

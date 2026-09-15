@@ -53,7 +53,7 @@ const profile: MemberProfile = {
       ],
     },
   ],
-  permissions: { canEdit: false, canDelete: false },
+  permissions: { canEdit: false, canDelete: false, canManageUnions: false },
 }
 
 describe('member view models', () => {
@@ -84,25 +84,36 @@ describe('member view models', () => {
   })
 
   it.each([
-    [{ canEdit: false, canDelete: false }, null, null],
-    [{ canEdit: true, canDelete: false }, '/tree/tree_1/member/mbr_awa/edit', null],
+    [{ canEdit: false, canDelete: false, canManageUnions: false }, null, null, null],
     [
-      { canEdit: true, canDelete: true },
+      { canEdit: true, canDelete: false, canManageUnions: false },
+      '/tree/tree_1/member/mbr_awa/edit',
+      null,
+      null,
+    ],
+    [
+      { canEdit: true, canDelete: true, canManageUnions: true },
       '/tree/tree_1/member/mbr_awa/edit',
       '/tree/tree_1/member/mbr_awa/delete',
+      '/tree/tree_1/unions/new?parent=mbr_awa',
     ],
-  ])('offers only the permitted actions for %o', (permissions, editHref, deleteHref) => {
-    expect(toMemberProfileViewModel({ ...profile, permissions })).toMatchObject({
-      editHref,
-      deleteHref,
-    })
-  })
+  ])(
+    'offers only the permitted actions for %o',
+    (permissions, editHref, deleteHref, newUnionHref) => {
+      expect(toMemberProfileViewModel({ ...profile, permissions })).toMatchObject({
+        editHref,
+        deleteHref,
+        newUnionHref,
+      })
+    },
+  )
 
   it('describes partner unions with links, dates and filiation', () => {
     const [union] = toMemberProfileViewModel(profile).partnerUnions
 
     expect(union).toEqual({
       id: 'uni_1',
+      href: '/tree/tree_1/union/uni_1',
       typeLabel: 'Mariage',
       datesLabel: 'depuis 1955',
       partner: { href: '/tree/tree_1/member/mbr_moussa', name: 'Moussa Diallo' },

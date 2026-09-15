@@ -37,7 +37,10 @@ function memberNode(id: string, overrides: Partial<MemberNodeData> = {}): Positi
 const unionNode: PositionedNode = {
   id: 'union_1',
   position: { x: 0, y: 0 },
-  data: { kind: 'union', typeLabel: 'Mariage', icon: 'heart', pending: null },
+  data: {
+    ...{ kind: 'union', typeLabel: 'Mariage', icon: 'heart', pending: null },
+    ...{ href: '/tree/tree_1/union/union_1', label: 'Mariage' },
+  },
 }
 
 const nodes = [

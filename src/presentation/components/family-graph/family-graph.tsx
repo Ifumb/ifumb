@@ -139,8 +139,7 @@ function toFlowNode(node: PositionedNode, sets: NodeSets): Node<GraphNodeData> {
     data: node.data,
     hidden: !sets.visible.has(node.id),
     className: nodeClassName(dimmed, sets.emphasis?.has(node.id) ?? false, isMember),
-    ariaRole: isMember ? 'group' : 'img',
-    ariaLabel: node.data.kind === 'union' ? unionLabel(node.data) : undefined,
+    ariaRole: 'group',
     domAttributes: {
       'aria-roledescription': isMember ? 'membre' : 'union',
       inert: dimmed || undefined,
@@ -152,10 +151,6 @@ function nodeClassName(dimmed: boolean, emphasized: boolean, isMember: boolean) 
   if (dimmed) return 'opacity-30'
   if (!emphasized) return undefined
   return [EMPHASIS_CLASS_NAME, isMember ? 'rounded-xl' : 'rounded-full'].join(' ')
-}
-
-function unionLabel({ typeLabel, pending }: Extract<GraphNodeData, { kind: 'union' }>): string {
-  return pending ? `${typeLabel}, ${pending.label.toLocaleLowerCase('fr')}` : typeLabel
 }
 
 /** reason: edges are hidden from assistive technology; the member links and profiles already

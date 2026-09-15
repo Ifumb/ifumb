@@ -7,9 +7,9 @@ import {
 import {
   MEMBER_FORM_ENTRIES,
   MEMBER_FORM_FIELDS,
-  MONTH_OPTIONS,
   memberFormValues,
 } from '@/presentation/forms/member-form'
+import { MONTH_OPTIONS } from '@/presentation/forms/partial-date-options'
 import { memberFormSchema } from '@/presentation/schemas/member-form-schema'
 import { dateOf } from '@tests/support/family-fixtures'
 import { memberInput } from '@tests/support/member-inputs'

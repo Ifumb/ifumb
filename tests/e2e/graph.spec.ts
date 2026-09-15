@@ -30,7 +30,8 @@ async function seedGraphFamily(page: Page, visibility: 'PRIVATE' | 'PUBLIC' = 'P
 }
 
 const canvas = (page: Page) => page.locator('.react-flow')
-const memberLinks = (page: Page) => canvas(page).locator('.react-flow__node').getByRole('link')
+const memberLinks = (page: Page) =>
+  canvas(page).locator('.react-flow__node-member').getByRole('link')
 
 test('the graph opens from the tree page and each member leads to their profile', async ({
   page,
@@ -55,6 +56,12 @@ test('the graph opens from the tree page and each member leads to their profile'
   expect(await page.evaluate(() => !!document.activeElement?.closest('.react-flow'))).toBe(true)
   await page.keyboard.press('Enter')
   await expect(page).toHaveURL(/\/member\//)
+
+  await page.goBack()
+  await canvas(page)
+    .getByRole('link', { name: /^Ibrahima Sow/ })
+    .click()
+  await expect(page.getByRole('heading', { level: 1, name: 'Ibrahima Sow' })).toBeVisible()
 })
 
 test('owners see pending markers, anonymous visitors of a public tree never do', async ({

@@ -18,16 +18,15 @@ import {
   BIRTH_DATE_FIELD,
   CERTAINTY_FIELD,
   CERTAINTY_OPTIONS,
-  DATE_HINT,
   DEATH_DATE_FIELD,
   GENDER_FIELD,
   GENDER_OPTIONS,
   MEMBER_FIELD_SPECS as TEXT,
   MEMBER_FORM_FIELDS,
-  MONTH_OPTIONS,
   type MemberFormValues,
   type TextFieldSpec,
 } from '@/presentation/forms/member-form'
+import { DATE_HINT, MONTH_OPTIONS } from '@/presentation/forms/partial-date-options'
 
 type MemberFormProps = Readonly<{
   action: FormAction

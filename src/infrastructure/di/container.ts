@@ -24,6 +24,8 @@ import { UpdateTreeUseCase } from '@/core/use-cases/update-tree'
 import { ResetPasswordUseCase } from '@/core/use-cases/reset-password'
 import { businessWritesEnabled } from '@/infrastructure/config/business-writes'
 import { requireServerEnv } from '@/infrastructure/config/server-env'
+import { lazy } from '@/infrastructure/di/lazy'
+import { unionUseCases, type TreeContentWriteDeps } from '@/infrastructure/di/union-use-cases'
 import { ResendPasswordResetMailer } from '@/infrastructure/mail/resend-password-reset-mailer'
 import { getPrismaClient } from '@/infrastructure/persistence/prisma/client'
 import { PrismaAuditLogReader } from '@/infrastructure/persistence/prisma/prisma-audit-log-reader'
@@ -46,12 +48,6 @@ import { CryptoTokenGenerator } from '@/infrastructure/security/crypto-token-gen
 import { SystemClock } from '@/infrastructure/system/system-clock'
 import { UuidIdGenerator } from '@/infrastructure/system/uuid-id-generator'
 
-/** Memoizes a factory so each dependency is built once, on first use. */
-function lazy<T>(create: () => T): () => T {
-  let instance: T | undefined
-  return () => (instance ??= create())
-}
-
 const globalForRateLimiters = globalThis as unknown as { ifumbRateLimiters?: RateLimiters }
 
 type RateLimiters = Readonly<Record<RateLimitPolicyName, RateLimiter>>
@@ -66,7 +62,7 @@ const unitOfWork = lazy(
   () => new PrismaUnitOfWork(getPrismaClient(), { writesEnabled: businessWritesEnabled() }),
 )
 const ids = lazy(() => new UuidIdGenerator())
-const memberWrites = () => ({
+const treeContentWrites = (): TreeContentWriteDeps => ({
   trees: trees(),
   families: families(),
   unitOfWork: unitOfWork(),
@@ -158,10 +154,11 @@ export const container = {
       }),
   ),
   getTreeSettings: lazy(() => new GetTreeSettingsUseCase({ trees: trees() })),
-  createMember: lazy(() => new CreateMemberUseCase(memberWrites())),
-  updateMember: lazy(() => new UpdateMemberUseCase(memberWrites())),
-  deleteMember: lazy(() => new DeleteMemberUseCase(memberWrites())),
+  createMember: lazy(() => new CreateMemberUseCase(treeContentWrites())),
+  updateMember: lazy(() => new UpdateMemberUseCase(treeContentWrites())),
+  deleteMember: lazy(() => new DeleteMemberUseCase(treeContentWrites())),
   getMemberForm: lazy(() => new GetMemberFormUseCase({ trees: trees(), families: families() })),
+  ...unionUseCases(treeContentWrites),
   getAuditLog: lazy(
     () =>
       new GetAuditLogUseCase({

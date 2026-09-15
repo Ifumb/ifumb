@@ -1,10 +1,19 @@
 import 'server-only'
 import type { Member } from '@/core/entities/member'
 import type { Tree } from '@/core/entities/tree'
+import type { Filiation, Union } from '@/core/entities/union'
 import type { AuditRecord } from '@/core/use-cases/ports/audit-log-writer'
 import type { UnitOfWork, UnitOfWorkContext } from '@/core/use-cases/ports/unit-of-work'
 
 type InsertedMember = { readonly treeId: string; readonly member: Member }
+type InsertedUnion = { readonly treeId: string; readonly union: Union }
+type AddedUnionChild = {
+  readonly unionId: string
+  readonly linkId: string
+  readonly childId: string
+  readonly filiation: Filiation
+}
+type RemovedUnionChild = { readonly unionId: string; readonly childId: string }
 
 type Writes = {
   insertedTrees: Tree[]
@@ -12,6 +21,11 @@ type Writes = {
   insertedMembers: InsertedMember[]
   updatedMembers: Member[]
   deletedMemberIds: string[]
+  insertedUnions: InsertedUnion[]
+  updatedUnions: Union[]
+  deletedUnionIds: string[]
+  addedUnionChildren: AddedUnionChild[]
+  removedUnionChildren: RemovedUnionChild[]
   auditRecords: AuditRecord[]
 }
 
@@ -21,6 +35,11 @@ const noWrites = (): Writes => ({
   insertedMembers: [],
   updatedMembers: [],
   deletedMemberIds: [],
+  insertedUnions: [],
+  updatedUnions: [],
+  deletedUnionIds: [],
+  addedUnionChildren: [],
+  removedUnionChildren: [],
   auditRecords: [],
 })
 
@@ -47,6 +66,21 @@ export class InMemoryUnitOfWork implements UnitOfWork, Readonly<Writes> {
   }
   get deletedMemberIds() {
     return this.committed.deletedMemberIds
+  }
+  get insertedUnions() {
+    return this.committed.insertedUnions
+  }
+  get updatedUnions() {
+    return this.committed.updatedUnions
+  }
+  get deletedUnionIds() {
+    return this.committed.deletedUnionIds
+  }
+  get addedUnionChildren() {
+    return this.committed.addedUnionChildren
+  }
+  get removedUnionChildren() {
+    return this.committed.removedUnionChildren
   }
   get auditRecords() {
     return this.committed.auditRecords
@@ -78,6 +112,7 @@ export class InMemoryUnitOfWork implements UnitOfWork, Readonly<Writes> {
         update: async (member) => void staged.updatedMembers.push(member),
         delete: async (memberId) => void staged.deletedMemberIds.push(memberId.value),
       },
+      unions: unionWriterFor(staged),
       auditLog: { record: async (entry) => this.stageRecord(staged, entry) },
     }
   }
@@ -88,5 +123,22 @@ export class InMemoryUnitOfWork implements UnitOfWork, Readonly<Writes> {
       throw new Error('Simulated audit log failure')
     }
     staged.auditRecords.push(entry)
+  }
+}
+
+function unionWriterFor(staged: Writes): UnitOfWorkContext['unions'] {
+  return {
+    insert: async (treeId, union) => void staged.insertedUnions.push({ treeId, union }),
+    update: async (union) => void staged.updatedUnions.push(union),
+    delete: async (unionId) => void staged.deletedUnionIds.push(unionId),
+    addChild: async (unionId, { id, childId, filiation }) =>
+      void staged.addedUnionChildren.push({
+        unionId,
+        linkId: id,
+        childId: childId.value,
+        filiation,
+      }),
+    removeChild: async (unionId, childId) =>
+      void staged.removedUnionChildren.push({ unionId, childId: childId.value }),
   }
 }

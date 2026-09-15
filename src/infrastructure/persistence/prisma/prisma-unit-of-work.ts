@@ -4,6 +4,7 @@ import { BusinessWritesDisabledError } from '@/infrastructure/config/business-wr
 import type { PrismaClient } from '@/infrastructure/persistence/prisma/generated/client'
 import { PrismaAuditLogWriter } from '@/infrastructure/persistence/prisma/prisma-audit-log-writer'
 import { PrismaMemberWriter } from '@/infrastructure/persistence/prisma/prisma-member-writer'
+import { PrismaUnionWriter } from '@/infrastructure/persistence/prisma/prisma-union-writer'
 import { PrismaTreeWriter } from '@/infrastructure/persistence/prisma/prisma-tree-writer'
 
 type PrismaUnitOfWorkOptions = { readonly writesEnabled: boolean }
@@ -25,6 +26,7 @@ export class PrismaUnitOfWork implements UnitOfWork {
       work({
         trees: new PrismaTreeWriter(transaction),
         members: new PrismaMemberWriter(transaction),
+        unions: new PrismaUnionWriter(transaction),
         auditLog: new PrismaAuditLogWriter(transaction),
       }),
     )

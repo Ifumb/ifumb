@@ -50,19 +50,10 @@ export const BIOGRAPHY_FIELD = {
   hint: 'Facultatif : parcours, métiers, anecdotes transmises…',
 } as const
 
-export const DATE_HINT = 'Laissez vides les parties inconnues : l’année seule suffit.'
-
 export const GENDER_OPTIONS = GENDERS.map((value) => ({ value, label: GENDER_LABELS[value] }))
 export const CERTAINTY_OPTIONS = CERTAINTIES.map((value) => ({
   value,
   label: CERTAINTY_LABELS[value],
-}))
-
-export const MONTH_OPTIONS = Array.from({ length: 12 }, (_, index) => ({
-  value: String(index + 1),
-  label: new Intl.DateTimeFormat('fr-FR', { month: 'long', timeZone: 'UTC' }).format(
-    new Date(Date.UTC(2000, index, 1)),
-  ),
 }))
 
 /** Every field, in the order of the form, for the error summary's links. */

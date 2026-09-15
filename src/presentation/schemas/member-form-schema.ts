@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { MEMBER_TEXT_LIMITS, type MemberDetailsInput } from '@/core/entities/member'
-import { composePartialDate, datePartSchema } from '@/presentation/schemas/partial-date-fields'
+import { dateFromEntries, datePartSchema } from '@/presentation/schemas/partial-date-fields'
 
 export const GENDERS = ['MALE', 'FEMALE', 'OTHER', 'UNKNOWN'] as const
 export const CERTAINTIES = ['CONFIRMED', 'APPROXIMATE', 'UNKNOWN'] as const
@@ -42,15 +42,14 @@ const fieldsSchema = z.object({
 })
 
 type MemberFields = z.infer<typeof fieldsSchema>
-type Context = z.core.$RefinementCtx<MemberFields>
 
 /**
  * The member form, as submitted: flat text entries in, the details of a member out. A date is typed
  * as day, month and year; its problems are reported on the date as a whole.
  */
 export const memberFormSchema = fieldsSchema.transform((fields, context): MemberDetailsInput => {
-  const birthDate = dateOf(fields, 'birth', context)
-  const deathDate = dateOf(fields, 'death', context)
+  const birthDate = dateFromEntries(fields, 'birth', context)
+  const deathDate = dateFromEntries(fields, 'death', context)
   if (birthDate === undefined || deathDate === undefined) return z.NEVER
   return {
     ...pickTexts(fields),
@@ -61,18 +60,6 @@ export const memberFormSchema = fieldsSchema.transform((fields, context): Member
     deathDate,
   }
 })
-
-/** The composed date, or undefined once its problem is reported on the date as a whole. */
-function dateOf(fields: MemberFields, prefix: 'birth' | 'death', context: Context) {
-  const composed = composePartialDate({
-    day: fields[`${prefix}Day`],
-    month: fields[`${prefix}Month`],
-    year: fields[`${prefix}Year`],
-  })
-  if ('date' in composed) return composed.date
-  context.addIssue({ code: 'custom', path: [`${prefix}Date`], message: composed.message })
-  return undefined
-}
 
 function pickTexts({ firstName, lastName, nickname, birthPlace, ...rest }: MemberFields) {
   const { tribe, clan, ethnicity, originRegion, biography } = rest

@@ -14,8 +14,10 @@ type MemberDataProps = Readonly<{ data: MemberNodeData }>
 
 const AVATAR_SIZE = 40
 
+// reason: React Flow turns pointer events off on nodes that can be neither selected nor dragged;
+// the link inside restores them, or the card could only be opened with the keyboard.
 const CARD_CLASS_NAMES = [
-  'flex h-full flex-col items-center justify-center gap-1 p-2',
+  'pointer-events-auto flex h-full flex-col items-center justify-center gap-1 p-2',
   'rounded-lg border-2 border-earth-sand bg-white shadow-sm hover:border-brand-dark',
   'text-center text-foreground no-underline',
 ]

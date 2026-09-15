@@ -39,7 +39,7 @@ async function seedFourGenerations(page: Page) {
   return { treeId, ids: { alpha, moussa, sekou, awa, fatou, ibrahima } }
 }
 
-const memberLinks = (page: Page) => page.locator('.react-flow__node').getByRole('link')
+const memberLinks = (page: Page) => page.locator('.react-flow__node-member').getByRole('link')
 const tool = (page: Page, title: string) => page.locator('details').filter({ hasText: title })
 
 async function usePairTool(

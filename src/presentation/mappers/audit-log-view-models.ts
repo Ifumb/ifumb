@@ -95,14 +95,14 @@ function toChange(change: AuditFieldChange): AuditChangeViewModel {
   const label = AUDIT_FIELD_LABELS[change.field] ?? change.field
   switch (change.kind) {
     case 'set':
-      return { label, before: null, after: formatAuditValue(change.after) }
+      return { label, before: null, after: formatAuditValue(change.after, change.field) }
     case 'removed':
-      return { label, before: formatAuditValue(change.before), after: null }
+      return { label, before: formatAuditValue(change.before, change.field), after: null }
     case 'changed':
       return {
         label,
-        before: formatAuditValue(change.before),
-        after: formatAuditValue(change.after),
+        before: formatAuditValue(change.before, change.field),
+        after: formatAuditValue(change.after, change.field),
       }
   }
 }

@@ -36,23 +36,19 @@ function TreeLinks({ tree }: Readonly<{ tree: TreeViewModel }>) {
 }
 
 function ContributorLinks({ tree }: Readonly<{ tree: TreeViewModel }>) {
-  return (
-    <>
-      {tree.newMemberHref && (
-        <li>
-          <Link href={tree.newMemberHref}>Ajouter un membre</Link>
-        </li>
-      )}
-      {tree.settingsHref && (
-        <li>
-          <Link href={tree.settingsHref}>Modifier l’arbre</Link>
-        </li>
-      )}
-      {tree.historyHref && (
-        <li>
-          <Link href={tree.historyHref}>Journal de l’arbre</Link>
-        </li>
-      )}
-    </>
-  )
+  const links = [
+    ...optionalLink(tree.newMemberHref, 'Ajouter un membre'),
+    ...optionalLink(tree.newUnionHref, 'Ajouter une union'),
+    ...optionalLink(tree.settingsHref, 'Modifier l’arbre'),
+    ...optionalLink(tree.historyHref, 'Journal de l’arbre'),
+  ]
+  return links.map((link) => (
+    <li key={link.label}>
+      <Link href={link.href}>{link.label}</Link>
+    </li>
+  ))
+}
+
+function optionalLink<H extends string>(href: H | null, label: string) {
+  return href ? [{ href, label }] : []
 }

@@ -46,4 +46,26 @@ export function partialDateParts(date: PartialDate | null): PartialDateParts {
   }
 }
 
+type IssueSink = Pick<z.core.$RefinementCtx, 'addIssue'>
+
+/**
+ * The date typed in the `<prefix>Day`, `<prefix>Month` and `<prefix>Year` entries. When it is not a
+ * date, its problem is reported on `<prefix>Date` and the result is undefined.
+ */
+export function dateFromEntries(
+  entries: Readonly<Record<string, unknown>>,
+  prefix: string,
+  context: IssueSink,
+): PartialDate | null | undefined {
+  const text = (part: string) => String(entries[`${prefix}${part}`] ?? '')
+  const composed = composePartialDate({
+    day: text('Day'),
+    month: text('Month'),
+    year: text('Year'),
+  })
+  if ('date' in composed) return composed.date
+  context.addIssue({ code: 'custom', path: [`${prefix}Date`], message: composed.message })
+  return undefined
+}
+
 export const datePartSchema = z.string().max(4, DATE_PART_MESSAGES.impossible)

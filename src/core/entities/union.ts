@@ -9,6 +9,15 @@ export type UnionChild = {
   readonly filiation: Filiation
 }
 
+/** What a form may set on a union; its children are linked one by one. */
+export type UnionDetailsInput = {
+  readonly type: UnionType
+  readonly parent1Id: MemberId
+  readonly parent2Id: MemberId | null
+  readonly startDate: PartialDate | null
+  readonly endDate: PartialDate | null
+}
+
 export type UnionProps = {
   readonly id: string
   readonly type: UnionType
@@ -22,8 +31,8 @@ export type UnionProps = {
 /**
  * The link through which children descend from one or two parents (union-centric model).
  * reason: no invariant is enforced here. The legacy app applied pending changes without validation,
- * so stored unions may lack parents or repeat one; reading them must not fail. The creation rules
- * (at least one parent, two distinct parents) belong to the write use cases of Phase 2.
+ * so stored unions may lack parents or repeat one; reading them must not fail. The rules of a
+ * written union depend on the whole family, so they live in `union-rules.ts`.
  */
 export class Union {
   private constructor(private readonly props: UnionProps) {
@@ -32,6 +41,21 @@ export class Union {
 
   static create(props: UnionProps): Union {
     return new Union({ ...props, children: [...props.children] })
+  }
+
+  /** A new union, without children yet. */
+  static start({ id, ...details }: UnionDetailsInput & { readonly id: string }): Union {
+    return new Union({ ...details, id, children: [] })
+  }
+
+  /** The union with new details, and whether any of them changed; itself when none did. */
+  revise(details: UnionDetailsInput): { union: Union; changed: boolean } {
+    const parents = sameParents(this, details)
+      ? { parent1Id: this.props.parent1Id, parent2Id: this.props.parent2Id }
+      : { parent1Id: details.parent1Id, parent2Id: details.parent2Id }
+    const next = new Union({ ...this.props, ...details, ...parents })
+    const changed = next.comparable.join('|') !== this.comparable.join('|')
+    return { union: changed ? next : this, changed }
   }
 
   get id(): string {
@@ -48,6 +72,14 @@ export class Union {
 
   get endDate(): PartialDate | null {
     return this.props.endDate
+  }
+
+  get parent1Id(): MemberId | null {
+    return this.props.parent1Id
+  }
+
+  get parent2Id(): MemberId | null {
+    return this.props.parent2Id
   }
 
   get children(): readonly UnionChild[] {
@@ -73,4 +105,25 @@ export class Union {
   otherParentOf(memberId: MemberId): MemberId | null {
     return this.parentIds.find((id) => id.value !== memberId.value) ?? null
   }
+
+  private get comparable(): readonly string[] {
+    const { type, parent1Id, parent2Id, startDate, endDate } = this.props
+    return [
+      type,
+      parent1Id?.value,
+      parent2Id?.value,
+      startDate?.toString(),
+      endDate?.toString(),
+    ].map((value) => value ?? '')
+  }
+}
+
+/** Whether the details name the union's parents, in either order. */
+function sameParents(union: Union, details: UnionDetailsInput): boolean {
+  const key = (ids: readonly (MemberId | null)[]) =>
+    ids
+      .map((id) => id?.value ?? '')
+      .sort()
+      .join('|')
+  return key([details.parent1Id, details.parent2Id]) === key([union.parent1Id, union.parent2Id])
 }

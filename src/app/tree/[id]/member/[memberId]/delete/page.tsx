@@ -3,7 +3,7 @@ import { deleteMemberAction } from '@/app/actions/member-actions'
 import { loadMemberForm } from '@/app/tree/[id]/member/[memberId]/load-member-form'
 import { MemberWriteRefusal } from '@/app/tree/[id]/member/[memberId]/member-write-refusal'
 import type { MemberForm } from '@/core/use-cases/get-member-form'
-import { DeleteMemberForm } from '@/presentation/components/forms/delete-member-form'
+import { ConfirmDeletionForm } from '@/presentation/components/forms/confirm-deletion-form'
 import { memberLink } from '@/presentation/mappers/union-view-models'
 
 type DeleteMemberPageProps = Readonly<{ params: Promise<{ id: string; memberId: string }> }>
@@ -32,7 +32,10 @@ function DeleteConfirmation({ form }: Readonly<{ form: MemberForm }>) {
         La fiche sera retirée de l’arbre {form.tree.name}, avec ses liens de parent et d’enfant. La
         suppression est inscrite au journal de l’arbre et ne peut pas être annulée.
       </p>
-      <DeleteMemberForm action={deleteMemberAction.bind(null, target)} cancelHref={href} />
+      <ConfirmDeletionForm
+        action={deleteMemberAction.bind(null, target)}
+        cancel={{ href, label: 'Annuler et revenir à la fiche' }}
+      />
     </section>
   )
 }
