@@ -4,11 +4,15 @@ import { loadPendingChanges } from '@/app/tree/[id]/pending/load-pending-changes
 import { loadTreeOverview } from '@/app/tree/[id]/load-tree-overview'
 import type { GetPendingChangesError } from '@/core/use-cases/get-pending-changes'
 import { toPendingChangesViewModel } from '@/presentation/mappers/pending-change-view-models'
+import { parseReviewResult } from '@/presentation/schemas/review-schema'
 import { PendingChangesView } from '@/presentation/views/pending-changes-view'
 import { PrivateTreeView } from '@/presentation/views/private-tree-view'
 import { RestrictedTreeView } from '@/presentation/views/restricted-tree-view'
 
-type PendingPageProps = Readonly<{ params: Promise<{ id: string }> }>
+type PendingPageProps = Readonly<{
+  params: Promise<{ id: string }>
+  searchParams: Promise<Record<string, string | string[] | undefined>>
+}>
 
 export async function generateMetadata({ params }: PendingPageProps): Promise<Metadata> {
   const { result } = await loadTreeOverview((await params).id)
@@ -22,12 +26,13 @@ export async function generateMetadata({ params }: PendingPageProps): Promise<Me
   }
 }
 
-export default async function PendingChangesPage({ params }: PendingPageProps) {
+export default async function PendingChangesPage({ params, searchParams }: PendingPageProps) {
   const { id } = await params
   const { signedIn, result } = await loadPendingChanges(id)
+  if (!result.ok) return unreadablePendingChanges(id, result.error, signedIn)
 
-  if (result.ok) return <PendingChangesView list={toPendingChangesViewModel(result.value)} />
-  return unreadablePendingChanges(id, result.error, signedIn)
+  const reviewResult = parseReviewResult(await searchParams)
+  return <PendingChangesView list={toPendingChangesViewModel(result.value)} reviewResult={reviewResult} />
 }
 
 function unreadablePendingChanges(

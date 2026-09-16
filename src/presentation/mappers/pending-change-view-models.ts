@@ -19,9 +19,13 @@ export type PendingChangeItemViewModel = {
   readonly changes: readonly AuditChangeViewModel[]
 }
 
+export type PendingHref = `/tree/${string}/pending`
+
 export type PendingChangesViewModel = {
+  readonly treeId: string
   readonly treeName: string
   readonly treeHref: `/tree/${string}`
+  readonly pendingHref: PendingHref
   readonly canReview: boolean
   readonly status: string
   readonly items: readonly PendingChangeItemViewModel[]
@@ -30,8 +34,10 @@ export type PendingChangesViewModel = {
 /** Reuses the audit log's own field labels and formatting: a proposal's diff reads the same way. */
 export function toPendingChangesViewModel(list: PendingChangesList): PendingChangesViewModel {
   return {
+    treeId: list.tree.id,
     treeName: list.tree.name,
     treeHref: `/tree/${list.tree.id}`,
+    pendingHref: `/tree/${list.tree.id}/pending`,
     canReview: list.canReview,
     status: statusOf(list.changes.length, list.canReview),
     items: list.changes.map(toItem),

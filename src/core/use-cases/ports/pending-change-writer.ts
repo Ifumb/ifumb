@@ -9,4 +9,6 @@ import type { PendingChange } from '@/core/entities/pending-change'
  */
 export interface PendingChangeWriter {
   propose(change: PendingChange): Promise<void>
+  /** Stores a proposal's resolution: its status, its comment, who resolved it, and when. */
+  resolve(change: PendingChange): Promise<void>
 }

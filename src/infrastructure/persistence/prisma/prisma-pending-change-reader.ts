@@ -1,5 +1,6 @@
 import 'server-only'
 import type { AuditSnapshot } from '@/core/entities/audit-change'
+import { PendingChange } from '@/core/entities/pending-change'
 import type { TreeId } from '@/core/shared/value-objects/tree-id'
 import type {
   PendingAction,
@@ -54,6 +55,16 @@ export class PrismaPendingChangeReader implements PendingChangeReader {
       include: { author: AUTHOR_SELECT },
     })
     return rows.map(toSummary)
+  }
+
+  async findById(treeId: TreeId, id: string): Promise<PendingChange | null> {
+    const row = await this.db.pendingChange.findFirst({ where: { id, treeId: treeId.value } })
+    if (!row) return null
+    return PendingChange.create({
+      ...row,
+      snapshotBefore: row.snapshotBefore as AuditSnapshot | null,
+      snapshotAfter: row.snapshotAfter as AuditSnapshot | null,
+    })
   }
 }
 

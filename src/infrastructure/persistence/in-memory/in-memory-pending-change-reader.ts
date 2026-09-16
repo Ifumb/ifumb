@@ -1,4 +1,5 @@
 import 'server-only'
+import type { PendingChange } from '@/core/entities/pending-change'
 import type { TreeId } from '@/core/shared/value-objects/tree-id'
 import type {
   PendingAction,
@@ -10,6 +11,7 @@ import type {
 export class InMemoryPendingChangeReader implements PendingChangeReader {
   private readonly targetsByTree = new Map<string, ReadonlyMap<string, PendingAction>>()
   private readonly changesByTree = new Map<string, PendingChangeSummary[]>()
+  private readonly byId = new Map<string, PendingChange>()
   private reads = 0
 
   seed(treeId: string, targets: Readonly<Record<string, PendingAction>>): void {
@@ -20,6 +22,11 @@ export class InMemoryPendingChangeReader implements PendingChangeReader {
   seedChange(treeId: string, change: PendingChangeSummary): void {
     const existing = this.changesByTree.get(treeId) ?? []
     this.changesByTree.set(treeId, [change, ...existing])
+  }
+
+  /** Seeds one proposal for `findById`, as the review use cases read it. */
+  seedById(treeId: string, change: PendingChange): void {
+    this.byId.set(`${treeId}:${change.id}`, change)
   }
 
   get readCount(): number {
@@ -41,5 +48,9 @@ export class InMemoryPendingChangeReader implements PendingChangeReader {
     return (this.changesByTree.get(treeId.value) ?? []).filter(
       (change) => change.authorId === authorId,
     )
+  }
+
+  async findById(treeId: TreeId, id: string): Promise<PendingChange | null> {
+    return this.byId.get(`${treeId.value}:${id}`) ?? null
   }
 }

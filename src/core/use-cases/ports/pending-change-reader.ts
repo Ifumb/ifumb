@@ -2,6 +2,7 @@ import 'server-only'
 import type { AuditSnapshot } from '@/core/entities/audit-change'
 import type {
   PendingActionKind,
+  PendingChange,
   PendingStatus,
   PendingTargetType,
 } from '@/core/entities/pending-change'
@@ -31,4 +32,6 @@ export interface PendingChangeReader {
   pendingForTree(treeId: TreeId): Promise<readonly PendingChangeSummary[]>
   /** One author's own proposals on this tree, any status, newest first. */
   byAuthor(treeId: TreeId, authorId: string): Promise<readonly PendingChangeSummary[]>
+  /** The proposal itself, fit to be resolved — null when it does not exist on this tree. */
+  findById(treeId: TreeId, id: string): Promise<PendingChange | null>
 }

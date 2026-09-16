@@ -46,6 +46,18 @@ export class PrismaPendingChangeWriter implements PendingChangeWriter {
       },
     })
   }
+
+  async resolve(change: PendingChange): Promise<void> {
+    await this.db.pendingChange.update({
+      where: { id: change.id },
+      data: {
+        status: change.status,
+        rejectionComment: change.rejectionComment,
+        resolvedAt: change.resolvedAt,
+        resolvedById: change.resolvedById,
+      },
+    })
+  }
 }
 
 function toJson(snapshot: AuditSnapshot | null): Prisma.InputJsonValue | typeof Prisma.DbNull {

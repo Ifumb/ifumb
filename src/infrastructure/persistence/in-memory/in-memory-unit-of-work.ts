@@ -32,6 +32,7 @@ type Writes = {
   removedUnionChildren: RemovedUnionChild[]
   auditRecords: AuditRecord[]
   proposedChanges: PendingChange[]
+  resolvedChanges: PendingChange[]
   notifications: NotificationRecord[]
 }
 
@@ -49,6 +50,7 @@ const noWrites = (): Writes => ({
   removedUnionChildren: [],
   auditRecords: [],
   proposedChanges: [],
+  resolvedChanges: [],
   notifications: [],
 })
 
@@ -104,6 +106,9 @@ export class InMemoryUnitOfWork implements UnitOfWork, Readonly<Writes> {
   get proposedChanges() {
     return this.committed.proposedChanges
   }
+  get resolvedChanges() {
+    return this.committed.resolvedChanges
+  }
   get notifications() {
     return this.committed.notifications
   }
@@ -144,7 +149,10 @@ export class InMemoryUnitOfWork implements UnitOfWork, Readonly<Writes> {
       },
       unions: unionWriterFor(staged),
       auditLog: { record: async (entry) => this.stageRecord(staged, entry) },
-      pendingChanges: { propose: async (change) => void staged.proposedChanges.push(change) },
+      pendingChanges: {
+        propose: async (change) => void staged.proposedChanges.push(change),
+        resolve: async (change) => void staged.resolvedChanges.push(change),
+      },
       notifications: { record: async (entry) => this.stageNotification(staged, entry) },
     }
   }

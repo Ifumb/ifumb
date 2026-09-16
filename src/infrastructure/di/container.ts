@@ -2,7 +2,10 @@ import 'server-only'
 import { AuthenticateUserUseCase } from '@/core/use-cases/authenticate-user'
 import { ChangePasswordUseCase } from '@/core/use-cases/change-password'
 import { GetAuditLogUseCase } from '@/core/use-cases/get-audit-log'
+import { ApprovePendingChangeUseCase } from '@/core/use-cases/approve-pending-change'
 import { GetPendingChangesUseCase } from '@/core/use-cases/get-pending-changes'
+import { RejectPendingChangeUseCase } from '@/core/use-cases/reject-pending-change'
+import { ReviewAllPendingChangesUseCase } from '@/core/use-cases/review-all-pending-changes'
 import { CreateMemberUseCase } from '@/core/use-cases/create-member'
 import { CreateTreeUseCase } from '@/core/use-cases/create-tree'
 import { DeleteMemberUseCase } from '@/core/use-cases/delete-member'
@@ -209,4 +212,10 @@ export const container = {
   getPendingChanges: lazy(
     () => new GetPendingChangesUseCase({ trees: trees(), pendingChanges: pendingChanges() }),
   ),
+  // reason: `treeContentWrites()` already carries everything these three need (and more, unused,
+  // structurally harmless) — passed straight through, never spread, so its `mailer` getter stays
+  // lazy and these three, which never send mail, never construct one.
+  approvePendingChange: lazy(() => new ApprovePendingChangeUseCase(treeContentWrites())),
+  rejectPendingChange: lazy(() => new RejectPendingChangeUseCase(treeContentWrites())),
+  reviewAllPendingChanges: lazy(() => new ReviewAllPendingChangesUseCase(treeContentWrites())),
 }
