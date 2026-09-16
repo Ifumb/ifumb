@@ -2,7 +2,8 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { createMemberAction } from '@/app/actions/member-actions'
-import type { TreeManagementError } from '@/core/use-cases/tree-management-access'
+import { canContribute } from '@/core/entities/tree'
+import type { GetTreeOverviewError } from '@/core/use-cases/get-tree-overview'
 import { requireCurrentUser } from '@/infrastructure/auth/current-user'
 import { container } from '@/infrastructure/di/container'
 import { MemberForm } from '@/presentation/components/forms/member-form'
@@ -17,9 +18,13 @@ export const metadata: Metadata = { title: 'Ajouter un membre', robots: { index:
 export default async function NewMemberPage({ params }: NewMemberPageProps) {
   const { id } = await params
   const currentUser = await requireCurrentUser()
-  // reason: adding a member is the owner's right (canAddMember), the same check as the settings.
-  const result = await container.getTreeSettings().execute({ treeId: id, viewerId: currentUser.id })
+  // reason: the owner and an editor both reach the form — the owner adds directly, an editor
+  // proposes (module 2.6); only a viewer, who contributes nothing, is turned away.
+  const result = await container.getTreeOverview().execute({ treeId: id, viewerId: currentUser.id })
   if (!result.ok) return memberCreationRefused(id, result.error)
+  if (!canContribute(result.value.role)) {
+    return memberCreationRefused(id, { kind: 'ACCESS_DENIED' })
+  }
 
   return <NewMember treeId={id} treeName={result.value.name} />
 }
@@ -42,17 +47,17 @@ function NewMember({ treeId, treeName }: Readonly<{ treeId: string; treeName: st
   )
 }
 
-function memberCreationRefused(treeId: string, error: TreeManagementError) {
+function memberCreationRefused(treeId: string, error: GetTreeOverviewError) {
   switch (error.kind) {
     case 'TREE_NOT_FOUND':
       notFound()
-    case 'TREE_MANAGEMENT_FORBIDDEN':
+    case 'ACCESS_DENIED':
       return (
         <RestrictedTreeView
-          title="Réservé au propriétaire"
+          title="Réservé aux contributeurs"
           treeHref={`/tree/${treeId}`}
           signedIn
-          message="Seul le propriétaire de l’arbre peut y ajouter un membre."
+          message="Seuls le propriétaire de l’arbre et ses éditeurs peuvent y ajouter un membre."
         />
       )
     default:

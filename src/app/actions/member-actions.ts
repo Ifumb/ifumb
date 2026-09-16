@@ -7,6 +7,7 @@ import { requireCurrentUser } from '@/infrastructure/auth/current-user'
 import { container } from '@/infrastructure/di/container'
 import {
   CREATE_MEMBER_ERRORS,
+  MEMBER_PROPOSED_MESSAGE,
   MEMBER_UNCHANGED_MESSAGE,
   MEMBER_WRITE_ERRORS,
   UPDATE_MEMBER_ERRORS,
@@ -37,6 +38,7 @@ export async function createMemberAction(
   if (!result) return failed(WRITES_DISABLED_MESSAGE, values)
   if (!result.ok) return failedAt(CREATE_MEMBER_ERRORS[result.error.kind], values)
   revalidatePath(`/tree/${treeId}`, 'layout')
+  if (result.value.outcome === 'proposed') return succeeded(MEMBER_PROPOSED_MESSAGE)
   redirect(`/tree/${treeId}/member/${result.value.memberId}`)
 }
 
@@ -55,6 +57,7 @@ export async function updateMemberAction(
   )
   if (!result) return failed(WRITES_DISABLED_MESSAGE, values)
   if (!result.ok) return failedAt(UPDATE_MEMBER_ERRORS[result.error.kind], values)
+  if (result.value.outcome === 'proposed') return succeeded(MEMBER_PROPOSED_MESSAGE)
   if (!result.value.changed) return succeeded(MEMBER_UNCHANGED_MESSAGE)
   revalidatePath(`/tree/${target.treeId}`, 'layout')
   redirect(`/tree/${target.treeId}/member/${target.memberId}`)
@@ -74,5 +77,6 @@ export async function deleteMemberAction(target: {
   if (!result) return failed(WRITES_DISABLED_MESSAGE)
   if (!result.ok) return failed(MEMBER_WRITE_ERRORS[result.error.kind].message)
   revalidatePath(`/tree/${target.treeId}`, 'layout')
+  if (result.value.outcome === 'proposed') return succeeded(MEMBER_PROPOSED_MESSAGE)
   redirect(`/tree/${target.treeId}`)
 }

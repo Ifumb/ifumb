@@ -13,24 +13,30 @@ import {
   type MemberTarget,
   type MemberWriteError,
 } from '@/core/use-cases/member-write-access'
+import { applied, proposed, type WriteOutcome } from '@/core/use-cases/proposal-outcome'
+import { recordProposal, type RecordProposalDeps } from '@/core/use-cases/proposal-recording'
 
 export type UpdateMemberInput = MemberTarget & MemberDetailsInput
 
 export type UpdateMemberError = MemberWriteError | { readonly kind: 'DEATH_BEFORE_BIRTH' }
 
-type UpdateMemberDeps = MemberReadDeps & {
-  readonly unitOfWork: UnitOfWork
-  readonly ids: IdGenerator
-  readonly clock: Clock
-}
+type UpdateMemberDeps = MemberReadDeps &
+  RecordProposalDeps & {
+    readonly unitOfWork: UnitOfWork
+    readonly ids: IdGenerator
+    readonly clock: Clock
+  }
 
-/** The owner, or the account that claimed the member, revises it; only real changes are stored. */
+/**
+ * The owner, or the account that claimed the member, revises it directly; only real changes are
+ * stored. Any other editor's revision is proposed to the owner instead.
+ */
 export class UpdateMemberUseCase {
   constructor(private readonly deps: UpdateMemberDeps) {}
 
   async execute(
     input: UpdateMemberInput,
-  ): Promise<Result<{ changed: boolean }, UpdateMemberError>> {
+  ): Promise<Result<WriteOutcome<{ changed: boolean }>, UpdateMemberError>> {
     const { treeId, memberId, viewerId, ...details } = input
     const target = await writableMember(this.deps, { treeId, memberId, viewerId }, EDIT_MEMBER_RULE)
     if (!target.ok) return target
@@ -38,9 +44,20 @@ export class UpdateMemberUseCase {
       return err({ kind: 'DEATH_BEFORE_BIRTH' })
 
     const { member, changes } = target.value.member.revise(details)
-    if (changes.length === 0) return ok({ changed: false })
+    if (changes.length === 0) return ok(applied({ changed: false }))
+
+    if (target.value.mode === 'propose') {
+      const pendingChangeId = await recordProposal(this.deps, target.value.tree, {
+        targetId: member.id.value,
+        targetType: 'MEMBER',
+        action: 'UPDATE',
+        diff: memberRevisionDiff(changes),
+        authorId: viewerId,
+      })
+      return ok(proposed(pendingChangeId))
+    }
     await this.store({ treeId, authorId: viewerId }, member, changes)
-    return ok({ changed: true })
+    return ok(applied({ changed: true }))
   }
 
   private store(

@@ -8,11 +8,14 @@ import { RemoveUnionChildUseCase } from '@/core/use-cases/remove-union-child'
 import { UpdateUnionUseCase } from '@/core/use-cases/update-union'
 import { PrismaClient } from '@/infrastructure/persistence/prisma/generated/client'
 import { PrismaFamilyReader } from '@/infrastructure/persistence/prisma/prisma-family-reader'
+import { PrismaPendingChangeReader } from '@/infrastructure/persistence/prisma/prisma-pending-change-reader'
 import { PrismaTreeReader } from '@/infrastructure/persistence/prisma/prisma-tree-reader'
 import { PrismaUnitOfWork } from '@/infrastructure/persistence/prisma/prisma-unit-of-work'
+import { PrismaUserRepository } from '@/infrastructure/persistence/prisma/prisma-user-repository'
 import { SystemClock } from '@/infrastructure/system/system-clock'
 import { UuidIdGenerator } from '@/infrastructure/system/uuid-id-generator'
 import { dateOf, memberId } from '@tests/support/family-fixtures'
+import { RecordingPendingChangeAlertMailer } from '@tests/support/fakes'
 import { TEST_DATABASE_URL } from '@tests/support/test-database'
 
 const prisma = new PrismaClient({ adapter: new PrismaPg(TEST_DATABASE_URL) })
@@ -21,6 +24,9 @@ const deps = {
   trees: new PrismaTreeReader(prisma),
   families: new PrismaFamilyReader(prisma),
   unitOfWork,
+  users: new PrismaUserRepository(prisma),
+  pendingChanges: new PrismaPendingChangeReader(prisma),
+  mailer: new RecordingPendingChangeAlertMailer(),
   ids: new UuidIdGenerator(),
   clock: new SystemClock(),
 }
@@ -61,6 +67,7 @@ async function createCouple(): Promise<string> {
     endDate: null,
   })
   if (!created.ok) throw new Error(`Could not create the union: ${created.error.kind}`)
+  if (created.value.outcome !== 'applied') throw new Error('Expected the union to be applied')
   return created.value.unionId
 }
 
@@ -91,7 +98,7 @@ describe('union writes through Prisma', () => {
     })
 
     const row = await prisma.union.findUniqueOrThrow({ where: { id: unionId } })
-    expect(result).toEqual({ ok: true, value: { changed: true } })
+    expect(result).toEqual({ ok: true, value: { outcome: 'applied', changed: true } })
     expect([row.type, row.parent1Id, row.parent2Id, row.startDate, row.endDate]).toEqual([
       'PARTNERSHIP',
       'mbr_awa',
@@ -127,7 +134,7 @@ describe('union writes through Prisma', () => {
 
     expect(await new DeleteUnionUseCase(deps).execute({ ...owner, unionId })).toEqual({
       ok: true,
-      value: undefined,
+      value: { outcome: 'applied' },
     })
     expect([await prisma.union.count(), await prisma.unionChild.count()]).toEqual([0, 0])
     expect(await prisma.member.count()).toBe(3)

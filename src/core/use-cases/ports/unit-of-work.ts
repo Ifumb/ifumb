@@ -1,6 +1,8 @@
 import 'server-only'
 import type { AuditLogWriter } from '@/core/use-cases/ports/audit-log-writer'
 import type { MemberWriter } from '@/core/use-cases/ports/member-writer'
+import type { NotificationWriter } from '@/core/use-cases/ports/notification-writer'
+import type { PendingChangeWriter } from '@/core/use-cases/ports/pending-change-writer'
 import type { TreeWriter } from '@/core/use-cases/ports/tree-writer'
 import type { UnionWriter } from '@/core/use-cases/ports/union-writer'
 
@@ -10,6 +12,8 @@ export type UnitOfWorkContext = {
   readonly members: MemberWriter
   readonly unions: UnionWriter
   readonly auditLog: AuditLogWriter
+  readonly pendingChanges: PendingChangeWriter
+  readonly notifications: NotificationWriter
 }
 
 /** Runs writes atomically: a change and its history entry are stored together, or not at all. */

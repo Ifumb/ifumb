@@ -10,16 +10,18 @@ import type { Clock } from '@/core/use-cases/ports/clock'
 import type { IdGenerator } from '@/core/use-cases/ports/id-generator'
 import type { PhotoStorage } from '@/core/use-cases/ports/photo-storage'
 import type { UnitOfWork } from '@/core/use-cases/ports/unit-of-work'
+import type { RecordProposalDeps } from '@/core/use-cases/proposal-recording'
 import type { FamilyDeps } from '@/core/use-cases/union-write-access'
 import { lazy } from '@/infrastructure/di/lazy'
 
-export type TreeContentWriteDeps = FamilyDeps & {
-  readonly unitOfWork: UnitOfWork
-  readonly ids: IdGenerator
-  readonly clock: Clock
-  /** Deleting a member also deletes its photo file, when a storage is configured. */
-  readonly storage: PhotoStorage | null
-}
+export type TreeContentWriteDeps = FamilyDeps &
+  RecordProposalDeps & {
+    readonly unitOfWork: UnitOfWork
+    readonly ids: IdGenerator
+    readonly clock: Clock
+    /** Deleting a member also deletes its photo file, when a storage is configured. */
+    readonly storage: PhotoStorage | null
+  }
 
 /**
  * The union use cases, each built lazily like the rest of the container.

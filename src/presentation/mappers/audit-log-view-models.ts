@@ -91,7 +91,8 @@ export function toAuditEntryViewModel(entry: AuditLogEntryView): AuditEntryViewM
   }
 }
 
-function toChange(change: AuditFieldChange): AuditChangeViewModel {
+/** Exported for `pending-change-view-models.ts`, which formats a proposal's diff the same way. */
+export function toChange(change: AuditFieldChange): AuditChangeViewModel {
   const label = AUDIT_FIELD_LABELS[change.field] ?? change.field
   switch (change.kind) {
     case 'set':

@@ -2,6 +2,7 @@ import 'server-only'
 import { AuthenticateUserUseCase } from '@/core/use-cases/authenticate-user'
 import { ChangePasswordUseCase } from '@/core/use-cases/change-password'
 import { GetAuditLogUseCase } from '@/core/use-cases/get-audit-log'
+import { GetPendingChangesUseCase } from '@/core/use-cases/get-pending-changes'
 import { CreateMemberUseCase } from '@/core/use-cases/create-member'
 import { CreateTreeUseCase } from '@/core/use-cases/create-tree'
 import { DeleteMemberUseCase } from '@/core/use-cases/delete-member'
@@ -29,6 +30,7 @@ import { configuredPhotoStorage, photoUseCases } from '@/infrastructure/di/photo
 import { SharpPhotoProcessor } from '@/infrastructure/images/sharp-photo-processor'
 import { unionUseCases, type TreeContentWriteDeps } from '@/infrastructure/di/union-use-cases'
 import { ResendPasswordResetMailer } from '@/infrastructure/mail/resend-password-reset-mailer'
+import { ResendPendingChangeAlertMailer } from '@/infrastructure/mail/resend-pending-change-alert-mailer'
 import { getPrismaClient } from '@/infrastructure/persistence/prisma/client'
 import { PrismaAuditLogReader } from '@/infrastructure/persistence/prisma/prisma-audit-log-reader'
 import { PrismaFamilyReader } from '@/infrastructure/persistence/prisma/prisma-family-reader'
@@ -71,6 +73,14 @@ const treeContentWrites = (): TreeContentWriteDeps => ({
   ids: ids(),
   clock: clock(),
   storage: configuredPhotoStorage(),
+  users: users(),
+  pendingChanges: pendingChanges(),
+  // reason: a getter, not a resolved value — this object is also handed to read-only use cases
+  // (forms, photos, child links) that never touch `.mailer`. A resolved value would construct the
+  // Resend mailer, and so require RESEND_API_KEY/RESEND_FROM, on every one of those reads too.
+  get mailer() {
+    return pendingChangeAlertMailer()
+  },
 })
 const photoProcessor = lazy(() => new SharpPhotoProcessor())
 const hasher = lazy(() => new BcryptjsPasswordHasher())
@@ -96,6 +106,14 @@ function buildRateLimiters(): RateLimiters {
 const passwordResetMailer = lazy(
   () =>
     new ResendPasswordResetMailer({
+      apiKey: requireServerEnv('RESEND_API_KEY'),
+      from: requireServerEnv('RESEND_FROM'),
+      appUrl: requireServerEnv('APP_URL'),
+    }),
+)
+const pendingChangeAlertMailer = lazy(
+  () =>
+    new ResendPendingChangeAlertMailer({
       apiKey: requireServerEnv('RESEND_API_KEY'),
       from: requireServerEnv('RESEND_FROM'),
       appUrl: requireServerEnv('APP_URL'),
@@ -163,7 +181,11 @@ export const container = {
   deleteMember: lazy(() => new DeleteMemberUseCase(treeContentWrites())),
   getMemberForm: lazy(() => new GetMemberFormUseCase({ trees: trees(), families: families() })),
   ...unionUseCases(treeContentWrites),
-  ...photoUseCases(() => ({ ...treeContentWrites(), photos: photoProcessor() })),
+  // reason: Object.assign, not a spread — treeContentWrites()'s `mailer` is a getter (see there),
+  // and `{ ...treeContentWrites(), photos: photoProcessor() }` would read it eagerly while copying
+  // it into the new object literal, defeating its laziness for the photo use cases, which never
+  // read it at all.
+  ...photoUseCases(() => Object.assign(treeContentWrites(), { photos: photoProcessor() })),
   getAuditLog: lazy(
     () =>
       new GetAuditLogUseCase({
@@ -183,5 +205,8 @@ export const container = {
   ),
   findCommonAncestors: lazy(
     () => new FindCommonAncestorsUseCase({ trees: trees(), families: families() }),
+  ),
+  getPendingChanges: lazy(
+    () => new GetPendingChangesUseCase({ trees: trees(), pendingChanges: pendingChanges() }),
   ),
 }

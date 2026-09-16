@@ -161,11 +161,16 @@ describe('union children and union reads', () => {
       })
     })
 
-    it.each([
-      [{ viewerId: EDITOR_ID }, 'UNION_MANAGEMENT_FORBIDDEN'],
-      [{ unionId: 'u_elsewhere' }, 'UNION_NOT_FOUND'],
-    ])('refuses %o with %s', async (input, kind) => {
-      expect(await form(input)).toEqual({ ok: false, error: { kind } })
+    it('gives an editor the form too, to propose a union (module 2.6)', async () => {
+      const result = await form({ viewerId: EDITOR_ID })
+      expect(result.ok).toBe(true)
     })
+
+    it.each([[{ unionId: 'u_elsewhere' }, 'UNION_NOT_FOUND']])(
+      'refuses %o with %s',
+      async (input, kind) => {
+        expect(await form(input)).toEqual({ ok: false, error: { kind } })
+      },
+    )
   })
 })

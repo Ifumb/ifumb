@@ -8,12 +8,15 @@ import { DeleteMemberUseCase } from '@/core/use-cases/delete-member'
 import { UpdateMemberUseCase } from '@/core/use-cases/update-member'
 import { PrismaClient } from '@/infrastructure/persistence/prisma/generated/client'
 import { PrismaFamilyReader } from '@/infrastructure/persistence/prisma/prisma-family-reader'
+import { PrismaPendingChangeReader } from '@/infrastructure/persistence/prisma/prisma-pending-change-reader'
 import { PrismaTreeReader } from '@/infrastructure/persistence/prisma/prisma-tree-reader'
 import { PrismaUnitOfWork } from '@/infrastructure/persistence/prisma/prisma-unit-of-work'
+import { PrismaUserRepository } from '@/infrastructure/persistence/prisma/prisma-user-repository'
 import { SystemClock } from '@/infrastructure/system/system-clock'
 import { UuidIdGenerator } from '@/infrastructure/system/uuid-id-generator'
 import { InMemoryPhotoStorage } from '@/infrastructure/storage/in-memory-photo-storage'
 import { dateOf } from '@tests/support/family-fixtures'
+import { RecordingPendingChangeAlertMailer } from '@tests/support/fakes'
 import { memberInput } from '@tests/support/member-inputs'
 import { JPEG_BYTES } from '@tests/support/photo-bytes'
 import { FakePhotoProcessor } from '@tests/support/photo-doubles'
@@ -25,6 +28,9 @@ const deps = {
   trees: new PrismaTreeReader(prisma),
   families,
   unitOfWork: new PrismaUnitOfWork(prisma, { writesEnabled: true }),
+  users: new PrismaUserRepository(prisma),
+  pendingChanges: new PrismaPendingChangeReader(prisma),
+  mailer: new RecordingPendingChangeAlertMailer(),
   ids: new UuidIdGenerator(),
   clock: new SystemClock(),
   storage: null,
@@ -43,7 +49,9 @@ async function addMember(firstName: string): Promise<string> {
     ...byOwner,
     ...memberInput({ firstName }),
   })
-  if (!created.ok) throw new Error(`Could not create ${firstName}`)
+  if (!created.ok || created.value.outcome !== 'applied') {
+    throw new Error(`Could not create ${firstName}`)
+  }
   return created.value.memberId
 }
 
@@ -64,7 +72,7 @@ describe('member writes through Prisma', () => {
       ...memberInput({ birthDate: dateOf('1932-05-07'), deathDate: dateOf('2001') }),
     })
 
-    const memberId = created.ok ? created.value.memberId : ''
+    const memberId = created.ok && created.value.outcome === 'applied' ? created.value.memberId : ''
     const row = await prisma.member.findUniqueOrThrow({ where: { id: memberId } })
     const entries = await prisma.auditLog.findMany({ where: { targetId: memberId } })
     expect([row.firstName, row.birthDate, row.deathDate, row.treeId]).toEqual([
@@ -86,7 +94,7 @@ describe('member writes through Prisma', () => {
     })
 
     const row = await prisma.member.findUniqueOrThrow({ where: { id: memberId } })
-    expect(result).toEqual({ ok: true, value: { changed: true } })
+    expect(result).toEqual({ ok: true, value: { outcome: 'applied', changed: true } })
     expect([row.tribe, row.birthDate, row.nickname]).toEqual([null, null, 'Mama'])
   })
 
@@ -115,7 +123,7 @@ describe('member writes through Prisma', () => {
 
     const family = await families.loadFamily(TreeId.fromString(TREE))
     const member = family.findMember(MemberId.fromString(memberId))
-    expect(result).toEqual({ ok: true, value: { changed: true } })
+    expect(result).toEqual({ ok: true, value: { outcome: 'applied', changed: true } })
     expect([member?.claimedById, member?.details.biography]).toEqual([
       'usr_claimer',
       'Née au Fouta',
@@ -163,7 +171,7 @@ describe('member deletion through Prisma', () => {
       },
     })
 
-    expect(await remove(child)).toEqual({ ok: true, value: undefined })
+    expect(await remove(child)).toEqual({ ok: true, value: { outcome: 'applied' } })
     expect(await prisma.member.count({ where: { id: child } })).toBe(0)
     expect(await prisma.unionChild.findMany({ select: { childId: true } })).toEqual([
       { childId: sibling },

@@ -102,7 +102,7 @@ test('the owner deletes a member who is a child in a union', async ({ page }) =>
   await expect(page.getByRole('main')).not.toContainText('Fatou')
 })
 
-test('an editor may not write members; the account that claimed one may edit it only', async ({
+test('an editor proposes member changes instead of writing directly; the account that claimed one may edit it only', async ({
   page,
   browser,
 }) => {
@@ -114,18 +114,30 @@ test('an editor may not write members; the account that claimed one may edit it 
   const awa = await seedMember(treeId, { firstName: 'Awa', claimedByEmail: claimer.email })
   const moussa = await seedMember(treeId, { firstName: 'Moussa' })
 
+  // The dashboard and profile links to these forms stay hidden from a plain editor; only the
+  // owner is invited to write directly. Module 2.6 opens the forms themselves, reached by URL, so
+  // that an editor can propose instead — see below.
   await editor.goto(`/tree/${treeId}`)
   await expect(editor.getByRole('link', { name: 'Ajouter un membre' })).toHaveCount(0)
   await editor.goto(`/tree/${treeId}/member/${moussa}`)
   await expect(editor.getByRole('link', { name: 'Modifier la fiche' })).toHaveCount(0)
-  await editor.goto(`/tree/${treeId}/member/${moussa}/edit`)
-  await expect(
-    editor.getByRole('heading', { level: 1, name: 'Modification réservée' }),
-  ).toBeVisible()
+
   await editor.goto(`/tree/${treeId}/members/new`)
+  await editor.getByLabel('Prénom').fill('Binta')
+  await editor.getByRole('button', { name: 'Ajouter le membre' }).click()
   await expect(
-    editor.getByRole('heading', { level: 1, name: 'Réservé au propriétaire' }),
+    editor.getByRole('status').filter({ hasText: 'Proposition envoyée' }),
   ).toBeVisible()
+  await expect(editor.getByRole('main')).not.toContainText('Binta')
+
+  await editor.goto(`/tree/${treeId}/member/${moussa}/edit`)
+  await editor.getByLabel('Biographie').fill('Vécut à Labé.')
+  await editor.getByRole('button', { name: 'Enregistrer les modifications' }).click()
+  await expect(
+    editor.getByRole('status').filter({ hasText: 'Proposition envoyée' }),
+  ).toBeVisible()
+  await editor.goto(`/tree/${treeId}/member/${moussa}`)
+  await expect(editor.getByRole('main')).not.toContainText('Vécut à Labé.')
 
   await editor.goto(`/tree/${treeId}/member/${awa}`)
   await expect(editor.getByRole('link', { name: 'Supprimer ce membre' })).toHaveCount(0)

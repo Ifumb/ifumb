@@ -1,7 +1,7 @@
 import 'server-only'
 import type { Member } from '@/core/entities/member'
 import { memberPhotoDiff } from '@/core/entities/member-audit'
-import { ok, type Result } from '@/core/shared/result'
+import { err, ok, type Result } from '@/core/shared/result'
 import type { MemberPhotoDeps } from '@/core/use-cases/member-photo-deps'
 import { discardPhotoFile } from '@/core/use-cases/member-photo-files'
 import {
@@ -18,6 +18,9 @@ export class RemoveMemberPhotoUseCase {
   async execute(target: MemberTarget): Promise<Result<{ changed: boolean }, MemberWriteError>> {
     const found = await writableMember(this.deps, target, EDIT_MEMBER_RULE)
     if (!found.ok) return found
+    // reason: a photo has no shape in the pending-change format (module 2.6) — an editor who did
+    // not claim this member stays refused here, never proposing.
+    if (found.value.mode !== 'apply') return err({ kind: 'MEMBER_EDIT_FORBIDDEN' })
 
     const { member } = found.value
     const previous = member.details.photoUrl

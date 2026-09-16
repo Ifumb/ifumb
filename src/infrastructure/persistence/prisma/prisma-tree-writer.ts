@@ -6,6 +6,8 @@ import { toTreeRow } from '@/infrastructure/persistence/prisma/mappers/tree-mapp
 
 type PrismaExecutor = PrismaClient | Prisma.TransactionClient
 
+const PENDING_ALERT_WINDOW_MS = 60 * 60 * 1000
+
 export class PrismaTreeWriter implements TreeWriter {
   constructor(private readonly db: PrismaExecutor) {}
 
@@ -19,5 +21,18 @@ export class PrismaTreeWriter implements TreeWriter {
       where: { id: tree.id.value },
       data: { name, description, visibility, updatedAt },
     })
+  }
+
+  /** A single conditional UPDATE: only one of two concurrent claims can match the WHERE clause. */
+  async claimPendingAlertSlot(treeId: string, now: Date): Promise<boolean> {
+    const windowStart = new Date(now.getTime() - PENDING_ALERT_WINDOW_MS)
+    const { count } = await this.db.tree.updateMany({
+      where: {
+        id: treeId,
+        OR: [{ pendingNotifLastSentAt: null }, { pendingNotifLastSentAt: { lt: windowStart } }],
+      },
+      data: { pendingNotifLastSentAt: now },
+    })
+    return count > 0
   }
 }

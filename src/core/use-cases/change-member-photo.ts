@@ -34,6 +34,9 @@ export class ChangeMemberPhotoUseCase {
     const { photo, ...target } = input
     const found = await writableMember(this.deps, target, EDIT_MEMBER_RULE)
     if (!found.ok) return found
+    // reason: a photo has no shape in the pending-change format (module 2.6) — an editor who did
+    // not claim this member stays refused here, never proposing.
+    if (found.value.mode !== 'apply') return err({ kind: 'MEMBER_EDIT_FORBIDDEN' })
     const { storage } = this.deps
     if (!storage) return err({ kind: 'PHOTO_STORAGE_UNAVAILABLE' })
     const problem = photoUploadProblem(photo)

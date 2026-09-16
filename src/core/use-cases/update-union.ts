@@ -1,5 +1,6 @@
 import 'server-only'
 import type { Family } from '@/core/entities/family'
+import { unionProposalRevisionSnapshot } from '@/core/entities/proposal-snapshots'
 import type { Union, UnionDetailsInput } from '@/core/entities/union'
 import { unionRevisionDiff } from '@/core/entities/union-audit'
 import {
@@ -12,6 +13,8 @@ import { err, ok, type Result } from '@/core/shared/result'
 import type { Clock } from '@/core/use-cases/ports/clock'
 import type { IdGenerator } from '@/core/use-cases/ports/id-generator'
 import type { UnitOfWork } from '@/core/use-cases/ports/unit-of-work'
+import { applied, proposed, type WriteOutcome } from '@/core/use-cases/proposal-outcome'
+import { recordProposal, type RecordProposalDeps } from '@/core/use-cases/proposal-recording'
 import {
   manageableUnion,
   unionDetailsFrom,
@@ -26,21 +29,21 @@ export type UpdateUnionInput = UnionTarget & UnionDetailsEntry
 export type UpdateUnionError =
   UnionWriteError | { readonly kind: UnionDetailsProblem } | { readonly kind: 'FAMILY_CYCLE' }
 
-type UpdateUnionDeps = FamilyDeps & {
-  readonly unitOfWork: UnitOfWork
-  readonly ids: IdGenerator
-  readonly clock: Clock
-}
+type UpdateUnionDeps = FamilyDeps &
+  RecordProposalDeps & {
+    readonly unitOfWork: UnitOfWork
+    readonly ids: IdGenerator
+    readonly clock: Clock
+  }
 
 /**
- * The owner changes the type, dates or parents of a union; only real changes are stored.
- * reason: the legacy endpoint validated nothing (its body type erased the DTO), so any field —
- * the tree, parents from elsewhere, a parent descending from a child — could be written.
+ * The owner changes the type, dates or parents of a union directly; only real changes are stored.
+ * An editor's revision is proposed to the owner instead.
  */
 export class UpdateUnionUseCase {
   constructor(private readonly deps: UpdateUnionDeps) {}
 
-  async execute(input: UpdateUnionInput): Promise<Result<{ changed: boolean }, UpdateUnionError>> {
+  async execute(input: UpdateUnionInput): Promise<Result<WriteOutcome<{ changed: boolean }>, UpdateUnionError>> {
     const { treeId, unionId, viewerId, ...entry } = input
     const found = await manageableUnion(this.deps, { treeId, unionId, viewerId })
     if (!found.ok) return found
@@ -51,12 +54,23 @@ export class UpdateUnionUseCase {
     if (problem) return err({ kind: problem })
 
     const revised = union.revise(details)
-    if (!revised.changed) return ok({ changed: false })
+    if (!revised.changed) return ok(applied({ changed: false }))
+
+    if (found.value.mode === 'propose') {
+      const pendingChangeId = await recordProposal(this.deps, found.value.tree, {
+        targetId: union.id,
+        targetType: 'UNION',
+        action: 'UPDATE',
+        diff: unionProposalRevisionSnapshot(union, revised.union),
+        authorId: viewerId,
+      })
+      return ok(proposed(pendingChangeId))
+    }
     await this.store(
       { before: union, after: revised.union, family },
       { treeId, authorId: viewerId },
     )
-    return ok({ changed: true })
+    return ok(applied({ changed: true }))
   }
 
   private store(

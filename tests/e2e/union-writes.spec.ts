@@ -148,9 +148,15 @@ test('an editor reads a union but may not change it', async ({ page, browser }) 
   await expect(editor.getByRole('button', { name: /Retirer/ })).toHaveCount(0)
   await expectNoAccessibilityViolations(editor)
 
-  for (const path of [`/tree/${treeId}/union/${union}/edit`, `/tree/${treeId}/unions/new`]) {
-    await editor.goto(path)
-    await expect(heading(editor, 'Réservé au propriétaire')).toBeVisible()
-  }
+  // The link is hidden, but module 2.6 opens the form itself by URL, so an editor can propose.
+  await editor.goto(`/tree/${treeId}/union/${union}/edit`)
+  await editor.getByRole('group', { name: 'Début' }).getByLabel('Année').fill('1955')
+  await editor.getByRole('button', { name: 'Enregistrer les modifications' }).click()
+  await expect(
+    editor.getByRole('status').filter({ hasText: 'Proposition envoyée' }),
+  ).toBeVisible()
+  await editor.goto(`/tree/${treeId}/union/${union}`)
+  await expect(editor.getByText('1955')).toHaveCount(0)
+
   await editorContext.close()
 })

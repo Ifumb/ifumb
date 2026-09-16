@@ -5,6 +5,8 @@ import type { UpdateMemberError } from '@/core/use-cases/update-member'
 type Placement = { readonly field?: string; readonly message: string }
 
 export const MEMBER_UNCHANGED_MESSAGE = 'Aucune modification à enregistrer.'
+export const MEMBER_PROPOSED_MESSAGE =
+  'Proposition envoyée au propriétaire de l’arbre, en attente de sa validation.'
 
 const SESSION_EXPIRED = 'Votre session a expiré. Reconnectez-vous puis réessayez.'
 const NO_ACCESS = 'Vous n’avez plus accès à cet arbre.'

@@ -13,6 +13,7 @@ import {
   ADD_UNION_CHILD_ERRORS,
   CREATE_UNION_ERRORS,
   REMOVE_UNION_CHILD_ERRORS,
+  UNION_PROPOSED_MESSAGE,
   UNION_UNCHANGED_MESSAGE,
   UNION_WRITE_ERRORS,
   UPDATE_UNION_ERRORS,
@@ -51,6 +52,7 @@ export async function createUnionAction(
   if (!result) return failed(WRITES_DISABLED_MESSAGE, values)
   if (!result.ok) return failedAt(CREATE_UNION_ERRORS[result.error.kind], values)
   revalidatePath(`/tree/${treeId}`, 'layout')
+  if (result.value.outcome === 'proposed') return succeeded(UNION_PROPOSED_MESSAGE)
   redirect(unionPath({ treeId, unionId: result.value.unionId }))
 }
 
@@ -69,6 +71,7 @@ export async function updateUnionAction(
   )
   if (!result) return failed(WRITES_DISABLED_MESSAGE, values)
   if (!result.ok) return failedAt(UPDATE_UNION_ERRORS[result.error.kind], values)
+  if (result.value.outcome === 'proposed') return succeeded(UNION_PROPOSED_MESSAGE)
   if (!result.value.changed) return succeeded(UNION_UNCHANGED_MESSAGE)
   revalidatePath(`/tree/${target.treeId}`, 'layout')
   redirect(unionPath(target))
@@ -86,6 +89,7 @@ export async function deleteUnionAction(target: UnionTarget): Promise<FormState>
   if (!result) return failed(WRITES_DISABLED_MESSAGE)
   if (!result.ok) return failed(UNION_WRITE_ERRORS[result.error.kind].message)
   revalidatePath(`/tree/${target.treeId}`, 'layout')
+  if (result.value.outcome === 'proposed') return succeeded(UNION_PROPOSED_MESSAGE)
   redirect(`/tree/${target.treeId}`)
 }
 

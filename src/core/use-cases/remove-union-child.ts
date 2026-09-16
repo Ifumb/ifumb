@@ -32,6 +32,9 @@ export class RemoveUnionChildUseCase {
     const { childId, ...target } = input
     const found = await manageableUnion(this.deps, target)
     if (!found.ok) return found
+    // reason: unlike create/update/delete, unlinking a child has no shape in the pending-change
+    // format (module 2.6) — an editor stays refused here, never proposing.
+    if (found.value.mode !== 'apply') return err({ kind: 'UNION_MANAGEMENT_FORBIDDEN' })
 
     const { family, union } = found.value
     const link = union.children.find((child) => child.childId.value === childId)

@@ -8,6 +8,8 @@ import { SAME_PARENT_TWICE_MESSAGE } from '@/presentation/schemas/union-form-sch
 type Placement = { readonly field?: string; readonly message: string }
 
 export const UNION_UNCHANGED_MESSAGE = 'Aucune modification à enregistrer.'
+export const UNION_PROPOSED_MESSAGE =
+  'Proposition envoyée au propriétaire de l’arbre, en attente de sa validation.'
 
 export const childLinkedMessage = (name: string) =>
   `Lien ajouté : ${name} est enfant de cette union.`

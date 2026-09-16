@@ -4,6 +4,8 @@ import { BusinessWritesDisabledError } from '@/infrastructure/config/business-wr
 import type { PrismaClient } from '@/infrastructure/persistence/prisma/generated/client'
 import { PrismaAuditLogWriter } from '@/infrastructure/persistence/prisma/prisma-audit-log-writer'
 import { PrismaMemberWriter } from '@/infrastructure/persistence/prisma/prisma-member-writer'
+import { PrismaNotificationWriter } from '@/infrastructure/persistence/prisma/prisma-notification-writer'
+import { PrismaPendingChangeWriter } from '@/infrastructure/persistence/prisma/prisma-pending-change-writer'
 import { PrismaUnionWriter } from '@/infrastructure/persistence/prisma/prisma-union-writer'
 import { PrismaTreeWriter } from '@/infrastructure/persistence/prisma/prisma-tree-writer'
 
@@ -28,6 +30,8 @@ export class PrismaUnitOfWork implements UnitOfWork {
         members: new PrismaMemberWriter(transaction),
         unions: new PrismaUnionWriter(transaction),
         auditLog: new PrismaAuditLogWriter(transaction),
+        pendingChanges: new PrismaPendingChangeWriter(transaction),
+        notifications: new PrismaNotificationWriter(transaction),
       }),
     )
   }
