@@ -175,7 +175,7 @@ trancher le cas des arbres `SHARED`, exclus par le legacy).
 | 2.4 | Unions en écriture (OWNER) : page d'union, parents modifiables, enfants liés/retirés, refus des cycles, nœuds du graphe cliquables | fait — `58fafde` |
 | 2.5 | Photos des membres : envoi côté serveur (clé de service), ré-encodage `sharp` sans métadonnées, retrait, suppression avec le membre, ADR 0007 | fait — `9c6221e` |
 | 2.6a | Modifications en attente — propositions : membres et unions, notification, email throttlé, page `/tree/[id]/pending` en lecture | fait — `dc551af` |
-| 2.6b | Modifications en attente — revue : approbation/rejet, application atomique, détection de péremption | à planifier |
+| 2.6b | Modifications en attente — revue : approbation/rejet, application atomique, détection de péremption | fait — `d56b1c9` |
 | 2.7 | Notifications (liste, lu, tout lu) | — |
 | 2.8 | Invitations (email, lien public par jeton, accepter/refuser/révoquer, rôle) + action « c'est moi » (claim, reportée de 2.3 ; `claimedByUserId` unique globalement) | — |
 
@@ -191,12 +191,19 @@ module ») : lire le legacy, vérifier l'emplacement du skill (voir « Cartograp
 **Le projet Supabase de staging (ADR 0005) n'existe pas** (confirmé par l'utilisateur le
 2026-09-16). Sans lui, seules les commandes automatisées (tests unitaires, intégration, E2E — elles
 utilisent une base Postgres locale via Docker, jamais Supabase) peuvent tourner ; aucun essai manuel
-de `pnpm dev` avec des écritures réelles n'est possible. Le module 2.6a a été mené entièrement sur
-la base Docker jetable, gate complet y compris `test:integration`/`test:e2e` — voir plus bas.
+de `pnpm dev` avec des écritures réelles n'est possible. Les modules 2.6a et 2.6b ont été menés
+entièrement sur la base Docker jetable, gate complet y compris `test:integration`/`test:e2e`.
+
+**Flake E2E préexistant, constaté en testant 2.6b, non corrigé (hors périmètre)** : sous
+`pnpm test:e2e` (parallélisme par défaut hors CI), `expectNoAccessibilityViolations` échoue
+occasionnellement avec « Document does not have a non-empty `<title>` element » sur une page
+atteinte par navigation cliente (`Link` suivi immédiatement d'un contrôle axe) — reproduit sur des
+specs d'avant ce module (`tree-writes.spec.ts`, `union-writes.spec.ts`), donc non lié au code. Passe
+de façon fiable en série (`--workers=1`), plus rarement mais pas jamais. À investiguer si ça devient
+gênant (piste : `Link` + axe pourrait avoir besoin d'attendre `document.title` avant d'analyser).
 
 Convention de version constatée jusqu'ici (SemVer mineure en 0.x par `feat`) :
-0.1.8→2.1, 0.1.9→2.2, 0.1.10→2.3, 0.1.11→2.4, 0.1.12→2.5, 0.1.13→2.6a. Donc 2.6b→0.1.14 si le
-découpage ci-dessous est conservé.
+0.1.8→2.1, 0.1.9→2.2, 0.1.10→2.3, 0.1.11→2.4, 0.1.12→2.5, 0.1.13→2.6a, 0.1.14→2.6b.
 
 #### Module 2.6a — Modifications en attente : propositions (fait — `dc551af`)
 
@@ -223,37 +230,27 @@ en attente » sur la page de l'arbre, bannière « sera proposé » avant soumis
 test d'intégration dédié à la règle « une proposition par (auteur, cible) » (codée et couverte
 indirectement par les tests d'écriture, jamais vérifiée isolément contre Postgres).
 
-#### Module 2.6b — Modifications en attente : revue (à planifier)
+#### Module 2.6b — Modifications en attente : revue (fait — `d56b1c9`)
 
-Legacy à relire avant de coder : `ifumb/apps/api/src/pending-changes/pending-changes.service.ts`
-(méthodes `review`, `batchReview`, `applyChange`), `ifumb/apps/api/src/notifications/`, le composant
-`ifumb/apps/web/src/components/tree/PendingChangesPanel.tsx`.
+Le propriétaire approuve ou rejette (un par un, ou en lot), avec un commentaire facultatif au rejet.
+`pending-change-application.ts` reparse le JSON de la proposition en `MemberDetailsInput`/
+`UnionDetailsInput` (tolérant, jamais de clé inconnue écrite) et le fait passer par les mêmes
+fonctions d'entité qu'une écriture directe — jamais appliqué brut. `proposal-staleness.isOutdated`
+détecte une proposition devenue caduque. `ApprovePendingChangeUseCase`/`RejectPendingChangeUseCase`
+écrivent l'application, le statut, le journal et la notification dans une seule transaction ;
+`ReviewAllPendingChangesUseCase` compose les deux, une transaction par proposition (une erreur de
+domaine sur l'une n'annule jamais les autres). Détail complet, y compris quel bug legacy chaque
+décision ferme : ADR `0008-revue-des-propositions-editeur.md` et le message du commit.
 
-Le propriétaire approuve ou rejette (un par un ou en lot), avec commentaire. L'approbation
-**revalide** le JSON avec les mêmes règles de domaine que l'écriture directe (jamais d'écriture
-brute façon legacy — bug 1 ci-dessous), détecte les propositions devenues caduques (l'état courant
-ne correspond plus à l'« avant » enregistré — bug 2), et applique dans une seule transaction avec le
-journal et la notification à l'auteur (bug 4).
+**Un vrai bug d'accessibilité trouvé en testant, pas dans le plan** : le message de confirmation
+d'une action par proposition (Approuver/Rejeter) ne survivait pas à la disparition de cette
+proposition de la liste, puisqu'elle n'est plus « en attente » après l'action — le message
+disparaissait avec elle avant d'être annoncé. Corrigé en redirigeant vers la liste avec le résultat
+porté par un paramètre d'URL (`review=approved|rejected`), lu et affiché par la page elle-même, dans
+une zone qui survit au changement de contenu.
 
-Bugs legacy encore à corriger dans ce module (numérotés dans le plan complet ; 3 et 8 déjà corrigés
-en 2.6a) :
-1. Le JSON de la proposition est appliqué tel quel à Prisma (`...fields as never`) : aucune
-   validation à l'approbation, une proposition peut porter des clés arbitraires.
-2. Une approbation peut écraser silencieusement des changements faits entre-temps par le
-   propriétaire (pas de détection de proposition caduque).
-4. Rien n'est atomique (proposition, journal, notification, statut en écritures séparées).
-5. Suppression d'un membre enfant d'union via une proposition : même bug de contrainte `RESTRICT`
-   que corrigé en 2.3 pour l'écriture directe, mais pas pour ce chemin.
-6. Un traitement en lot s'arrête à la première erreur sans rien défaire.
-7. Le journal d'une création approuvée pointe vers un identifiant temporaire (`new-<horodatage>`)
-   au lieu de l'identifiant réel créé — **déjà résolu côté 2.6a** : `targetId` d'une proposition de
-   création est l'id réel généré à la proposition (`ids.next()`), jamais un placeholder ; 2.6b n'a
-   qu'à le réutiliser tel quel à l'approbation.
-
-Décisions déjà actées en 2.6a, à ne pas rouvrir : les liens enfant-union (2.4) et les photos (2.5)
-restent réservés au propriétaire même après 2.6 — le format JSON legacy ne les représente pas ; une
-proposition PENDING par (auteur, cible), pas par cible seule. ADR 0008 à rédiger en 2.6b pour
-l'atomicité et la revalidation à l'approbation.
+**Reporté, hors gate** : lien de navigation « N modifications en attente » depuis la page de
+l'arbre (la page `/pending` n'est atteignable que par URL directe).
 
 #### Module 2.7 — Notifications
 
