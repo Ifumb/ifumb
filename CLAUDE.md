@@ -174,7 +174,8 @@ trancher le cas des arbres `SHARED`, exclus par le legacy).
 | 2.3 | Membres en écriture (OWNER ; édition par le compte qui a revendiqué la fiche), validation des dates partielles, suppression d'un enfant d'union | fait — `b850093` |
 | 2.4 | Unions en écriture (OWNER) : page d'union, parents modifiables, enfants liés/retirés, refus des cycles, nœuds du graphe cliquables | fait — `58fafde` |
 | 2.5 | Photos des membres : envoi côté serveur (clé de service), ré-encodage `sharp` sans métadonnées, retrait, suppression avec le membre, ADR 0007 | fait — `9c6221e` |
-| 2.6 | Modifications en attente (propositions EDITOR, revue, application, notification) | à planifier |
+| 2.6a | Modifications en attente — propositions : membres et unions, notification, email throttlé, page `/tree/[id]/pending` en lecture | fait — `dc551af` |
+| 2.6b | Modifications en attente — revue : approbation/rejet, application atomique, détection de péremption | à planifier |
 | 2.7 | Notifications (liste, lu, tout lu) | — |
 | 2.8 | Invitations (email, lien public par jeton, accepter/refuser/révoquer, rôle) + action « c'est moi » (claim, reportée de 2.3 ; `claimedByUserId` unique globalement) | — |
 
@@ -187,62 +188,72 @@ cycle de travail à suivre pour chaque module est celui décrit plus bas (« Cyc
 module ») : lire le legacy, vérifier l'emplacement du skill (voir « Cartographie »), produire le plan des 14 points,
 **attendre confirmation avant de coder**, gate de build à la fin, commit local, rapport.
 
-**Question ouverte non résolue, à poser avant tout essai manuel d'écriture** : le projet Supabase
-de **staging** (ADR 0005) existe-t-il déjà ? Sans lui, seules les commandes automatisées (tests
-unitaires, intégration, E2E — elles utilisent une base Postgres locale via Docker, jamais Supabase)
-peuvent tourner ; aucun essai manuel de `pnpm dev` avec des écritures réelles n'est possible.
+**Le projet Supabase de staging (ADR 0005) n'existe pas** (confirmé par l'utilisateur le
+2026-09-16). Sans lui, seules les commandes automatisées (tests unitaires, intégration, E2E — elles
+utilisent une base Postgres locale via Docker, jamais Supabase) peuvent tourner ; aucun essai manuel
+de `pnpm dev` avec des écritures réelles n'est possible. Le module 2.6a a été mené entièrement sur
+la base Docker jetable, gate complet y compris `test:integration`/`test:e2e` — voir plus bas.
 
 Convention de version constatée jusqu'ici (SemVer mineure en 0.x par `feat`) :
-0.1.8→2.1, 0.1.9→2.2, 0.1.10→2.3, 0.1.11→2.4, 0.1.12→2.5. Donc 2.6a→0.1.13, 2.6b→0.1.14 si le
+0.1.8→2.1, 0.1.9→2.2, 0.1.10→2.3, 0.1.11→2.4, 0.1.12→2.5, 0.1.13→2.6a. Donc 2.6b→0.1.14 si le
 découpage ci-dessous est conservé.
 
-#### Module 2.6 — Modifications en attente (EDITOR)
+#### Module 2.6a — Modifications en attente : propositions (fait — `dc551af`)
 
 Plan complet des 14 points :
-[`ifumb-next/docs/plans/2.6-modifications-en-attente.md`](ifumb-next/docs/plans/2.6-modifications-en-attente.md)
-— **proposé, pas encore confirmé ni codé**. Legacy à relire avant de coder :
-`ifumb/apps/api/src/pending-changes/` (service et contrôleur),
-`ifumb/apps/api/src/notifications/notifications.service.ts`,
-`ifumb/apps/api/src/mail/mail.service.ts` (méthode `sendPendingChangeAlert`), les branches
-`if (treeRole === 'EDITOR')` dans `members.service.ts` et `unions.service.ts`, et le composant
+[`ifumb-next/docs/plans/2.6-modifications-en-attente.md`](ifumb-next/docs/plans/2.6-modifications-en-attente.md).
+Les formulaires membre et union (2.3/2.4) distinguent désormais *appliquer* (OWNER, ou compte ayant
+revendiqué la fiche) de *proposer* (EDITOR) via `writeMode()`
+(`src/core/entities/contribution-access.ts`), au lieu de refuser l'éditeur avec
+`*_MANAGEMENT_FORBIDDEN`. Une proposition (`PendingChange`, `src/core/entities/pending-change.ts`)
+enregistre un JSON avant/après aux mêmes clés que le modèle legacy, notifie le propriétaire et lui
+envoie un email throttlé à 1/h/arbre (`TreeWriter.claimPendingAlertSlot`, écriture conditionnelle).
+Page `/tree/[id]/pending` en lecture (le propriétaire voit tout, un éditeur ses propres
+propositions). Détail dans le message du commit.
+
+**Deux bugs trouvés en lançant le gate complet (Docker), pas dans le plan initial** — utiles pour
+2.6b et au-delà : (1) un getter/`Object.assign` est nécessaire dès qu'une dépendance partagée
+(comme le mailer, qui lit `RESEND_API_KEY`) est aussi consommée par des cas d'usage de lecture — un
+spread (`{ ...deps, x }`) lit un getter immédiatement et casse sa paresse ; (2) une page peut avoir
+son propre garde-fou d'accès, séparé et plus strict que le cas d'usage qu'elle appelle — vérifier
+les deux avant de conclure qu'un rôle est bien géré bout en bout.
+
+**Reporté à 2.6b** (hors gate, noté explicitement dans le rapport de 2.6a) : lien « N modifications
+en attente » sur la page de l'arbre, bannière « sera proposé » avant soumission sur les formulaires,
+test d'intégration dédié à la règle « une proposition par (auteur, cible) » (codée et couverte
+indirectement par les tests d'écriture, jamais vérifiée isolément contre Postgres).
+
+#### Module 2.6b — Modifications en attente : revue (à planifier)
+
+Legacy à relire avant de coder : `ifumb/apps/api/src/pending-changes/pending-changes.service.ts`
+(méthodes `review`, `batchReview`, `applyChange`), `ifumb/apps/api/src/notifications/`, le composant
 `ifumb/apps/web/src/components/tree/PendingChangesPanel.tsx`.
 
-Découpage recommandé en deux livraisons (le module est trop gros pour un seul commit) :
+Le propriétaire approuve ou rejette (un par un ou en lot), avec commentaire. L'approbation
+**revalide** le JSON avec les mêmes règles de domaine que l'écriture directe (jamais d'écriture
+brute façon legacy — bug 1 ci-dessous), détecte les propositions devenues caduques (l'état courant
+ne correspond plus à l'« avant » enregistré — bug 2), et applique dans une seule transaction avec le
+journal et la notification à l'auteur (bug 4).
 
-- **2.6a — Propositions.** Les formulaires membre et union existants (créer/modifier/supprimer),
-  déjà écrits en 2.3 et 2.4, se mettent à distinguer *appliquer* (OWNER, ou compte ayant revendiqué
-  la fiche) de *proposer* (EDITOR) au lieu de refuser l'EDITOR avec `*_MANAGEMENT_FORBIDDEN`. Une
-  proposition enregistre un JSON avant/après **au format des clés du modèle `PendingChange` du
-  legacy** (pour qu'une proposition créée avant le cutover reste lisible par l'app legacy tant que
-  les deux coexistent), notifie le propriétaire (table `Notification`) et lui envoie un email
-  (throttlé à 1/h/arbre via `Tree.pendingNotifLastSentAt`, réutilise le mailer Resend existant côté
-  patron de `resend-password-reset-mailer.ts`). Page `/tree/[id]/pending` en lecture seule (liste
-  des propositions, pour le propriétaire toutes, pour l'éditeur les siennes).
-- **2.6b — Revue.** Le propriétaire approuve ou rejette (un par un ou en lot), avec commentaire.
-  L'approbation **revalide** le JSON avec les mêmes règles de domaine que l'écriture directe (jamais
-  d'écriture brute façon legacy — c'est le bug 1 ci-dessous), détecte les propositions devenues
-  caduques (l'état courant ne correspond plus à l'« avant » enregistré), et applique dans une seule
-  transaction avec le journal et la notification à l'auteur.
-
-Bugs legacy identifiés à corriger dans ce module (numérotés dans le plan complet) :
+Bugs legacy encore à corriger dans ce module (numérotés dans le plan complet ; 3 et 8 déjà corrigés
+en 2.6a) :
 1. Le JSON de la proposition est appliqué tel quel à Prisma (`...fields as never`) : aucune
    validation à l'approbation, une proposition peut porter des clés arbitraires.
 2. Une approbation peut écraser silencieusement des changements faits entre-temps par le
    propriétaire (pas de détection de proposition caduque).
-3. Deux éditeurs proposant sur la même cible : la seconde proposition écrase la première sans que
-   l'auteur enregistré change.
 4. Rien n'est atomique (proposition, journal, notification, statut en écritures séparées).
 5. Suppression d'un membre enfant d'union via une proposition : même bug de contrainte `RESTRICT`
    que corrigé en 2.3 pour l'écriture directe, mais pas pour ce chemin.
 6. Un traitement en lot s'arrête à la première erreur sans rien défaire.
 7. Le journal d'une création approuvée pointe vers un identifiant temporaire (`new-<horodatage>`)
-   au lieu de l'identifiant réel créé.
-8. L'email d'alerte insère les noms (arbre, éditeur) sans échappement HTML.
+   au lieu de l'identifiant réel créé — **déjà résolu côté 2.6a** : `targetId` d'une proposition de
+   création est l'id réel généré à la proposition (`ids.next()`), jamais un placeholder ; 2.6b n'a
+   qu'à le réutiliser tel quel à l'approbation.
 
-Décisions déjà proposées (à confirmer avec l'utilisateur au moment de coder) : les liens
-enfant-union (2.4) et les photos (2.5) restent réservés au propriétaire même après 2.6 — le format
-JSON legacy ne les représente pas ; une seule proposition PENDING par (auteur, cible) ; ADR 0008 à
-rédiger pour la compatibilité du format et l'atomicité.
+Décisions déjà actées en 2.6a, à ne pas rouvrir : les liens enfant-union (2.4) et les photos (2.5)
+restent réservés au propriétaire même après 2.6 — le format JSON legacy ne les représente pas ; une
+proposition PENDING par (auteur, cible), pas par cible seule. ADR 0008 à rédiger en 2.6b pour
+l'atomicité et la revalidation à l'approbation.
 
 #### Module 2.7 — Notifications
 
