@@ -15,42 +15,56 @@ suivant (voir « Gate de build », qui est la règle centrale de ce document).
 
 ## Cartographie du dépôt
 
+Depuis le 2026-09-16, le poste de travail a été réorganisé : tout vit sous un dossier parent
+`ifumb-apps/` (`C:\Users\chermann-king\Development\ifumb-apps\`), qui est la racine réellement
+ouverte dans l'éditeur — ce dépôt (`ifumb-next/`) n'en est qu'un sous-dossier.
+
 ```
-ifumb/                       # SOURCE — legacy (React 18 + Vite / NestJS + Prisma). LECTURE SEULE.
-  apps/web/                  #   frontend actuel
-  apps/api/                  #   backend actuel (~14 modules, 13 controllers, ~56 handlers)
-  apps/api/prisma/           #   schema.prisma (~17 modèles) + 10 migrations
-  packages/shared/           #   types TS partagés (@ifumb/shared)
-  docs/audit-migration-nextjs.md   # AUDIT — état des lieux + phasage (non normatif)
-  CLAUDE.md                  #   contexte du legacy (contient des inexactitudes, voir plus bas)
+ifumb-apps/                          # racine réelle du poste de travail
+  ifumb/                             # SOURCE — legacy (React 18 + Vite / NestJS + Prisma). LECTURE SEULE.
+    apps/web/                        #   frontend actuel
+    apps/api/                        #   backend actuel (~14 modules, 13 controllers, ~56 handlers)
+    apps/api/prisma/                 #   schema.prisma (~17 modèles) + 10 migrations
+    packages/shared/                 #   types TS partagés (@ifumb/shared)
+    docs/audit-migration-nextjs.md   # AUDIT — état des lieux + phasage (non normatif)
+    CLAUDE.md                        #   contexte du legacy (contient des inexactitudes, voir plus bas)
 
-ifumb-next/                  # CIBLE — l'application Next.js. Tout le code neuf va ici.
+  ifumb-next/                        # CIBLE — l'application Next.js. Tout le code neuf va ici. (ce dépôt)
 
-nextjs-clean-architect/      # SKILL — SOURCE éditée par l'utilisateur. NORMATIF.
-  SKILL.md                   #   contrat principal
-  references/                #   à lire paresseusement, selon le besoin du module en cours
-  audit/assets/              #   arbre projet de référence + templates de fichiers
-
-.claude/skills/nextjs-clean-architect/   # COPIE INSTALLÉE du skill (invocable via /nextjs-clean-architect)
+  docs/
+    nextjs-clean-architect/          # SKILL — SOURCE éditée par l'utilisateur. NORMATIF.
+      SKILL.md                       #   contrat principal
+      references/                    #   à lire paresseusement, selon le besoin du module en cours
+      audit/assets/                  #   arbre projet de référence + templates de fichiers
 ```
 
-**Deux copies du skill coexistent.** La racine `nextjs-clean-architect/` fait foi ; la copie sous
-`.claude/skills/` n'existe que pour que le skill soit invocable. Avant de démarrer un module, vérifier
-qu'elles sont identiques :
+Chemin absolu du skill : `C:\Users\chermann-king\Development\ifumb-apps\docs\nextjs-clean-architect\SKILL.md`
+— soit `../docs/nextjs-clean-architect/` depuis la racine de ce dépôt.
+
+**Aucune copie installée du skill n'est présente dans cet environnement** : pas de
+`.claude/skills/nextjs-clean-architect/`, ni dans `ifumb-next/`, ni ailleurs sous `ifumb-apps/`
+(vérifié le 2026-09-16). Tant qu'aucune copie n'est installée, `/nextjs-clean-architect` n'est pas
+invocable comme slash command dans cette session — le skill se consulte en lisant directement
+`docs/nextjs-clean-architect/SKILL.md` (et ses `references/` au besoin) et en suivant ses règles
+manuellement. Si une copie installée est ajoutée plus tard (globale sous `~/.claude/skills/`, ou
+projet sous `ifumb-apps/.claude/skills/` ou `ifumb-next/.claude/skills/`), rétablir la vérification
+avant de démarrer un module :
 
 ```bash
-diff -rq nextjs-clean-architect .claude/skills/nextjs-clean-architect
+diff -rq ../docs/nextjs-clean-architect .claude/skills/nextjs-clean-architect
 ```
 
-Si elles divergent, c'est la racine qui gagne : resynchroniser la copie installée avant d'écrire du
-code, et ouvrir une nouvelle session pour que le skill rechargé soit pris en compte.
+Si elles divergent, c'est la source sous `docs/` qui gagne : resynchroniser la copie installée avant
+d'écrire du code, et ouvrir une nouvelle session pour que le skill rechargé soit pris en compte.
 
 ---
 
 ## Hiérarchie des sources
 
-1. **Le skill `nextjs-clean-architect` est normatif** (source : `nextjs-clean-architect/`,
-   invocable par `/nextjs-clean-architect`). Ses règles (dependency rule, SOLID, checklist Clean
+1. **Le skill `nextjs-clean-architect` est normatif** (source : `../docs/nextjs-clean-architect/`,
+   soit `ifumb-apps/docs/nextjs-clean-architect/` en absolu ; non invocable par `/nextjs-clean-architect`
+   dans cet environnement faute de copie installée — se lit directement, voir « Cartographie »).
+   Ses règles (dependency rule, SOLID, checklist Clean
    Code, stratégie de test, accessibilité, Conventional Commits, pnpm, spécificités Next.js 16,
    anti-patterns) s'appliquent à tout fichier écrit dans `ifumb-next/`. Le skill impose de
    **produire le plan d'architecture défini par `SKILL.md` (14 points, dont certains conditionnels) et d'obtenir la confirmation de l'utilisateur
@@ -170,7 +184,7 @@ Reportés en Phase 3 : réglage « découvrable » d'un membre (avec `contact-re
 
 Ce qui suit permet de reprendre la migration sans avoir participé aux sessions précédentes. Le
 cycle de travail à suivre pour chaque module est celui décrit plus bas (« Cycle de travail par
-module ») : lire le legacy, vérifier les deux copies du skill, produire le plan des 14 points,
+module ») : lire le legacy, vérifier l'emplacement du skill (voir « Cartographie »), produire le plan des 14 points,
 **attendre confirmation avant de coder**, gate de build à la fin, commit local, rapport.
 
 **Question ouverte non résolue, à poser avant tout essai manuel d'écriture** : le projet Supabase
@@ -277,8 +291,10 @@ de `ifumb/apps/*` ; passage à un déploiement unique.
 #### Rappels transverses pour la suite
 
 - **Un seul module en cours à la fois**, gate de build vert avant de passer au suivant.
-- Avant de démarrer un module : `diff -rq nextjs-clean-architect .claude/skills/nextjs-clean-architect`
-  (la racine fait foi en cas d'écart).
+- Avant de démarrer un module : vérifier qu'il n'y a toujours qu'une source du skill
+  (`ifumb-apps/docs/nextjs-clean-architect/`). Si une copie installée apparaît un jour sous
+  `.claude/skills/`, revenir au `diff -rq` décrit dans « Cartographie » (la source sous `docs/`
+  fait foi en cas d'écart).
 - Commits locaux uniquement (`git commit`, jamais `push` ni `tag`) tant que l'utilisateur ne le
   demande pas explicitement.
 - Chaque module de la Phase 2 a ajouté une ADR dans `ifumb-next/docs/adr/` quand la décision était
@@ -353,7 +369,8 @@ une exigence de toute migration. **Décision utilisateur du 2026-09-13 : la cibl
 
 1. Lire le code source du module dans `ifumb/apps/api/src/<module>/` et ses consommateurs dans
    `ifumb/apps/web/src/`.
-2. Vérifier que les deux copies du skill sont identiques (voir « Cartographie »).
+2. Vérifier l'emplacement du skill et, si une copie installée existe, qu'elle est identique à la
+   source sous `docs/` (voir « Cartographie »).
 3. Produire le **plan d'architecture** exigé par `SKILL.md` (14 points ; les points 9 à 14 ne
    s'appliquent que si le module touche l'UI, une route, une action sensible, une API externe ou
    le déploiement — le plan dit explicitement lesquels sont sans objet).
