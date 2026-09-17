@@ -2,6 +2,7 @@ import 'server-only'
 import type { ReactNode } from 'react'
 import type { GraphMode } from '@/app/tree/[id]/graph/load-graph-view'
 import type { FamilyGraph } from '@/core/use-cases/family-graph-views'
+import type { CrossTreeLinkView } from '@/core/use-cases/ports/cross-tree-link-reader'
 import { configuredMemberPhotoSource } from '@/infrastructure/config/member-photos'
 import { graphHref } from '@/presentation/graph/graph-view-urls'
 import { toFamilyGraphViewModel } from '@/presentation/graph/layout-family-graph'
@@ -23,14 +24,21 @@ type GraphViewContentProps = Readonly<{
   request: GraphViewRequest
   graph: FamilyGraph
   mode: GraphMode
+  crossTreeLinks: readonly CrossTreeLinkView[]
 }>
 
 type ModeOutcome = { readonly view: ReactNode; readonly emphasis: readonly string[] | null }
 
 /** Composes the graph page once everything is readable: tools, the active result, the graph. */
-export function GraphViewContent({ treeId, request, graph, mode }: GraphViewContentProps) {
+export function GraphViewContent({
+  treeId,
+  request,
+  graph,
+  mode,
+  crossTreeLinks,
+}: GraphViewContentProps) {
   const outcome = modeOutcome(treeId, graph, mode)
-  const graphViewModel = toFamilyGraphViewModel(graph, configuredMemberPhotoSource())
+  const graphViewModel = toFamilyGraphViewModel(graph, configuredMemberPhotoSource(), crossTreeLinks)
   const tools = toGraphToolsViewModel(treeId, graph.people, request)
   return (
     <FamilyGraphView

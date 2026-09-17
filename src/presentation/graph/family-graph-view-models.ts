@@ -1,10 +1,13 @@
 import 'server-only'
 import type { UnionType } from '@/core/entities/union'
 import type { FamilyGraph, GraphMember, GraphUnion } from '@/core/use-cases/family-graph-views'
+import type { CrossTreeLinkView } from '@/core/use-cases/ports/cross-tree-link-reader'
 import type { PendingAction } from '@/core/use-cases/ports/pending-change-reader'
 import { lifespanLabel } from '@/presentation/formatting/partial-date-format'
 import { photoSource, type PhotoSourcePolicy } from '@/presentation/formatting/photo-source'
 import type {
+  BridgeLink,
+  ForeignOrigin,
   GraphEdge,
   MemberNodeData,
   PendingBadge,
@@ -21,6 +24,14 @@ export type UnlaidGraph = {
   readonly edges: readonly GraphEdge[]
 }
 
+export type UnlaidGraphOptions = {
+  /** Set only when `graph` is a foreign branch merged into another tree's graph (module 3.3). */
+  readonly foreign?: ForeignOrigin
+  /** This tree's own cross-tree bridges, by member id; never set for a foreign branch itself
+   * (module 3.3, decision 6 — a foreign node never shows its own bridge buttons). */
+  readonly bridgesByMember?: ReadonlyMap<string, readonly BridgeLink[]>
+}
+
 const UNION_ICONS: Readonly<Record<UnionType, UnionNodeData['icon']>> = {
   MARRIAGE: 'heart',
   PARTNERSHIP: 'rings',
@@ -30,30 +41,46 @@ const UNION_ICONS: Readonly<Record<UnionType, UnionNodeData['icon']>> = {
 export const memberNodeId = (memberId: string) => `member_${memberId}`
 export const unionNodeId = (unionId: string) => `union_${unionId}`
 
-export function toUnlaidGraph(graph: FamilyGraph, photos: PhotoSourcePolicy | null): UnlaidGraph {
+export function toUnlaidGraph(
+  graph: FamilyGraph,
+  photos: PhotoSourcePolicy | null,
+  options: UnlaidGraphOptions = {},
+): UnlaidGraph {
+  const { foreign = null, bridgesByMember } = options
   const treeId = graph.tree.id
   const pivotId = graph.lineage?.pivot.id ?? null
   return {
     nodes: [
       ...graph.members.map((member) => ({
         id: memberNodeId(member.id),
-        data: toMemberNodeData(treeId, member, photos, pivotId),
+        data: toMemberNodeData(treeId, member, photos, {
+          pivotId,
+          foreign,
+          bridgeLinks: bridgesByMember?.get(member.id) ?? [],
+        }),
       })),
       ...graph.unions.map((union) => ({
         id: unionNodeId(union.id),
-        data: toUnionNodeData(graph, union),
+        data: toUnionNodeData(graph, union, foreign),
       })),
     ],
     edges: graph.unions.flatMap(unionEdges),
   }
 }
 
+type MemberNodeContext = {
+  readonly pivotId?: string | null
+  readonly foreign?: ForeignOrigin | null
+  readonly bridgeLinks?: readonly BridgeLink[]
+}
+
 export function toMemberNodeData(
   treeId: string,
   member: GraphMember,
   photos: PhotoSourcePolicy | null,
-  pivotId: string | null = null,
+  context: MemberNodeContext = {},
 ): MemberNodeData {
+  const { pivotId = null, foreign = null, bridgeLinks = [] } = context
   const { href, name } = memberLink(treeId, member)
   return {
     kind: 'member',
@@ -73,10 +100,16 @@ export function toMemberNodeData(
     ethnicities: member.ethnicities,
     gender: member.gender,
     generation: member.generation,
+    foreign,
+    bridgeLinks,
   }
 }
 
-function toUnionNodeData(graph: FamilyGraph, union: GraphUnion): UnionNodeData {
+function toUnionNodeData(
+  graph: FamilyGraph,
+  union: GraphUnion,
+  foreign: ForeignOrigin | null = null,
+): UnionNodeData {
   const typeLabel = UNION_TYPE_LABELS[union.type]
   const names = union.parentIds.flatMap((id) => {
     const parent = graph.members.find((member) => member.id === id)
@@ -89,7 +122,28 @@ function toUnionNodeData(graph: FamilyGraph, union: GraphUnion): UnionNodeData {
     label: names.length > 0 ? `${typeLabel} : ${names.join(' et ')}` : typeLabel,
     icon: UNION_ICONS[union.type],
     pending: pendingBadge(union.pendingAction),
+    foreign,
   }
+}
+
+/** This tree's cross-tree bridges, keyed by the local member id each one hangs off. */
+export function bridgesByMemberFor(
+  treeId: string,
+  links: readonly CrossTreeLinkView[],
+  expandedLinkIds: ReadonlySet<string> = new Set(),
+): ReadonlyMap<string, readonly BridgeLink[]> {
+  const byMember = new Map<string, BridgeLink[]>()
+  for (const view of links) {
+    const own = view.link.ownSide(treeId)
+    if (!own) continue
+    const entry: BridgeLink = {
+      linkId: view.link.id,
+      treeName: view.linkedTreeName,
+      expanded: expandedLinkIds.has(view.link.id),
+    }
+    byMember.set(own.memberId, [...(byMember.get(own.memberId) ?? []), entry])
+  }
+  return byMember
 }
 
 function unionEdges(union: GraphUnion): GraphEdge[] {

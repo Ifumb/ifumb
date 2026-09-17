@@ -7,6 +7,16 @@ export type PendingBadge = {
   readonly tone: 'pending' | 'deletion'
 }
 
+/** The other tree a node belongs to, once its branch has been merged into this graph (module 3.3). */
+export type ForeignOrigin = { readonly treeId: string; readonly treeName: string }
+
+/** One bridge a local member has into another tree, and whether its branch is currently shown. */
+export type BridgeLink = {
+  readonly linkId: string
+  readonly treeName: string
+  readonly expanded: boolean
+}
+
 export type MemberNodeData = {
   readonly kind: 'member'
   readonly name: string
@@ -23,17 +33,23 @@ export type MemberNodeData = {
   readonly ethnicities: readonly string[]
   readonly gender: Gender | null
   readonly generation: number
+  /** Set once this node comes from a merged foreign branch; null for a node of the tree itself. */
+  readonly foreign: ForeignOrigin | null
+  /** This member's own bridges into other trees; always empty on a `foreign` node (module 3.3,
+   * decision 6 — no chained expansion). */
+  readonly bridgeLinks: readonly BridgeLink[]
 }
 
 export type UnionNodeData = {
   readonly kind: 'union'
   readonly typeLabel: string
-  /** The union's own page, which the node links to. */
+  /** The union's own page, which the node links to; ignored when `foreign` is set. */
   readonly href: UnionHref
   /** The accessible name of that link: the type and the parents' names. */
   readonly label: string
   readonly icon: 'heart' | 'rings' | 'branch'
   readonly pending: PendingBadge | null
+  readonly foreign: ForeignOrigin | null
 }
 
 export type GraphNodeData = MemberNodeData | UnionNodeData
@@ -48,6 +64,7 @@ export type GraphEdge = { readonly id: string; readonly source: string; readonly
 
 /** Everything the client graph needs, already laid out on the server. */
 export type FamilyGraphViewModel = {
+  readonly treeId: string
   readonly treeName: string
   readonly treeHref: `/tree/${string}`
   readonly memberCount: number

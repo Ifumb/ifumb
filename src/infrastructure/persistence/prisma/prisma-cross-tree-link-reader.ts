@@ -26,6 +26,11 @@ export class PrismaCrossTreeLinkReader implements CrossTreeLinkReader {
     return rows.map((row) => toView(row, treeId, names))
   }
 
+  async findById(id: string): Promise<CrossTreeLink | null> {
+    const row = await this.db.crossTreeLink.findUnique({ where: { id } })
+    return row ? CrossTreeLink.create(row) : null
+  }
+
   private async namesFor(memberIds: readonly string[]): Promise<ReadonlyMap<string, string>> {
     if (memberIds.length === 0) return new Map()
     const members = await this.db.member.findMany({

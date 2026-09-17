@@ -52,6 +52,8 @@ describe('toMemberNodeData', () => {
       ethnicities: [],
       gender: 'FEMALE',
       generation: 1,
+      foreign: null,
+      bridgeLinks: [],
     })
   })
 
@@ -125,6 +127,7 @@ describe('toUnlaidGraph', () => {
       label: 'Union libre : awa Diallo',
       icon: 'rings',
       pending: { label: 'Suppression en attente', tone: 'deletion' },
+      foreign: null,
     })
   })
 

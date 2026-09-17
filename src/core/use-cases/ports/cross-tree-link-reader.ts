@@ -11,4 +11,5 @@ export type CrossTreeLinkView = {
 /** Read side of established cross-tree links, seen from one of the two trees they connect. */
 export interface CrossTreeLinkReader {
   listForTree(treeId: string): Promise<readonly CrossTreeLinkView[]>
+  findById(id: string): Promise<CrossTreeLink | null>
 }

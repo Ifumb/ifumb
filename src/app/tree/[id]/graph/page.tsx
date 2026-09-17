@@ -33,12 +33,20 @@ export async function generateMetadata({ params }: GraphPageProps): Promise<Meta
 export default async function GraphPage({ params, searchParams }: GraphPageProps) {
   const { id } = await params
   const request = parseGraphView(await searchParams)
-  const { signedIn, graph, mode } = await loadGraphView(id, request)
+  const { signedIn, graph, mode, crossTreeLinks } = await loadGraphView(id, request)
 
   if (!graph.ok) return unreadableGraph(graph.error.kind, signedIn)
   if (mode.kind !== 'none' && !mode.result.ok)
     return unreadableGraph(mode.result.error.kind, signedIn)
-  return <GraphViewContent treeId={id} request={request} graph={graph.value} mode={mode} />
+  return (
+    <GraphViewContent
+      treeId={id}
+      request={request}
+      graph={graph.value}
+      mode={mode}
+      crossTreeLinks={crossTreeLinks}
+    />
+  )
 }
 
 function unreadableGraph(kind: string, signedIn: boolean) {

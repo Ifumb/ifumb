@@ -63,6 +63,22 @@ describe('cross-tree links through Prisma', () => {
     expect(fromTarget[0]).toMatchObject({ linkedTreeName: 'Famille Diallo' })
   })
 
+  it('finds a link by id, or returns null', async () => {
+    await linkWriter.create(
+      CrossTreeLink.establish({
+        id: 'ctl_1',
+        tree1Id: SOURCE_TREE,
+        member1Id: 'mbr_awa',
+        tree2Id: TARGET_TREE,
+        member2Id: 'mbr_awa_target',
+        now: NOW,
+      }),
+    )
+
+    expect((await linkReader.findById('ctl_1'))?.id).toBe('ctl_1')
+    expect(await linkReader.findById('ctl_missing')).toBeNull()
+  })
+
   it('tolerates a dangling member reference left by a deletion, without failing the whole list', async () => {
     await linkWriter.create(
       CrossTreeLink.establish({

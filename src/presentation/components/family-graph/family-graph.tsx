@@ -12,11 +12,13 @@ import {
   type ReactFlowProps,
 } from '@xyflow/react'
 import { useMemo, useState } from 'react'
+import { CrossTreeBranchProvider } from '@/presentation/components/family-graph/cross-tree-branch-context'
 import { GraphFiltersPanel } from '@/presentation/components/family-graph/graph-filters-panel'
 import { GraphStatus } from '@/presentation/components/family-graph/graph-status'
 import { GraphToolbar } from '@/presentation/components/family-graph/graph-toolbar'
 import { MemberNode } from '@/presentation/components/family-graph/member-node'
 import { UnionNode } from '@/presentation/components/family-graph/union-node'
+import { useCrossTreeBranches } from '@/presentation/components/family-graph/use-cross-tree-branches'
 import { useGraphCentring } from '@/presentation/components/family-graph/use-graph-centring'
 import type {
   FamilyGraphViewModel,
@@ -67,7 +69,9 @@ export function FamilyGraph({ graph }: FamilyGraphProps) {
   )
 }
 
-function FamilyGraphCanvas({ graph }: FamilyGraphProps) {
+function FamilyGraphCanvas({ graph: initialGraph }: FamilyGraphProps) {
+  const branches = useCrossTreeBranches(initialGraph)
+  const graph = branches.graph
   const [filters, setFilters] = useState(NO_FILTERS)
   const options = useMemo(() => filterOptions(graph.nodes), [graph.nodes])
   const visible = useMemo(() => visibleNodeIds(graph.nodes, graph.edges, filters), [graph, filters])
@@ -78,7 +82,20 @@ function FamilyGraphCanvas({ graph }: FamilyGraphProps) {
       <GraphToolbar nodes={graph.nodes} visible={visible} onCentre={centre} onReset={reset} />
       <GraphFiltersPanel options={options} filters={filters} onChange={setFilters} />
       <GraphStatus nodes={graph.nodes} visible={visible} total={graph.memberCount} />
-      <GraphCanvas graph={graph} visible={visible} inFocus={inFocus} />
+      {branches.error && (
+        <p role="alert" className="text-brand-dark">
+          {branches.error}
+        </p>
+      )}
+      <CrossTreeBranchProvider
+        value={{
+          expandedLinkIds: branches.expandedLinkIds,
+          pendingLinkId: branches.pendingLinkId,
+          onToggle: branches.toggle,
+        }}
+      >
+        <GraphCanvas graph={graph} visible={visible} inFocus={inFocus} />
+      </CrossTreeBranchProvider>
     </div>
   )
 }

@@ -3,6 +3,7 @@ import { AcceptSuggestionUseCase } from '@/core/use-cases/accept-suggestion'
 import { ApproveConnectionRequestUseCase } from '@/core/use-cases/approve-connection-request'
 import { ComputeSuggestionsUseCase } from '@/core/use-cases/compute-suggestions'
 import { GetConnectionRequestsUseCase } from '@/core/use-cases/get-connection-requests'
+import { GetCrossTreeBranchUseCase } from '@/core/use-cases/get-cross-tree-branch'
 import { GetSuggestionsUseCase } from '@/core/use-cases/get-suggestions'
 import { ListCrossTreeLinksUseCase } from '@/core/use-cases/list-cross-tree-links'
 import type { Clock } from '@/core/use-cases/ports/clock'
@@ -49,5 +50,6 @@ export function crossTreeUseCases(deps: () => CrossTreeWriteDeps) {
     approveConnectionRequest: lazy(() => new ApproveConnectionRequestUseCase(deps())),
     refuseConnectionRequest: lazy(() => new RefuseConnectionRequestUseCase(deps())),
     listCrossTreeLinks: lazy(() => new ListCrossTreeLinksUseCase(deps())),
+    getCrossTreeBranch: lazy(() => new GetCrossTreeBranchUseCase(deps())),
   }
 }

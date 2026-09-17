@@ -17,11 +17,19 @@ export type GraphMode =
 export async function loadGraphView(treeId: string, request: GraphViewRequest) {
   const viewer = await currentUserOrNull()
   const reader: TreeReadInput = { treeId, viewerId: viewer?.id }
-  const [graph, mode] = await Promise.all([
+  const [graph, mode, crossTreeLinks] = await Promise.all([
     container.getFamilyGraph().execute(graphInput(reader, request)),
     loadMode(reader, request),
+    loadCrossTreeLinks(reader),
   ])
-  return { signedIn: viewer !== null, graph, mode }
+  return { signedIn: viewer !== null, graph, mode, crossTreeLinks }
+}
+
+/** The tree's cross-tree bridges (module 3.3); an empty list if it turns out unreadable — the
+ * graph's own access result is what the page actually acts on. */
+async function loadCrossTreeLinks(reader: TreeReadInput) {
+  const result = await container.listCrossTreeLinks().execute(reader)
+  return result.ok ? result.value : []
 }
 
 function graphInput(reader: TreeReadInput, request: GraphViewRequest): GetFamilyGraphInput {

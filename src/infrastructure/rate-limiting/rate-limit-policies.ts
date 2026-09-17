@@ -29,6 +29,9 @@ export const RATE_LIMIT_POLICIES = {
   // Recomputing suggestions (module 3.2): scans every member of every accessible tree against the
   // whole candidate pool — far stricter than treeWriteByUser, a brake on repeated full rescans.
   computeSuggestionsByUser: { limit: 5, windowMs: 15 * MINUTE_MS },
+  // Expanding a foreign branch (module 3.3): loads a whole linked tree and relays out the merged
+  // graph server-side on every toggle — a brake on repeated full reloads.
+  crossTreeBranchByUser: { limit: 20, windowMs: MINUTE_MS },
 } as const satisfies Record<string, RateLimitPolicy>
 
 export type RateLimitPolicyName = keyof typeof RATE_LIMIT_POLICIES
