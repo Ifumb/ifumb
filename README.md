@@ -1,4 +1,4 @@
-# ifumb-next
+# ifumb
 
 Migration de l'application IFUMB (réseau généalogique culturel) vers Next.js 16, en Clean
 Architecture. Les règles de migration sont dans le `CLAUDE.md` du dépôt parent ; les règles

@@ -3,7 +3,7 @@
 services:
   postgres-test:
     image: postgres:16-alpine
-    container_name: ifumb-next-postgres-test
+    container_name: ifumb-postgres-test
     ports:
       - '55432:5432'
     environment:

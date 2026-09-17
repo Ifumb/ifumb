@@ -2,11 +2,16 @@
 
 ## Objectif du dépôt
 
-Migrer **l'intégralité** de l'application ifumb (monorepo React/Vite + NestJS situé dans `ifumb/`)
-vers **une application Next.js unique** dans `ifumb-next/`.
+Migrer **l'intégralité** de l'application ifumb (monorepo React/Vite + NestJS situé dans
+`ifumb-legacy/`) vers **une application Next.js unique** dans `ifumb/`.
 
 Absorption complète : le backend NestJS disparaît, il n'y a **pas** de BFF ni d'API NestJS
-résiduelle. À terme, `ifumb/` est déprécié et un seul déploiement subsiste.
+résiduelle. À terme, `ifumb-legacy/` est déprécié et un seul déploiement subsiste.
+
+*Renommage du 2026-09-18 : ce dépôt s'appelait `ifumb-next` (dossier local et dépôt GitHub), le
+legacy s'appelait `ifumb`. Les deux dépôts GitHub et dossiers locaux ont été renommés
+(`ifumb-next`→`ifumb`, `ifumb`→`ifumb-legacy`) une fois la Phase 3 terminée — l'historique Git (et
+les liens/commits antérieurs à cette date) garde les anciens noms.*
 
 La migration se fait **module par module**, et **chaque module doit builder** avant de passer au
 suivant (voir « Gate de build », qui est la règle centrale de ce document).
@@ -17,11 +22,11 @@ suivant (voir « Gate de build », qui est la règle centrale de ce document).
 
 Depuis le 2026-09-16, le poste de travail a été réorganisé : tout vit sous un dossier parent
 `ifumb-apps/` (`C:\Users\chermann-king\Development\ifumb-apps\`), qui est la racine réellement
-ouverte dans l'éditeur — ce dépôt (`ifumb-next/`) n'en est qu'un sous-dossier.
+ouverte dans l'éditeur — ce dépôt (`ifumb/`) n'en est qu'un sous-dossier.
 
 ```
 ifumb-apps/                          # racine réelle du poste de travail
-  ifumb/                             # SOURCE — legacy (React 18 + Vite / NestJS + Prisma). LECTURE SEULE.
+  ifumb-legacy/                      # SOURCE — legacy (React 18 + Vite / NestJS + Prisma). LECTURE SEULE.
     apps/web/                        #   frontend actuel
     apps/api/                        #   backend actuel (~14 modules, 13 controllers, ~56 handlers)
     apps/api/prisma/                 #   schema.prisma (~17 modèles) + 10 migrations
@@ -29,7 +34,7 @@ ifumb-apps/                          # racine réelle du poste de travail
     docs/audit-migration-nextjs.md   # AUDIT — état des lieux + phasage (non normatif)
     CLAUDE.md                        #   contexte du legacy (contient des inexactitudes, voir plus bas)
 
-  ifumb-next/                        # CIBLE — l'application Next.js. Tout le code neuf va ici. (ce dépôt)
+  ifumb/                              # CIBLE — l'application Next.js. Tout le code neuf va ici. (ce dépôt)
 
   docs/
     nextjs-clean-architect/          # SKILL — SOURCE éditée par l'utilisateur. NORMATIF.
@@ -42,12 +47,12 @@ Chemin absolu du skill : `C:\Users\chermann-king\Development\ifumb-apps\docs\nex
 — soit `../docs/nextjs-clean-architect/` depuis la racine de ce dépôt.
 
 **Aucune copie installée du skill n'est présente dans cet environnement** : pas de
-`.claude/skills/nextjs-clean-architect/`, ni dans `ifumb-next/`, ni ailleurs sous `ifumb-apps/`
+`.claude/skills/nextjs-clean-architect/`, ni dans `ifumb/`, ni ailleurs sous `ifumb-apps/`
 (vérifié le 2026-09-16). Tant qu'aucune copie n'est installée, `/nextjs-clean-architect` n'est pas
 invocable comme slash command dans cette session — le skill se consulte en lisant directement
 `docs/nextjs-clean-architect/SKILL.md` (et ses `references/` au besoin) et en suivant ses règles
 manuellement. Si une copie installée est ajoutée plus tard (globale sous `~/.claude/skills/`, ou
-projet sous `ifumb-apps/.claude/skills/` ou `ifumb-next/.claude/skills/`), rétablir la vérification
+projet sous `ifumb-apps/.claude/skills/` ou `ifumb/.claude/skills/`), rétablir la vérification
 avant de démarrer un module :
 
 ```bash
@@ -66,18 +71,18 @@ d'écrire du code, et ouvrir une nouvelle session pour que le skill rechargé so
    dans cet environnement faute de copie installée — se lit directement, voir « Cartographie »).
    Ses règles (dependency rule, SOLID, checklist Clean
    Code, stratégie de test, accessibilité, Conventional Commits, pnpm, spécificités Next.js 16,
-   anti-patterns) s'appliquent à tout fichier écrit dans `ifumb-next/`. Le skill impose de
+   anti-patterns) s'appliquent à tout fichier écrit dans `ifumb/`. Le skill impose de
    **produire le plan d'architecture défini par `SKILL.md` (14 points, dont certains conditionnels) et d'obtenir la confirmation de l'utilisateur
    avant de générer du code** — pour chaque module migré, et aussi pour chaque fix ou chore.
    Ce document ne recopie pas ces règles : en cas de doute, c'est `SKILL.md` qui fait foi.
-2. **`ifumb/docs/audit-migration-nextjs.md` est un état des lieux, explicitement non normatif**
+2. **`ifumb-legacy/docs/audit-migration-nextjs.md` est un état des lieux, explicitement non normatif**
    (il le dit dans son propre en-tête). Il fournit l'inventaire, l'ordre des modules, le phasage
    et les risques. Il ne dicte pas l'architecture cible.
 3. **En cas de conflit, le skill l'emporte.** Conflit connu et déjà tranché : l'audit suggère
    d'appeler « Prisma directement » depuis les Server Actions ; le skill l'interdit. → Prisma
    n'est jamais importé hors de `src/infrastructure/persistence/prisma/`. Chaque agrégat a un
    port défini dans `src/core/use-cases/`, injecté via le conteneur DI.
-4. **`ifumb/CLAUDE.md` décrit le legacy et contient des inexactitudes vérifiées** : il mentionne
+4. **`ifumb-legacy/CLAUDE.md` décrit le legacy et contient des inexactitudes vérifiées** : il mentionne
    `pg_trgm` et `shadcn/ui`, or aucun des deux n'est réellement utilisé dans le code (recherche
    par simples filtres Prisma `contains`/`insensitive`, primitives Radix UI brutes). Ne pas s'y
    fier sans vérifier dans le code.
@@ -86,7 +91,7 @@ d'écrire du code, et ouvrir une nouvelle session pour que le skill rechargé so
 
 ## Gate de build — règle centrale
 
-**Un module n'est terminé que lorsque `ifumb-next/` build.** Depuis `ifumb-next/` :
+**Un module n'est terminé que lorsque `ifumb/` build.** Depuis `ifumb/` :
 
 ```bash
 pnpm install && pnpm typecheck && pnpm lint && pnpm test && pnpm run audit && pnpm build
@@ -108,7 +113,7 @@ Règles associées, sans exception :
   colle la sortie réelle. Un échec est rapporté tel quel, jamais contourné par un `any`, un
   `@ts-ignore`, une règle ESLint désactivée ou un `ignoreBuildErrors` dans `next.config`.
 - Ces scripts (`typecheck`, `lint`, `test`, `audit`, `build`, `test:integration`, `test:e2e`) existent
-  dans `ifumb-next/package.json` : les supprimer ou les vider revient à contourner le gate.
+  dans `ifumb/package.json` : les supprimer ou les vider revient à contourner le gate.
 
 ---
 
@@ -123,7 +128,7 @@ code → tests → gate de build → rapport*.
 | 1 | **Lecture seule** : `members`, `unions`, `graph` (+ parenté, ancêtres communs), explore | Server Components ; `reactflow` en Client Component | Moyenne |
 | 2 | **Écritures et collaboration**, dans cet ordre : `audit-log` → mutations OWNER (arbres, membres, unions, claim) → `pending-changes` (mutations EDITOR) → `invitations`, `notifications` | Server Actions + Route Handler pour le lien d'invitation public | Élevée |
 | 3 | `cross-tree` (suggestions + branch), `contact-requests` | Server Actions | Élevée — logique la plus dense |
-| 4 | Cutover | Dépréciation de `ifumb/apps/*`, déploiement unique | — |
+| 4 | Cutover | Dépréciation de `ifumb-legacy/apps/*`, déploiement unique | — |
 | — | `mail` (Resend) | Module serveur partagé, réutilisé tel quel | Faible |
 
 L'auth est traitée en Phase 0 parce qu'elle est structurante pour tout le reste — et parce que
@@ -210,7 +215,7 @@ Convention de version constatée jusqu'ici (SemVer mineure en 0.x par `feat`) :
 #### Module 2.6a — Modifications en attente : propositions (fait — `dc551af`)
 
 Plan complet des 14 points :
-[`ifumb-next/docs/plans/2.6-modifications-en-attente.md`](ifumb-next/docs/plans/2.6-modifications-en-attente.md).
+[`ifumb/docs/plans/2.6-modifications-en-attente.md`](ifumb/docs/plans/2.6-modifications-en-attente.md).
 Les formulaires membre et union (2.3/2.4) distinguent désormais *appliquer* (OWNER, ou compte ayant
 revendiqué la fiche) de *proposer* (EDITOR) via `writeMode()`
 (`src/core/entities/contribution-access.ts`), au lieu de refuser l'éditeur avec
@@ -281,13 +286,13 @@ provoque via `revalidatePath`. Corrigé en gardant le formulaire toujours monté
 cache une fois qu'il n'y a plus rien à marquer), à l'image de la convention déjà en place sur
 `NotificationBadge`.
 
-Legacy de référence : `ifumb/apps/api/src/notifications/` (`create`, `createForContactRequest`,
-`findForUser`), `ifumb/apps/web/src/hooks/useNotifications.ts`.
+Legacy de référence : `ifumb-legacy/apps/api/src/notifications/` (`create`, `createForContactRequest`,
+`findForUser`), `ifumb-legacy/apps/web/src/hooks/useNotifications.ts`.
 
 #### Module 2.8 — Invitations + action « c'est moi » (fait — `da7f252`)
 
 Plan complet des 14 points :
-[`ifumb-next/docs/plans/2.8-invitations-et-claim.md`](ifumb-next/docs/plans/2.8-invitations-et-claim.md).
+[`ifumb/docs/plans/2.8-invitations-et-claim.md`](ifumb/docs/plans/2.8-invitations-et-claim.md).
 Cycle de vie complet d'une invitation (`core/entities/invitation.ts` : `send`/`resolve`/
 `changeRole`, même vocabulaire que `PendingChange.resolve` du module 2.6b) : le propriétaire invite
 par email + rôle, l'invité accepte ou rejette (email du compte revérifié contre celui de
@@ -314,7 +319,7 @@ attente sur cet arbre dans la même transaction (`PendingChangeWriter.rejectAllB
 legacy `rejectAllByUser`, silencieux — pas de notification). Pas d'écran dédié « à qui êtes-vous ? »
 après acceptation (réduction de périmètre validée) : l'invité est redirigé sur l'arbre et revendique
 sa fiche depuis la page membre. Ajout généraliste d'une redirection après connexion/inscription
-(`?redirect=…`, absente jusqu'ici côté `ifumb-next`), avec `safeRedirectTarget` qui rejette tout ce
+(`?redirect=…`, absente jusqu'ici côté `ifumb`), avec `safeRedirectTarget` qui rejette tout ce
 qui n'est pas un chemin relatif interne (`presentation/security/safe-redirect.ts`) — sans ça,
 `redirect()` suivrait aveuglément n'importe quelle URL passée en paramètre.
 
@@ -328,7 +333,7 @@ mailer paresseux du même genre.
 #### Phase 3 — cross-tree et contact-requests
 
 Plan complet des 14 points (les trois sous-modules) :
-[`ifumb-next/docs/plans/3-cross-tree-et-contact-requests.md`](ifumb-next/docs/plans/3-cross-tree-et-contact-requests.md).
+[`ifumb/docs/plans/3-cross-tree-et-contact-requests.md`](ifumb/docs/plans/3-cross-tree-et-contact-requests.md).
 Découpée en trois livraisons, la phase étant « la logique la plus dense » du projet :
 
 | Module | Contenu | État |
@@ -373,7 +378,7 @@ Reportés ici depuis les phases précédentes (à ne pas oublier pour 3.2/3.3) :
 ##### Module 3.2 — Suggestions et demandes de connexion inter-arbres (fait — `3e8580e`)
 
 Plan complet des 14 points :
-[`ifumb-next/docs/plans/3.2-suggestions-et-connexions-inter-arbres.md`](ifumb-next/docs/plans/3.2-suggestions-et-connexions-inter-arbres.md).
+[`ifumb/docs/plans/3.2-suggestions-et-connexions-inter-arbres.md`](ifumb/docs/plans/3.2-suggestions-et-connexions-inter-arbres.md).
 `core/entities/member-matching.ts` porte l'algorithme de correspondance du legacy (`scoreMatch`) en
 fonction pure et testable isolément : nom de famille identique obligatoire, écart de naissance > 5
 ans disqualifie (si les deux sont connus), prénom identique + (tribu partagée OU année identique) →
@@ -425,7 +430,7 @@ Docker), test:e2e (85/85).
 ##### Module 3.3 — Branche étrangère intégrée dans le graphe (fait — `d3b5fe2`)
 
 Plan complet des 14 points :
-[`ifumb-next/docs/plans/3.3-branche-etrangere-dans-le-graphe.md`](ifumb-next/docs/plans/3.3-branche-etrangere-dans-le-graphe.md).
+[`ifumb/docs/plans/3.3-branche-etrangere-dans-le-graphe.md`](ifumb/docs/plans/3.3-branche-etrangere-dans-le-graphe.md).
 Dernier sous-module de la Phase 3, qui est donc terminée dans son intégralité. `GetCrossTreeBranchUseCase`
 charge la branche distante d'un `CrossTreeLink` : `otherSide()`/`ownSide()` (module 3.2) identifient
 le membre pivot des deux côtés, `toFamilyGraph` (module 1.2) est réutilisé tel quel pour construire
@@ -458,7 +463,7 @@ Docker), test:e2e (86/86).
 
 #### Phase 4 — Cutover
 
-En cours. Plan complet : [`ifumb-next/docs/plans/4-cutover.md`](ifumb-next/docs/plans/4-cutover.md).
+En cours. Plan complet : [`ifumb/docs/plans/4-cutover.md`](ifumb/docs/plans/4-cutover.md).
 Cible d'hébergement tranchée (décision utilisateur du 2026-09-17, résout l'ADR 0004) : **Vercel**.
 Voir l'ADR 0009 pour le détail de chaque conséquence de ce choix (rate limiting, pool Prisma, IP
 cliente, sondes de santé, CI, dépendances ajoutées).
@@ -476,12 +481,17 @@ vérifier en réel la compatibilité du pooler Supabase en mode transaction avec
 (point ouvert depuis l'ADR 0003, jamais testé — le staging n'a jamais existé), basculer
 `BUSINESS_WRITES_ENABLED` en deux temps, rediriger le trafic, arrêter le legacy.
 
-**Renommage décidé, pas encore fait** (demande utilisateur du 2026-09-18, après le commit du code
-ci-dessus) : `ifumb-next` (ce dépôt) devient `ifumb` ; le legacy actuellement nommé `ifumb`
-(dépôt GitHub `Ifumb/ifumb`) devient `ifumb-legacy`. Couvre les deux dépôts GitHub
-(`gh repo rename`), les dossiers locaux, les remotes Git, les `name` de `package.json`, et les
-références dans la documentation. Pas de risque de production connu côté hébergement legacy
-(confirmé par l'utilisateur).
+**Renommage fait** (demande utilisateur du 2026-09-18, après le commit du code ci-dessus) : ce dépôt
+(`Ifumb/ifumb-next` sur GitHub, `ifumb-next/` en local) est devenu `Ifumb/ifumb`/`ifumb/` ; le
+legacy (`Ifumb/ifumb`, `ifumb/` en local) est devenu `Ifumb/ifumb-legacy`/`ifumb-legacy/`. Couvert :
+les deux dépôts GitHub (`gh repo rename`), les remotes Git, les dossiers locaux, les `name` de
+`package.json` (et `package-name` de `release-please-config.json` côté cible), le nom du conteneur
+Docker de test (`ifumb-next-postgres-test` → `ifumb-postgres-test`), les références dans cette
+documentation. Aucun risque de production connu côté hébergement legacy (confirmé par
+l'utilisateur). Non touchés, volontairement : l'historique Git des deux dépôts (commits antérieurs
+au 2026-09-18, qui gardent les anciens noms dans leur texte) et les décisions déjà actées des ADR/
+plans antérieurs (`docs/adr/`, `docs/plans/`), qui restent des relevés au moment où ils ont été
+écrits plutôt que d'être réécrits rétroactivement.
 
 #### Rappels transverses pour la suite
 
@@ -492,7 +502,7 @@ références dans la documentation. Pas de risque de production connu côté hé
   fait foi en cas d'écart).
 - Commits locaux uniquement (`git commit`, jamais `push` ni `tag`) tant que l'utilisateur ne le
   demande pas explicitement.
-- Chaque module de la Phase 2 a ajouté une ADR dans `ifumb-next/docs/adr/` quand la décision était
+- Chaque module de la Phase 2 a ajouté une ADR dans `ifumb/docs/adr/` quand la décision était
   structurante (0005 à 0007 à ce jour) ; continuer cette pratique plutôt que de disperser la
   justification dans les messages de commit uniquement.
 - Mémoire de session : `ifumb-migration-progress.md` (projet Claude Code de cet utilisateur) retrace
@@ -523,7 +533,7 @@ une exigence de toute migration. **Décision utilisateur du 2026-09-13 : la cibl
 - le code reste compatible avec les deux cibles : pas de dépendance à un système de fichiers local,
   et le rate limiting passe par un port, pour qu'un store partagé puisse remplacer l'in-memory si la
   cible est serverless ;
-- la décision et ses conséquences sont consignées dans une ADR (`docs/adr/`) de `ifumb-next`.
+- la décision et ses conséquences sont consignées dans une ADR (`docs/adr/`) de `ifumb`.
 
 ---
 
@@ -536,7 +546,7 @@ une exigence de toute migration. **Décision utilisateur du 2026-09-13 : la cibl
 - **Base de données** : la base Supabase existante est réutilisée. `schema.prisma` et les
   migrations sont copiés tels quels ; **jamais de `prisma migrate dev` sur cette base** (il la
   réinitialiserait). Toute nouvelle migration est additive et soumise à confirmation.
-- **Écritures de développement** (décision utilisateur du 2026-09-13) : ifumb-next n'écrit **jamais**
+- **Écritures de développement** (décision utilisateur du 2026-09-13) : ifumb n'écrit **jamais**
   de données métier (arbres, membres, unions…) dans la base de production pendant la migration. Dès
   que les écritures arrivent (Phase 2), le développement et les essais manuels utilisent un **projet
   Supabase de staging** restauré depuis une sauvegarde de la production ; la production n'est
@@ -562,8 +572,8 @@ une exigence de toute migration. **Décision utilisateur du 2026-09-13 : la cibl
 
 ## Cycle de travail par module
 
-1. Lire le code source du module dans `ifumb/apps/api/src/<module>/` et ses consommateurs dans
-   `ifumb/apps/web/src/`.
+1. Lire le code source du module dans `ifumb-legacy/apps/api/src/<module>/` et ses consommateurs dans
+   `ifumb-legacy/apps/web/src/`.
 2. Vérifier l'emplacement du skill et, si une copie installée existe, qu'elle est identique à la
    source sous `docs/` (voir « Cartographie »).
 3. Produire le **plan d'architecture** exigé par `SKILL.md` (14 points ; les points 9 à 14 ne
@@ -582,7 +592,7 @@ une exigence de toute migration. **Décision utilisateur du 2026-09-13 : la cibl
 ## Commandes
 
 ```bash
-# Cible — depuis ifumb-next/
+# Cible — depuis ifumb/
 pnpm install
 pnpm dev
 pnpm typecheck
@@ -593,11 +603,11 @@ pnpm test:e2e       # Playwright
 ```
 
 ```bash
-# Legacy — depuis ifumb/, pour lecture ou comparaison de comportement uniquement
+# Legacy — depuis ifumb-legacy/, pour lecture ou comparaison de comportement uniquement
 pnpm dev            # démarre l'ancien FE + BE en parallèle
 ```
 
-Gestionnaire de paquets : **pnpm exclusivement** — jamais npm, yarn ni bun. `ifumb-next/` est
+Gestionnaire de paquets : **pnpm exclusivement** — jamais npm, yarn ni bun. `ifumb/` est
 verrouillé sur `pnpm@12.3.4` (`packageManager` + `preinstall: npx only-allow pnpm`), Node >= 22.12
 (plancher du skill : Node 20 est en fin de vie).
 Le legacy reste sur `pnpm@10.31.0` : ne pas aligner l'un sur l'autre.
@@ -606,11 +616,11 @@ Le legacy reste sur `pnpm@10.31.0` : ne pas aligner l'un sur l'autre.
 
 ## Contraintes d'écriture
 
-- `ifumb/` est en **lecture seule** jusqu'au cutover (Phase 4). Aucune modification du legacy pour
-  faire avancer la migration — s'il faut un correctif, il va dans `ifumb-next/`.
-- Tout le code neuf va dans `ifumb-next/`, selon l'arbre défini par le skill
+- `ifumb-legacy/` est en **lecture seule** jusqu'au cutover (Phase 4). Aucune modification du
+  legacy pour faire avancer la migration — s'il faut un correctif, il va dans `ifumb/`.
+- Tout le code neuf va dans `ifumb/`, selon l'arbre défini par le skill
   (`src/core/`, `src/infrastructure/`, `src/app/`, `src/presentation/`, `tests/`).
-- **Conventional Commits dès le premier commit** de `ifumb-next/` (commitlint + hook Husky
+- **Conventional Commits dès le premier commit** de `ifumb/` (commitlint + hook Husky
   `commit-msg`). La version n'est jamais éditée à la main dans `package.json`.
 - Langue : explications, plans et prose en **français**. Code, identifiants, chemins et
   commentaires en **anglais**.
