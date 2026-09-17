@@ -177,7 +177,7 @@ trancher le cas des arbres `SHARED`, exclus par le legacy).
 | 2.6a | Modifications en attente — propositions : membres et unions, notification, email throttlé, page `/tree/[id]/pending` en lecture | fait — `dc551af` |
 | 2.6b | Modifications en attente — revue : approbation/rejet, application atomique, détection de péremption | fait — `d56b1c9` |
 | 2.7 | Notifications (liste, lu, tout lu, compteur temps réel) | fait — `dd5a2ff` |
-| 2.8 | Invitations (email, lien public par jeton, accepter/refuser/révoquer, rôle) + action « c'est moi » (claim, reportée de 2.3 ; `claimedByUserId` unique globalement) | — |
+| 2.8 | Invitations (email, lien public par jeton, accepter/refuser/révoquer, rôle) + action « c'est moi » (claim, reportée de 2.3 ; `claimedByUserId` unique globalement) | fait — `da7f252` |
 
 Reportés en Phase 3 : réglage « découvrable » d'un membre (avec `contact-requests`), visites guidées.
 
@@ -204,8 +204,9 @@ s'afficher un tick avant que l'App Router commite le nouveau `<title>`. Corrigé
 défaut sans réapparition.
 
 Convention de version constatée jusqu'ici (SemVer mineure en 0.x par `feat`) :
-0.1.8→2.1, 0.1.9→2.2, 0.1.10→2.3, 0.1.11→2.4, 0.1.12→2.5, 0.1.13→2.6a, 0.1.14→2.6b, 0.1.15→2.7
-(déduit automatiquement par release-please au commit — ne pas modifier `package.json` à la main).
+0.1.8→2.1, 0.1.9→2.2, 0.1.10→2.3, 0.1.11→2.4, 0.1.12→2.5, 0.1.13→2.6a, 0.1.14→2.6b, 0.1.15→2.7,
+0.1.16→2.8 (déduit automatiquement par release-please au commit — ne pas modifier `package.json` à
+la main).
 
 #### Module 2.6a — Modifications en attente : propositions (fait — `dc551af`)
 
@@ -284,21 +285,46 @@ cache une fois qu'il n'y a plus rien à marquer), à l'image de la convention d�
 Legacy de référence : `ifumb/apps/api/src/notifications/` (`create`, `createForContactRequest`,
 `findForUser`), `ifumb/apps/web/src/hooks/useNotifications.ts`.
 
-#### Module 2.8 — Invitations + action « c'est moi » (claim)
+#### Module 2.8 — Invitations + action « c'est moi » (fait — `da7f252`)
 
-Non planifié en détail. Legacy : `ifumb/apps/api/src/invitations/` (service, contrôleur, DTO),
-probablement `CollaboratorsPanel.tsx` et `InviteModal.tsx` côté web (noms à vérifier), et la méthode
-`claim` de `members.service.ts` (déjà repérée pendant la lecture pour 2.3 : vérifie que
-`claimedByUserId` est libre avant d'écrire). Points connus à traiter :
-- envoi d'email d'invitation (Resend, motif déjà en place) ;
-- lien public par jeton (`Invitation.token`), accepter/refuser sans compte existant peut-être ;
-- révoquer une invitation, changer un rôle ;
-- `claimedByUserId` est **unique globalement** dans le schéma (`@unique` sur `Member`), pas par
-  arbre : un compte ne peut revendiquer qu'un seul membre dans toute l'application, tous arbres
-  confondus — vérifier que c'est le comportement voulu ou un bug legacy à documenter ;
-  `rejectAllByUser` (legacy) rejette silencieusement les propositions PENDING d'un utilisateur dont
-  l'accès est révoqué — à reporter si pertinent.
-- l'action claim a été délibérément reportée de 2.3 à ce module (décision utilisateur).
+Plan complet des 14 points :
+[`ifumb-next/docs/plans/2.8-invitations-et-claim.md`](ifumb-next/docs/plans/2.8-invitations-et-claim.md).
+Cycle de vie complet d'une invitation (`core/entities/invitation.ts` : `send`/`resolve`/
+`changeRole`, même vocabulaire que `PendingChange.resolve` du module 2.6b) : le propriétaire invite
+par email + rôle, l'invité accepte ou rejette (email du compte revérifié contre celui de
+l'invitation), le propriétaire change un rôle ou révoque. Page `/tree/[id]/collaborators`
+(propriétaire seulement, lien depuis `/tree/[id]/settings`), page publique
+`/invitations/accept?token=…`. Action « c'est moi » (`ClaimMemberUseCase`) : bouton sur la fiche
+membre, ouvert à tout visiteur qui peut lire l'arbre (pas seulement un éditeur), comme le legacy.
+
+**Trois vrais bugs legacy corrigés, trouvés en lisant le code avant de coder** (pas en testant,
+cette fois) :
+1. Ré-inviter un email après un rejet plantait (`@@unique([treeId, email])` jamais géré par un
+   upsert) — `sendInvitation` est maintenant un upsert sur `(treeId, email)`, refusé seulement si la
+   ligne existante est déjà `ACCEPTED` (`ALREADY_COLLABORATOR`).
+2. `claim` vérifiait l'unicité par arbre alors que `Member.claimedByUserId` est **unique
+   globalement** en base — un deuxième claim dans un autre arbre aurait fait remonter une erreur SQL
+   brute. `MemberClaimReader` (nouveau port, lecture globale) referme ça proprement
+   (`ALREADY_CLAIMED_ELSEWHERE`), vérifié par un test d'intégration qui provoque volontairement la
+   vraie contrainte `@unique` pour documenter pourquoi la vérification doit être globale.
+3. Email d'invitation vulnérable à l'injection HTML (même famille que le bug 8 du module 2.6) —
+   `mail/invitation-email.ts` échappe tout, sur le modèle de `pending-change-alert-email.ts`.
+
+**Décisions structurantes** : révoquer un collaborateur accepté rejette aussi ses propositions en
+attente sur cet arbre dans la même transaction (`PendingChangeWriter.rejectAllByAuthor`, porté du
+legacy `rejectAllByUser`, silencieux — pas de notification). Pas d'écran dédié « à qui êtes-vous ? »
+après acceptation (réduction de périmètre validée) : l'invité est redirigé sur l'arbre et revendique
+sa fiche depuis la page membre. Ajout généraliste d'une redirection après connexion/inscription
+(`?redirect=…`, absente jusqu'ici côté `ifumb-next`), avec `safeRedirectTarget` qui rejette tout ce
+qui n'est pas un chemin relatif interne (`presentation/security/safe-redirect.ts`) — sans ça,
+`redirect()` suivrait aveuglément n'importe quelle URL passée en paramètre.
+
+**Piège trouvé en lançant le gate (pas en écrivant le code)** : `SendInvitationUseCase` accédait à
+`this.deps.mailer` directement, hors `try/catch` — comme `mailer` est un getter paresseux
+(`container.ts`), l'accéder plante immédiatement si `RESEND_API_KEY` est absent (E2E), avant même
+d'atteindre l'appel réseau. Corrigé en encapsulant tout l'envoi dans un bloc `try/catch` « au mieux »
+identique à celui de `proposal-recording.ts` (module 2.6) — leçon à revérifier sur tout futur
+mailer paresseux du même genre.
 
 #### Phase 3 — cross-tree et contact-requests
 
