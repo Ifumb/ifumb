@@ -205,8 +205,8 @@ défaut sans réapparition.
 
 Convention de version constatée jusqu'ici (SemVer mineure en 0.x par `feat`) :
 0.1.8→2.1, 0.1.9→2.2, 0.1.10→2.3, 0.1.11→2.4, 0.1.12→2.5, 0.1.13→2.6a, 0.1.14→2.6b, 0.1.15→2.7,
-0.1.16→2.8 (déduit automatiquement par release-please au commit — ne pas modifier `package.json` à
-la main).
+0.1.16→2.8, 0.1.17→3.1 (déduit automatiquement par release-please au commit — ne pas modifier
+`package.json` à la main).
 
 #### Module 2.6a — Modifications en attente : propositions (fait — `dc551af`)
 
@@ -328,14 +328,48 @@ mailer paresseux du même genre.
 
 #### Phase 3 — cross-tree et contact-requests
 
-Non planifiée. Legacy : `ifumb/apps/api/src/cross-tree/` (suggestions + `cross-tree-branch`
-controller séparé — à comprendre avant de planifier), `ifumb/apps/api/src/contact-requests/`.
-Reportés ici depuis les phases précédentes (à ne pas oublier) :
-- réglage « membre découvrable » dans la recherche publique (Phase 1, explore) — trancher le cas
-  des arbres `SHARED` que le legacy excluait de la découverte ;
+Plan complet des 14 points (les trois sous-modules) :
+[`ifumb-next/docs/plans/3-cross-tree-et-contact-requests.md`](ifumb-next/docs/plans/3-cross-tree-et-contact-requests.md).
+Découpée en trois livraisons, la phase étant « la logique la plus dense » du projet :
+
+| Module | Contenu | État |
+|---|---|---|
+| 3.1 | Recherche découvrable + `contact-requests` : réglage `discoverable`, recherche globale complète (publique + privée découvrable), envoi/réponse/retrait d'une demande de contact, notifications | fait — `83057b3` |
+| 3.2 | Suggestions et demandes de connexion inter-arbres (panneaux liste, sans le graphe) | — |
+| 3.3 | Branche étrangère intégrée dans le graphe (dépend de 3.2, touche le plus lourdement 1.2/1.3) | — |
+
+##### Module 3.1 — Recherche découvrable + contact-requests (fait — `83057b3`)
+
+`Member.discoverable` sort désormais du même isolement que `claimedById` dans l'entité (jamais dans
+`MemberDetailsInput`/`revise()` — un réglage de confidentialité, pas un fait généalogique) ; bascule
+immédiate par `ToggleMemberDiscoverableUseCase`, réservée au propriétaire ou au compte qui a
+revendiqué la fiche, jamais proposée à un éditeur. `/explore/members` gagne une deuxième section,
+paginée indépendamment de la section publique (chacune avec son propre total honnête — corrige le
+bug où le legacy renvoyait la taille de page comme total). `core/entities/contact-request.ts` :
+cycle de vie `send`/`respond`/`withdraw`, même vocabulaire que `Invitation`/`PendingChange`. Page
+`/contact-requests` (Reçues/Envoyées).
+
+**Trois vrais bugs legacy corrigés en lisant le code avant de coder** (même discipline qu'aux
+modules 2.6/2.8) :
+1. aucun filtre `archivedAt` sur la recherche découvrable ni sur le bassin de correspondance —
+   fermé pour ce module (module 3.2 devra faire de même pour les suggestions) ;
+2. un contact refusé ou retiré bloquait la paire (demandeur, membre) pour toujours
+   (`@@unique([requesterId, memberId])`, schéma déjà déployé) — fermé par un upsert dans
+   `ContactRequestWriter.send`, même leçon qu'au module 2.8 ;
+3. l'email du demandeur et celui du propriétaire étaient renvoyés par l'API à **tout** statut, alors
+   que l'interface ne les affichait qu'une fois la demande acceptée — filtrage purement côté client
+   dans le legacy, resserré ici côté serveur (`PrismaContactRequestReader`, jamais l'email hors
+   `ACCEPTED`), vérifié par un test d'intégration dédié.
+
+Arbres `SHARED` traités comme `PRIVATE` dans la recherche découvrable (fermé l'incohérence du
+legacy, qui les excluait ici mais pas du bassin de suggestions cross-tree). Pas de notification pour
+l'approbation/le refus d'une connexion inter-arbres : ça reste un écart documenté pour le module
+3.2, `NotificationType` (schéma déjà déployé) n'ayant aucune valeur pour cet événement.
+
+Reportés ici depuis les phases précédentes (à ne pas oublier pour 3.2/3.3) :
 - visites guidées `driver.js` (montrent surtout des actions d'écriture, d'où le report après la
   Phase 2) ;
-- branches étrangères du graphe (nœuds d'un autre arbre liés par `cross-tree`).
+- branches étrangères du graphe (nœuds d'un autre arbre liés par `cross-tree`) → module 3.3.
 
 #### Phase 4 — Cutover
 
