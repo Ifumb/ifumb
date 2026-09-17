@@ -24,6 +24,8 @@ export const RATE_LIMIT_POLICIES = {
   photoUploadByUser: { limit: 10, windowMs: HOUR_MS },
   // Polled client-side every ~15s (module 2.7): generous for that, a brake on a script hammering it.
   notificationPollByUser: { limit: 20, windowMs: MINUTE_MS },
+  // Sending a contact request (module 3.1): a brake on scripted outreach to discoverable members.
+  contactRequestByUser: { limit: 10, windowMs: HOUR_MS },
 } as const satisfies Record<string, RateLimitPolicy>
 
 export type RateLimitPolicyName = keyof typeof RATE_LIMIT_POLICIES

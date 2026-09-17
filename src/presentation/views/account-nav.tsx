@@ -10,6 +10,7 @@ type AccountNavProps = Readonly<{
 
 const ACCOUNT_LINKS: readonly NavLink[] = [
   { href: '/dashboard', label: 'Mes arbres' },
+  { href: '/contact-requests', label: 'Demandes de contact' },
   { href: '/account/password', label: 'Changer le mot de passe' },
 ]
 

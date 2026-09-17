@@ -25,7 +25,9 @@ beforeEach(async () => {
   await createUser(OWNER, 'Awa')
   await createUser(EDITOR, 'Fatou')
   await prisma.tree.create({ data: { id: TREE, name: 'Famille Diallo', ownerId: OWNER } })
-  await prisma.member.create({ data: { id: 'mbr_awa', firstName: 'Awa', treeId: TREE } })
+  await prisma.member.create({
+    data: { id: 'mbr_awa', firstName: 'Awa', treeId: TREE, discoverable: true },
+  })
   await new PrismaPendingChangeWriter(prisma).propose(
     PendingChange.propose({
       id: 'pc_1',
@@ -131,5 +133,41 @@ describe('notifications through Prisma', () => {
 
     expect(await writer.markAllRead(OWNER)).toBe(2)
     expect(await reader.unreadCountFor(OWNER)).toBe(0)
+  })
+
+  it('names the requester and the tree for a contact request received (module 3.1)', async () => {
+    const contactRequest = await prisma.contactRequest.create({
+      data: { id: 'cr_1', treeId: TREE, memberId: 'mbr_awa', requesterId: EDITOR },
+    })
+    await writer.record({
+      id: 'ntf_8',
+      userId: OWNER,
+      type: 'CONTACT_REQUEST_RECEIVED',
+      contactRequestId: contactRequest.id,
+      createdAt: new Date(),
+    })
+
+    const [notification] = await reader.listForUser(OWNER, 20)
+    expect(notification).toMatchObject({
+      type: 'CONTACT_REQUEST_RECEIVED',
+      treeName: 'Famille Diallo',
+      personName: 'Fatou Test',
+    })
+  })
+
+  it('names the tree owner for a contact request responded to (module 3.1)', async () => {
+    const contactRequest = await prisma.contactRequest.create({
+      data: { id: 'cr_2', treeId: TREE, memberId: 'mbr_awa', requesterId: EDITOR, status: 'ACCEPTED' },
+    })
+    await writer.record({
+      id: 'ntf_9',
+      userId: EDITOR,
+      type: 'CONTACT_REQUEST_RESPONDED',
+      contactRequestId: contactRequest.id,
+      createdAt: new Date(),
+    })
+
+    const [notification] = await reader.listForUser(EDITOR, 20)
+    expect(notification?.personName).toBe('Awa Test')
   })
 })

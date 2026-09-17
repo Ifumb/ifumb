@@ -27,12 +27,17 @@ import { RegisterUserUseCase } from '@/core/use-cases/register-user'
 import { RequestPasswordResetUseCase } from '@/core/use-cases/request-password-reset'
 import type { RateLimiter } from '@/core/use-cases/ports/rate-limiter'
 import { SearchPublicMembersUseCase } from '@/core/use-cases/search-public-members'
+import { ToggleMemberDiscoverableUseCase } from '@/core/use-cases/toggle-member-discoverable'
 import { UpdateMemberUseCase } from '@/core/use-cases/update-member'
 import { UpdateTreeUseCase } from '@/core/use-cases/update-tree'
 import { ResetPasswordUseCase } from '@/core/use-cases/reset-password'
 import { businessWritesEnabled } from '@/infrastructure/config/business-writes'
 import { requireServerEnv } from '@/infrastructure/config/server-env'
 import { lazy } from '@/infrastructure/di/lazy'
+import {
+  contactRequestUseCases,
+  type ContactRequestWriteDeps,
+} from '@/infrastructure/di/contact-request-use-cases'
 import { invitationUseCases, type InvitationWriteDeps } from '@/infrastructure/di/invitation-use-cases'
 import { configuredPhotoStorage, photoUseCases } from '@/infrastructure/di/photo-use-cases'
 import { SharpPhotoProcessor } from '@/infrastructure/images/sharp-photo-processor'
@@ -42,6 +47,8 @@ import { ResendPasswordResetMailer } from '@/infrastructure/mail/resend-password
 import { ResendPendingChangeAlertMailer } from '@/infrastructure/mail/resend-pending-change-alert-mailer'
 import { getPrismaClient } from '@/infrastructure/persistence/prisma/client'
 import { PrismaAuditLogReader } from '@/infrastructure/persistence/prisma/prisma-audit-log-reader'
+import { PrismaContactRequestReader } from '@/infrastructure/persistence/prisma/prisma-contact-request-reader'
+import { PrismaDiscoverableMemberDirectory } from '@/infrastructure/persistence/prisma/prisma-discoverable-member-directory'
 import { PrismaFamilyReader } from '@/infrastructure/persistence/prisma/prisma-family-reader'
 import { PrismaInvitationReader } from '@/infrastructure/persistence/prisma/prisma-invitation-reader'
 import { PrismaMemberClaimReader } from '@/infrastructure/persistence/prisma/prisma-member-claim-reader'
@@ -77,6 +84,10 @@ const families = lazy(
 const pendingChanges = lazy(() => new PrismaPendingChangeReader(getPrismaClient()))
 const invitationReader = lazy(() => new PrismaInvitationReader(getPrismaClient()))
 const memberClaims = lazy(() => new PrismaMemberClaimReader(getPrismaClient()))
+const discoverableMemberDirectory = lazy(
+  () => new PrismaDiscoverableMemberDirectory(getPrismaClient()),
+)
+const contactRequestReader = lazy(() => new PrismaContactRequestReader(getPrismaClient()))
 const notificationReader = lazy(() => new PrismaNotificationReader(getPrismaClient()))
 // reason: standalone, never through the unit of work — marking a notification read is not a
 // business write and does not belong in that transaction (see `ports/unit-of-work.ts`).
@@ -116,6 +127,14 @@ const invitationWrites = (): InvitationWriteDeps => ({
   get mailer() {
     return invitationMailer()
   },
+})
+const contactRequestWrites = (): ContactRequestWriteDeps => ({
+  directory: discoverableMemberDirectory(),
+  contactRequests: contactRequestReader(),
+  trees: trees(),
+  unitOfWork: unitOfWork(),
+  ids: ids(),
+  clock: clock(),
 })
 const photoProcessor = lazy(() => new SharpPhotoProcessor())
 const hasher = lazy(() => new BcryptjsPasswordHasher())
@@ -223,6 +242,9 @@ export const container = {
   updateMember: lazy(() => new UpdateMemberUseCase(treeContentWrites())),
   deleteMember: lazy(() => new DeleteMemberUseCase(treeContentWrites())),
   getMemberForm: lazy(() => new GetMemberFormUseCase({ trees: trees(), families: families() })),
+  // reason: `treeContentWrites()` already carries everything this needs (and more, unused,
+  // structurally harmless) — passed straight through, like `approvePendingChange` below.
+  toggleMemberDiscoverable: lazy(() => new ToggleMemberDiscoverableUseCase(treeContentWrites())),
   ...unionUseCases(treeContentWrites),
   // reason: Object.assign, not a spread — treeContentWrites()'s `mailer` is a getter (see there),
   // and `{ ...treeContentWrites(), photos: photoProcessor() }` would read it eagerly while copying
@@ -271,4 +293,5 @@ export const container = {
     () => new MarkAllNotificationsReadUseCase({ notifications: notificationWriter() }),
   ),
   ...invitationUseCases(invitationWrites),
+  ...contactRequestUseCases(contactRequestWrites),
 }

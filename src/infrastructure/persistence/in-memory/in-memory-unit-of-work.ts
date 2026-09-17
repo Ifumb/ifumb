@@ -1,4 +1,5 @@
 import 'server-only'
+import type { ContactRequest } from '@/core/entities/contact-request'
 import type { Invitation } from '@/core/entities/invitation'
 import type { Member } from '@/core/entities/member'
 import type { PendingChange } from '@/core/entities/pending-change'
@@ -19,6 +20,7 @@ type AddedUnionChild = {
 type UpdatedPhoto = { readonly memberId: string; readonly photoUrl: string | null }
 type RemovedUnionChild = { readonly unionId: string; readonly childId: string }
 type ClaimedMember = { readonly memberId: string; readonly userId: string }
+type UpdatedDiscoverable = { readonly memberId: string; readonly discoverable: boolean }
 type RejectedAllByAuthor = { readonly treeId: string; readonly authorId: string; readonly now: Date }
 
 type Writes = {
@@ -29,6 +31,7 @@ type Writes = {
   deletedMemberIds: string[]
   updatedPhotos: UpdatedPhoto[]
   claimedMembers: ClaimedMember[]
+  updatedDiscoverable: UpdatedDiscoverable[]
   insertedUnions: InsertedUnion[]
   updatedUnions: Union[]
   deletedUnionIds: string[]
@@ -43,6 +46,8 @@ type Writes = {
   resolvedInvitations: Invitation[]
   roleChangedInvitations: Invitation[]
   revokedInvitationIds: string[]
+  sentContactRequests: ContactRequest[]
+  resolvedContactRequests: ContactRequest[]
 }
 
 const noWrites = (): Writes => ({
@@ -53,6 +58,7 @@ const noWrites = (): Writes => ({
   deletedMemberIds: [],
   updatedPhotos: [],
   claimedMembers: [],
+  updatedDiscoverable: [],
   insertedUnions: [],
   updatedUnions: [],
   deletedUnionIds: [],
@@ -67,6 +73,8 @@ const noWrites = (): Writes => ({
   resolvedInvitations: [],
   roleChangedInvitations: [],
   revokedInvitationIds: [],
+  sentContactRequests: [],
+  resolvedContactRequests: [],
 })
 
 /**
@@ -102,6 +110,9 @@ export class InMemoryUnitOfWork implements UnitOfWork, Readonly<Writes> {
   }
   get claimedMembers() {
     return this.committed.claimedMembers
+  }
+  get updatedDiscoverable() {
+    return this.committed.updatedDiscoverable
   }
   get insertedUnions() {
     return this.committed.insertedUnions
@@ -145,6 +156,12 @@ export class InMemoryUnitOfWork implements UnitOfWork, Readonly<Writes> {
   get revokedInvitationIds() {
     return this.committed.revokedInvitationIds
   }
+  get sentContactRequests() {
+    return this.committed.sentContactRequests
+  }
+  get resolvedContactRequests() {
+    return this.committed.resolvedContactRequests
+  }
 
   /** Makes the next audit entry fail, as a database error inside the transaction would. */
   failNextAuditRecord(): void {
@@ -181,6 +198,8 @@ export class InMemoryUnitOfWork implements UnitOfWork, Readonly<Writes> {
           void staged.updatedPhotos.push({ memberId: memberId.value, photoUrl }),
         claim: async (memberId, userId) =>
           void staged.claimedMembers.push({ memberId: memberId.value, userId }),
+        updateDiscoverable: async (memberId, discoverable) =>
+          void staged.updatedDiscoverable.push({ memberId: memberId.value, discoverable }),
       },
       unions: unionWriterFor(staged),
       auditLog: { record: async (entry) => this.stageRecord(staged, entry) },
@@ -196,6 +215,10 @@ export class InMemoryUnitOfWork implements UnitOfWork, Readonly<Writes> {
         resolve: async (invitation) => void staged.resolvedInvitations.push(invitation),
         changeRole: async (invitation) => void staged.roleChangedInvitations.push(invitation),
         revoke: async (invitationId) => void staged.revokedInvitationIds.push(invitationId),
+      },
+      contactRequests: {
+        send: async (contactRequest) => void staged.sentContactRequests.push(contactRequest),
+        resolve: async (contactRequest) => void staged.resolvedContactRequests.push(contactRequest),
       },
     }
   }

@@ -30,6 +30,9 @@ export type MemberProfile = {
   readonly member: MemberDetails
   readonly parentUnions: readonly ParentUnionView[]
   readonly partnerUnions: readonly PartnerUnionView[]
+  /** Whether strangers may find this member through global search (module 3.1) — kept apart from
+   * `member`, like the entity itself keeps it apart from its facts. */
+  readonly discoverable: boolean
   /** What the viewer may do with this member, so that only those actions are offered. */
   readonly permissions: {
     readonly canEdit: boolean
@@ -67,6 +70,7 @@ export class GetMemberProfileUseCase {
       member: toMemberDetails(member),
       parentUnions: family.parentUnionsOf(memberId).map(toParentUnionView),
       partnerUnions: family.partnerUnionsOf(memberId).map(toPartnerUnionView),
+      discoverable: member.discoverable,
       permissions: permissionsOf(role, member, input.viewerId),
     })
   }

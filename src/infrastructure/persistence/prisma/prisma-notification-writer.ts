@@ -13,7 +13,8 @@ export class PrismaNotificationWriter implements NotificationWriter {
         id: entry.id,
         userId: entry.userId,
         type: entry.type,
-        pendingChangeId: entry.pendingChangeId,
+        pendingChangeId: entry.pendingChangeId ?? null,
+        contactRequestId: entry.contactRequestId ?? null,
         createdAt: entry.createdAt,
       },
     })

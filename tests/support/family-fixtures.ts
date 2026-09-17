@@ -32,6 +32,7 @@ export function aMember(overrides: Partial<MemberProps> = {}): Member {
     certainty: 'CONFIRMED',
     photoUrl: null,
     claimedById: null,
+    discoverable: false,
     ...overrides,
   })
 }

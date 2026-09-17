@@ -11,6 +11,7 @@ export type PublicTreeSearch = {
 }
 
 export type PublicMemberSearchRequest = { readonly query?: string; readonly page: number }
+export type DiscoverableMemberSearchRequest = { readonly query?: string; readonly page: number }
 
 /** Query parameter names of the explore pages. */
 export const EXPLORE_PARAMS = {
@@ -18,6 +19,8 @@ export const EXPLORE_PARAMS = {
   tribe: 'tribe',
   ethnicity: 'ethnicity',
   page: 'page',
+  /** The discoverable section pages separately from the public one, on the same query text. */
+  discoverablePage: 'dpage',
 } as const
 
 const P = EXPLORE_PARAMS
@@ -29,7 +32,11 @@ const publicTreeSearchSchema = z.object({
   [P.page]: pageParam,
 })
 
-const publicMemberSearchSchema = z.object({ [P.text]: searchTextParam, [P.page]: pageParam })
+const publicMemberSearchSchema = z.object({
+  [P.text]: searchTextParam,
+  [P.page]: pageParam,
+  [P.discoverablePage]: pageParam,
+})
 
 export function parsePublicTreeSearch(searchParams: SearchParams): PublicTreeSearch {
   const { q, tribe, ethnicity, page } = publicTreeSearchSchema.parse(searchParams)
@@ -39,6 +46,13 @@ export function parsePublicTreeSearch(searchParams: SearchParams): PublicTreeSea
 export function parsePublicMemberSearch(searchParams: SearchParams): PublicMemberSearchRequest {
   const { q, page } = publicMemberSearchSchema.parse(searchParams)
   return { page, ...(q && { query: q }) }
+}
+
+export function parseDiscoverableMemberSearch(
+  searchParams: SearchParams,
+): DiscoverableMemberSearchRequest {
+  const { q, dpage } = publicMemberSearchSchema.parse(searchParams)
+  return { page: dpage, ...(q && { query: q }) }
 }
 
 /** True when the listing is narrowed or paged: such a page is not worth indexing. */

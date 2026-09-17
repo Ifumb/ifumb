@@ -1,9 +1,12 @@
 import 'server-only'
+import type { DiscoverableMemberSearch } from '@/core/use-cases/search-discoverable-members'
 import type { PublicTreeExploration } from '@/core/use-cases/explore-public-trees'
 import type { PublicMemberSearch } from '@/core/use-cases/search-public-members'
+import { currentUserOrNull } from '@/infrastructure/auth/current-user'
 import { container } from '@/infrastructure/di/container'
 import { currentClientIp } from '@/infrastructure/http/client-ip'
 import type {
+  DiscoverableMemberSearchRequest,
   PublicMemberSearchRequest,
   PublicTreeSearch,
 } from '@/presentation/schemas/explore-schema'
@@ -30,6 +33,17 @@ export async function loadPublicMembers(
   request: PublicMemberSearchRequest,
 ): Promise<Limited<PublicMemberSearch>> {
   const run = () => container.searchMembers().execute(request)
+  if (!request.query) return { kind: 'ok', value: await run() }
+  return withinSearchBudget(run)
+}
+
+/** Shares the same anonymous search budget as `loadPublicMembers` — one combined page, two calls. */
+export async function loadDiscoverableMembers(
+  request: DiscoverableMemberSearchRequest,
+): Promise<Limited<DiscoverableMemberSearch>> {
+  const viewer = await currentUserOrNull()
+  const run = () =>
+    container.searchDiscoverableMembers().execute({ ...request, viewerId: viewer?.id })
   if (!request.query) return { kind: 'ok', value: await run() }
   return withinSearchBudget(run)
 }

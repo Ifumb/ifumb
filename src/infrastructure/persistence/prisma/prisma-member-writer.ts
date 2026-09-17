@@ -34,6 +34,10 @@ export class PrismaMemberWriter implements MemberWriter {
   async claim(memberId: MemberId, userId: string): Promise<void> {
     await this.db.member.update({ where: { id: memberId.value }, data: { claimedByUserId: userId } })
   }
+
+  async updateDiscoverable(memberId: MemberId, discoverable: boolean): Promise<void> {
+    await this.db.member.update({ where: { id: memberId.value }, data: { discoverable } })
+  }
 }
 
 function detailColumns(member: Member) {

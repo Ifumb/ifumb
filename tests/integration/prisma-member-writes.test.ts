@@ -5,6 +5,7 @@ import { TreeId } from '@/core/shared/value-objects/tree-id'
 import { ChangeMemberPhotoUseCase } from '@/core/use-cases/change-member-photo'
 import { CreateMemberUseCase } from '@/core/use-cases/create-member'
 import { DeleteMemberUseCase } from '@/core/use-cases/delete-member'
+import { ToggleMemberDiscoverableUseCase } from '@/core/use-cases/toggle-member-discoverable'
 import { UpdateMemberUseCase } from '@/core/use-cases/update-member'
 import { PrismaClient } from '@/infrastructure/persistence/prisma/generated/client'
 import { PrismaFamilyReader } from '@/infrastructure/persistence/prisma/prisma-family-reader'
@@ -128,6 +129,29 @@ describe('member writes through Prisma', () => {
       'usr_claimer',
       'Née au Fouta',
     ])
+  })
+})
+
+describe('member discoverability through Prisma', () => {
+  it('records whether a member is discoverable, with its history entry', async () => {
+    const memberId = await addMember('Awa')
+
+    const result = await new ToggleMemberDiscoverableUseCase(deps).execute({
+      ...byOwner,
+      memberId,
+      discoverable: true,
+    })
+
+    const row = await prisma.member.findUniqueOrThrow({ where: { id: memberId } })
+    const entry = await prisma.auditLog.findFirstOrThrow({
+      where: { targetId: memberId, action: 'MEMBER_UPDATED' },
+    })
+    expect(result).toEqual({ ok: true, value: { changed: true } })
+    expect(row.discoverable).toBe(true)
+    expect(entry.diff).toEqual({
+      before: { discoverable: false },
+      after: { discoverable: true },
+    })
   })
 })
 

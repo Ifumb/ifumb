@@ -13,4 +13,6 @@ export interface MemberWriter {
   delete(memberId: MemberId): Promise<void>
   /** Records who claimed this member ("this is me"). */
   claim(memberId: MemberId, userId: string): Promise<void>
+  /** Records whether strangers may find this member through global search (module 3.1). */
+  updateDiscoverable(memberId: MemberId, discoverable: boolean): Promise<void>
 }

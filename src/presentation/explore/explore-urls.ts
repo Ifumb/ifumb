@@ -22,6 +22,15 @@ export function exploreMembersHref(search: PublicMemberSearchRequest): ExploreMe
   return query ? `/explore/members?${query}` : '/explore/members'
 }
 
+/** Same query text, but the discoverable section's own page — never the public section's. */
+export function discoverableMembersHref(
+  query: string | undefined,
+  page: number,
+): ExploreMembersHref {
+  const value = queryString({ [P.text]: query, [P.discoverablePage]: pageValue(page) })
+  return value ? `/explore/members?${value}` : '/explore/members'
+}
+
 /** The first page is the default: it stays out of the URL. */
 function pageValue(page: number): string | undefined {
   return page > 1 ? String(page) : undefined

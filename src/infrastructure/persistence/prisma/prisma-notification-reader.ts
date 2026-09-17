@@ -17,6 +17,10 @@ type NotificationRow = {
     readonly author: PersonName
     readonly resolvedBy: PersonName | null
   } | null
+  readonly contactRequest: {
+    readonly tree: { readonly id: string; readonly name: string; readonly owner: PersonName }
+    readonly requester: PersonName
+  } | null
 }
 
 const PENDING_CHANGE_INCLUDE = {
@@ -24,6 +28,15 @@ const PENDING_CHANGE_INCLUDE = {
     tree: { select: { id: true, name: true } },
     author: { select: { firstName: true, lastName: true } },
     resolvedBy: { select: { firstName: true, lastName: true } },
+  },
+} as const
+
+const CONTACT_REQUEST_INCLUDE = {
+  include: {
+    tree: {
+      select: { id: true, name: true, owner: { select: { firstName: true, lastName: true } } },
+    },
+    requester: { select: { firstName: true, lastName: true } },
   },
 } as const
 
@@ -41,6 +54,7 @@ export class PrismaNotificationReader implements NotificationReader {
         read: true,
         createdAt: true,
         pendingChange: PENDING_CHANGE_INCLUDE,
+        contactRequest: CONTACT_REQUEST_INCLUDE,
       },
     })
     return rows.map(toView)
@@ -51,17 +65,35 @@ export class PrismaNotificationReader implements NotificationReader {
   }
 }
 
-/** For an owner, the proposal's author; for its author, whoever resolved it. */
+/**
+ * For an owner, who proposed or who is contacting them; for the other side, who resolved or who
+ * they contacted.
+ */
 function toView(row: NotificationRow): NotificationView {
-  const { pendingChange } = row
-  const person = row.type === 'PENDING_CHANGE_CREATED' ? pendingChange?.author : pendingChange?.resolvedBy
+  const { pendingChange, contactRequest } = row
+  if (pendingChange) {
+    const person = row.type === 'PENDING_CHANGE_CREATED' ? pendingChange.author : pendingChange.resolvedBy
+    return notificationView(row, pendingChange.tree, person)
+  }
+  if (contactRequest) {
+    const person = row.type === 'CONTACT_REQUEST_RECEIVED' ? contactRequest.requester : contactRequest.tree.owner
+    return notificationView(row, contactRequest.tree, person)
+  }
+  return notificationView(row, null, null)
+}
+
+function notificationView(
+  row: NotificationRow,
+  tree: { readonly id: string; readonly name: string } | null,
+  person: PersonName | null,
+): NotificationView {
   return {
     id: row.id,
     type: row.type,
     read: row.read,
     createdAt: row.createdAt,
-    treeId: pendingChange?.tree.id ?? null,
-    treeName: pendingChange?.tree.name ?? null,
+    treeId: tree?.id ?? null,
+    treeName: tree?.name ?? null,
     personName: person ? [person.firstName, person.lastName].filter(Boolean).join(' ') : null,
   }
 }

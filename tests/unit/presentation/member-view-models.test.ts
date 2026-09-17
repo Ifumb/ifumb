@@ -40,6 +40,7 @@ const profile: MemberProfile = {
     certainty: 'APPROXIMATE',
     photoUrl: null,
   },
+  discoverable: false,
   parentUnions: [],
   partnerUnions: [
     {

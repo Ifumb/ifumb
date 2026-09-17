@@ -30,10 +30,12 @@ export type MemberProps = MemberDetailsInput & {
   readonly photoUrl: string | null
   /** The account that said "this is me", if any. */
   readonly claimedById: string | null
+  /** Whether this member may be found by strangers through global search (module 3.1). */
+  readonly discoverable: boolean
 }
 
-/** Every recorded fact of a member, without who claimed it. */
-export type MemberFacts = Omit<MemberProps, 'claimedById'>
+/** Every recorded fact of a member, without who claimed it or whether it is discoverable. */
+export type MemberFacts = Omit<MemberProps, 'claimedById' | 'discoverable'>
 
 export type MemberField = keyof MemberDetailsInput
 
@@ -93,10 +95,14 @@ export class Member {
   private readonly props: MemberFacts
   /** The account that said "this is me", kept apart from the facts shown to readers. */
   readonly claimedById: string | null
+  /** Kept apart from the facts shown to readers, like `claimedById`: it is a privacy setting, not
+   * a genealogical fact. */
+  readonly discoverable: boolean
 
-  private constructor({ claimedById, ...props }: MemberProps) {
+  private constructor({ claimedById, discoverable, ...props }: MemberProps) {
     this.props = props
     this.claimedById = claimedById
+    this.discoverable = discoverable
     Object.freeze(this)
   }
 
@@ -111,13 +117,24 @@ export class Member {
 
   /** A new member, with every limit of a written member enforced. */
   static start({ id, ...input }: MemberDetailsInput & { readonly id: MemberId }): Member {
-    return new Member({ ...validDetails(input, id), id, photoUrl: null, claimedById: null })
+    return new Member({
+      ...validDetails(input, id),
+      id,
+      photoUrl: null,
+      claimedById: null,
+      discoverable: false,
+    })
   }
 
   /** The member with new details and the fields that actually changed; itself when none did. */
   revise(input: MemberDetailsInput): { member: Member; changes: MemberDetailChange[] } {
     const details = validDetails(input, this.props.id)
-    const next = new Member({ ...this.props, ...details, claimedById: this.claimedById })
+    const next = new Member({
+      ...this.props,
+      ...details,
+      claimedById: this.claimedById,
+      discoverable: this.discoverable,
+    })
     const [before, after] = [this.recordedValues, next.recordedValues]
     const changes = MEMBER_FIELDS.flatMap((field) =>
       before[field] === after[field] ? [] : [{ field, before: before[field], after: after[field] }],
@@ -129,7 +146,12 @@ export class Member {
   withPhoto(photoUrl: string | null): { member: Member; changed: boolean } {
     if (photoUrl === this.props.photoUrl) return { member: this, changed: false }
     return {
-      member: new Member({ ...this.props, photoUrl, claimedById: this.claimedById }),
+      member: new Member({
+        ...this.props,
+        photoUrl,
+        claimedById: this.claimedById,
+        discoverable: this.discoverable,
+      }),
       changed: true,
     }
   }
@@ -141,7 +163,20 @@ export class Member {
    */
   claim(userId: string): Member {
     if (userId === this.claimedById) return this
-    return new Member({ ...this.props, claimedById: userId })
+    return new Member({ ...this.props, claimedById: userId, discoverable: this.discoverable })
+  }
+
+  /**
+   * Whether strangers may find this member through global search (module 3.1) and, from there,
+   * send its tree's owner a contact request. Whether the viewer may change this at all is decided
+   * by `ToggleMemberDiscoverableUseCase`, the same way `claim` leaves cross-cutting checks out.
+   */
+  setDiscoverable(discoverable: boolean): { member: Member; changed: boolean } {
+    if (discoverable === this.discoverable) return { member: this, changed: false }
+    return {
+      member: new Member({ ...this.props, claimedById: this.claimedById, discoverable }),
+      changed: true,
+    }
   }
 
   /** Every recorded fact, read-only. */

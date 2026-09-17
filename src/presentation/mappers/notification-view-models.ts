@@ -7,7 +7,7 @@ export type NotificationItemViewModel = {
   readonly message: string
   readonly read: boolean
   readonly createdAtIso: string
-  readonly href: `/tree/${string}/pending` | null
+  readonly href: `/tree/${string}/pending` | '/contact-requests' | null
 }
 
 export type NotificationsViewModel = {
@@ -36,8 +36,15 @@ function toItem(notification: NotificationView): NotificationItemViewModel {
     message: messageFor(notification),
     read: notification.read,
     createdAtIso: notification.createdAt.toISOString(),
-    href: notification.treeId ? `/tree/${notification.treeId}/pending` : null,
+    href: hrefFor(notification),
   }
+}
+
+function hrefFor(notification: NotificationView): NotificationItemViewModel['href'] {
+  if (notification.type === 'CONTACT_REQUEST_RECEIVED' || notification.type === 'CONTACT_REQUEST_RESPONDED') {
+    return '/contact-requests'
+  }
+  return notification.treeId ? `/tree/${notification.treeId}/pending` : null
 }
 
 /** "Fatou Sow a proposé une modification sur Famille Diallo." — never the field-level detail. */

@@ -16,9 +16,11 @@ export type NotificationRecord = {
   readonly id: string
   readonly userId: string
   readonly type: NotificationType
-  readonly pendingChangeId: string
   readonly createdAt: Date
-}
+} & (
+  | { readonly pendingChangeId: string; readonly contactRequestId?: undefined }
+  | { readonly contactRequestId: string; readonly pendingChangeId?: undefined }
+)
 
 /** Write side of the in-app notifications shown to a tree's owner and its editors. */
 export interface NotificationWriter {

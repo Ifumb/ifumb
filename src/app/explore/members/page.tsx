@@ -1,7 +1,13 @@
 import type { Metadata } from 'next'
-import { loadPublicMembers } from '@/app/explore/load-explore'
+import { loadDiscoverableMembers, loadPublicMembers } from '@/app/explore/load-explore'
+import { currentUserOrNull } from '@/infrastructure/auth/current-user'
+import { toDiscoverableMemberSearchViewModel } from '@/presentation/mappers/discoverable-member-view-models'
 import { toMemberSearchViewModel } from '@/presentation/mappers/explore-view-models'
-import { parsePublicMemberSearch } from '@/presentation/schemas/explore-schema'
+import {
+  parseDiscoverableMemberSearch,
+  parsePublicMemberSearch,
+} from '@/presentation/schemas/explore-schema'
+import { DiscoverableMemberSearchView } from '@/presentation/views/discoverable-member-search-view'
 import { ExploreHeaderView } from '@/presentation/views/explore-header-view'
 import { PublicMemberSearchView } from '@/presentation/views/public-member-search-view'
 import { RateLimitedView } from '@/presentation/views/rate-limited-view'
@@ -18,14 +24,25 @@ export const metadata: Metadata = {
 }
 
 export default async function MemberSearchPage({ searchParams }: MemberSearchPageProps) {
-  const outcome = await loadPublicMembers(parsePublicMemberSearch(await searchParams))
+  const params = await searchParams
+  const [publicOutcome, discoverableOutcome, currentUser] = await Promise.all([
+    loadPublicMembers(parsePublicMemberSearch(params)),
+    loadDiscoverableMembers(parseDiscoverableMemberSearch(params)),
+    currentUserOrNull(),
+  ])
   return (
     <div className="space-y-8">
       <ExploreHeaderView />
-      {outcome.kind === 'rate-limited' ? (
+      {publicOutcome.kind === 'rate-limited' ? (
         <RateLimitedView />
       ) : (
-        <PublicMemberSearchView search={toMemberSearchViewModel(outcome.value)} />
+        <PublicMemberSearchView search={toMemberSearchViewModel(publicOutcome.value)} />
+      )}
+      {discoverableOutcome.kind === 'ok' && (
+        <DiscoverableMemberSearchView
+          search={toDiscoverableMemberSearchViewModel(discoverableOutcome.value)}
+          signedIn={currentUser !== null}
+        />
       )}
     </div>
   )

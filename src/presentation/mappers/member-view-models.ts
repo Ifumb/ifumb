@@ -45,6 +45,10 @@ export type MemberProfileViewModel = {
   /** "This is me" — shown only when the member is free and the viewer is signed in. */
   readonly canClaim: boolean
   readonly claimedByViewer: boolean
+  /** Whether strangers may find this member through global search (module 3.1), and whether the
+   * viewer may change that — the owner, or the account that claimed this member. */
+  readonly discoverable: boolean
+  readonly canToggleDiscoverable: boolean
   readonly identity: readonly Fact[]
   readonly datesAndPlaces: readonly Fact[]
   readonly culture: readonly Fact[]
@@ -78,6 +82,8 @@ export function toMemberProfileViewModel(
     lineageHref: lineageHref(tree.id, member.id, DEFAULT_LINEAGE_DEPTH),
     ...actionLinks(profile),
     ...claimPermissions(profile),
+    discoverable: profile.discoverable,
+    canToggleDiscoverable: profile.permissions.canEdit,
     portrait: toPortrait(member, member.photoUrl, photos),
     identity: identityFacts(member),
     datesAndPlaces: datesAndPlacesFacts(member),

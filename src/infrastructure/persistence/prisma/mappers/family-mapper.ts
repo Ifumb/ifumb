@@ -32,6 +32,7 @@ export function toDomainMember(row: MemberRow): Member {
     certainty: row.certainty,
     photoUrl: row.photoUrl,
     claimedById: row.claimedByUserId,
+    discoverable: row.discoverable,
   })
 }
 

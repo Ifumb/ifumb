@@ -12,6 +12,7 @@ export type SeedMemberInput = {
   readonly photoUrl?: string
   /** The account that claimed the member, found by its email. */
   readonly claimedByEmail?: string
+  readonly discoverable?: boolean
 }
 
 export type SeedUnionInput = {
@@ -30,9 +31,9 @@ export async function seedMember(treeId: string, input: SeedMemberInput): Promis
   await withTestClient((client) =>
     client.query(
       `INSERT INTO "Member" (id, "firstName", "lastName", gender, "birthDate", "birthDateApprox",
-         tribe, ethnicity, "photoUrl", "treeId", "claimedByUserId", "updatedAt")
+         tribe, ethnicity, "photoUrl", "treeId", "claimedByUserId", discoverable, "updatedAt")
        VALUES ($1, $2, $3, $4::"Gender", $5, $6, $7, $8, $9, $10,
-         (SELECT id FROM "User" WHERE email = $11), now())`,
+         (SELECT id FROM "User" WHERE email = $11), $12, now())`,
       [
         memberId,
         input.firstName,
@@ -45,6 +46,7 @@ export async function seedMember(treeId: string, input: SeedMemberInput): Promis
         input.photoUrl ?? null,
         treeId,
         input.claimedByEmail ?? null,
+        input.discoverable ?? false,
       ],
     ),
   )
