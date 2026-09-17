@@ -335,7 +335,7 @@ Découpée en trois livraisons, la phase étant « la logique la plus dense » d
 | Module | Contenu | État |
 |---|---|---|
 | 3.1 | Recherche découvrable + `contact-requests` : réglage `discoverable`, recherche globale complète (publique + privée découvrable), envoi/réponse/retrait d'une demande de contact, notifications | fait — `83057b3` |
-| 3.2 | Suggestions et demandes de connexion inter-arbres (panneaux liste, sans le graphe) | — |
+| 3.2 | Suggestions et demandes de connexion inter-arbres (pages liste, sans le graphe) | fait — `3e8580e` |
 | 3.3 | Branche étrangère intégrée dans le graphe (dépend de 3.2, touche le plus lourdement 1.2/1.3) | — |
 
 ##### Module 3.1 — Recherche découvrable + contact-requests (fait — `83057b3`)
@@ -370,6 +370,58 @@ Reportés ici depuis les phases précédentes (à ne pas oublier pour 3.2/3.3) :
 - visites guidées `driver.js` (montrent surtout des actions d'écriture, d'où le report après la
   Phase 2) ;
 - branches étrangères du graphe (nœuds d'un autre arbre liés par `cross-tree`) → module 3.3.
+
+##### Module 3.2 — Suggestions et demandes de connexion inter-arbres (fait — `3e8580e`)
+
+Plan complet des 14 points :
+[`ifumb-next/docs/plans/3.2-suggestions-et-connexions-inter-arbres.md`](ifumb-next/docs/plans/3.2-suggestions-et-connexions-inter-arbres.md).
+`core/entities/member-matching.ts` porte l'algorithme de correspondance du legacy (`scoreMatch`) en
+fonction pure et testable isolément : nom de famille identique obligatoire, écart de naissance > 5
+ans disqualifie (si les deux sont connus), prénom identique + (tribu partagée OU année identique) →
+`HIGH`, prénom identique seul → `MEDIUM`, sous-chaîne de prénom → `LOW`. Trois entités complètent le
+cycle : `CrossTreeSuggestion` (`propose`/`accept`/`reject`), `CrossTreeConnectionRequest`
+(`open`/`approve`/`refuse`, revérifie elle-même son expiration) et `CrossTreeLink` (simple).
+`NEW → ACCEPTED` (ouvre une demande de connexion, 30 jours) ou `REJECTED` ; `PENDING → APPROVED`
+(établit le lien) ou `REFUSED`. Nouvelles pages `/tree/[id]/suggestions`, `/tree/[id]/
+connection-requests`, `/tree/[id]/links`, liées depuis la page de l'arbre selon le rôle
+(contributeur, propriétaire, tout lecteur).
+
+**Correction en cours de route, avant le premier test d'intégration** : la règle « ne jamais
+toucher une suggestion déjà `ACCEPTED` lors d'un recalcul » vivait d'abord côté writer Prisma
+(`updateMany` conditionnel + lecture de désambiguïsation). En écrivant les tests unitaires de
+`ComputeSuggestionsUseCase`, ce design s'est révélé incompatible avec le pattern déjà établi
+(`SendInvitationUseCase` module 2.8, `SendContactRequestUseCase` module 3.1) où c'est toujours le
+**cas d'usage** qui lit l'état existant et décide, jamais le writer. Corrigé :
+`CrossTreeSuggestionReader.listAcceptedPairsForTree` renvoie les paires déjà acceptées,
+`ComputeSuggestionsUseCase` filtre avant d'écrire, `PrismaCrossTreeSuggestionWriter.upsertMany` est
+redevenu un upsert inconditionnel — testé aux deux niveaux (unitaire avec un double en mémoire,
+intégration contre Postgres réel) que le recalcul ne touche jamais une paire acceptée.
+
+**Quatre bugs legacy fermés** (numérotation reprise du document de constats commun à la Phase 3) :
+1. fuite d'autorisation (bug 3) : le bassin de calcul dépend de qui lance le calcul, mais le legacy
+   servait ensuite la suggestion stockée à tout propriétaire/éditeur de l'arbre source, même sans
+   accès personnel à l'arbre cible — fermé en filtrant à la lecture dans `GetSuggestionsUseCase`
+   (accès du lecteur courant à l'arbre cible, `readableTree` réutilisé), vérifié en unitaire **et**
+   en E2E (un éditeur du même arbre source qu'un autre éditeur ayant accès à l'arbre cible ne voit
+   pas sa suggestion) ;
+2. rejet permanent d'une suggestion (bug 5) : `@@unique([memberId, targetMemberId])` sans dimension
+   statut — fermé par l'upsert décrit ci-dessus ;
+3. expiration d'une demande de connexion jamais revérifiée à l'approbation/au refus (bug 4),
+   seulement au balayage paresseux de la liste : `CrossTreeConnectionRequest.approve`/`refuse`
+   revérifie désormais `expiresAt` elle-même, sans tâche planifiée (ADR 0004) ;
+4. aucun filtre sur les arbres archivés dans le bassin de candidats (bug 1), même famille que 1.4 et
+   3.1.
+
+Écarts documentés, non fermés : aucune notification pour l'approbation/le refus d'une connexion
+(bug 6, `NotificationType` n'a aucune valeur pour cet événement, schéma figé) ; références pendantes
+à la suppression d'un membre (bug 7, `memberId`/`targetMemberId` ne sont pas des relations Prisma,
+tolérées comme au module 3.1). Arbres `SHARED` inclus dans le bassin de calcul au même titre que
+`PUBLIC`. Nouvelle politique de débit `computeSuggestionsByUser`, plus stricte que
+`treeWriteByUser` (le calcul est O(n×m)). Branche étrangère dans le graphe toujours hors périmètre :
+module 3.3.
+
+Gate complet exécuté : typecheck, lint, test (866/866), audit, build, test:integration (124/124,
+Docker), test:e2e (85/85).
 
 #### Phase 4 — Cutover
 
