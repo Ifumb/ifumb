@@ -176,7 +176,7 @@ trancher le cas des arbres `SHARED`, exclus par le legacy).
 | 2.5 | Photos des membres : envoi côté serveur (clé de service), ré-encodage `sharp` sans métadonnées, retrait, suppression avec le membre, ADR 0007 | fait — `9c6221e` |
 | 2.6a | Modifications en attente — propositions : membres et unions, notification, email throttlé, page `/tree/[id]/pending` en lecture | fait — `dc551af` |
 | 2.6b | Modifications en attente — revue : approbation/rejet, application atomique, détection de péremption | fait — `d56b1c9` |
-| 2.7 | Notifications (liste, lu, tout lu) | — |
+| 2.7 | Notifications (liste, lu, tout lu, compteur temps réel) | fait — `dd5a2ff` |
 | 2.8 | Invitations (email, lien public par jeton, accepter/refuser/révoquer, rôle) + action « c'est moi » (claim, reportée de 2.3 ; `claimedByUserId` unique globalement) | — |
 
 Reportés en Phase 3 : réglage « découvrable » d'un membre (avec `contact-requests`), visites guidées.
@@ -194,16 +194,18 @@ utilisent une base Postgres locale via Docker, jamais Supabase) peuvent tourner 
 de `pnpm dev` avec des écritures réelles n'est possible. Les modules 2.6a et 2.6b ont été menés
 entièrement sur la base Docker jetable, gate complet y compris `test:integration`/`test:e2e`.
 
-**Flake E2E préexistant, constaté en testant 2.6b, non corrigé (hors périmètre)** : sous
-`pnpm test:e2e` (parallélisme par défaut hors CI), `expectNoAccessibilityViolations` échoue
-occasionnellement avec « Document does not have a non-empty `<title>` element » sur une page
-atteinte par navigation cliente (`Link` suivi immédiatement d'un contrôle axe) — reproduit sur des
-specs d'avant ce module (`tree-writes.spec.ts`, `union-writes.spec.ts`), donc non lié au code. Passe
-de façon fiable en série (`--workers=1`), plus rarement mais pas jamais. À investiguer si ça devient
-gênant (piste : `Link` + axe pourrait avoir besoin d'attendre `document.title` avant d'analyser).
+**Flake E2E « document-title » constaté en testant 2.6b, corrigé en 2.7** : sous `pnpm test:e2e`
+(parallélisme par défaut hors CI), `expectNoAccessibilityViolations` échouait occasionnellement
+avec « Document does not have a non-empty `<title>` element » sur une page atteinte par navigation
+cliente (`Link` suivi immédiatement d'un contrôle axe) — le contenu (et son titre `<h1>`) peut
+s'afficher un tick avant que l'App Router commite le nouveau `<title>`. Corrigé dans
+`tests/e2e/support/fixtures.ts` : `expectNoAccessibilityViolations` attend désormais
+`page.title()` non vide avant de lancer axe. Confirmé par deux runs complets en parallélisme par
+défaut sans réapparition.
 
 Convention de version constatée jusqu'ici (SemVer mineure en 0.x par `feat`) :
-0.1.8→2.1, 0.1.9→2.2, 0.1.10→2.3, 0.1.11→2.4, 0.1.12→2.5, 0.1.13→2.6a, 0.1.14→2.6b.
+0.1.8→2.1, 0.1.9→2.2, 0.1.10→2.3, 0.1.11→2.4, 0.1.12→2.5, 0.1.13→2.6a, 0.1.14→2.6b, 0.1.15→2.7
+(déduit automatiquement par release-please au commit — ne pas modifier `package.json` à la main).
 
 #### Module 2.6a — Modifications en attente : propositions (fait — `dc551af`)
 
@@ -252,15 +254,35 @@ une zone qui survit au changement de contenu.
 **Reporté, hors gate** : lien de navigation « N modifications en attente » depuis la page de
 l'arbre (la page `/pending` n'est atteignable que par URL directe).
 
-#### Module 2.7 — Notifications
+#### Module 2.7 — Notifications (fait — `dd5a2ff`)
 
-Non planifié en détail. Legacy : `ifumb/apps/api/src/notifications/` (service déjà lu partiellement
-pendant la planification de 2.6 : `create`, `createForContactRequest`, `findForUser` avec
-enrichissement des noms de cible), `ifumb/apps/web/src/hooks/useNotifications.ts`. Dépend de 2.6
-(les notifications `PENDING_CHANGE_*` existent déjà en base une fois 2.6 fait). Prévoir : liste,
-marquer comme lue, tout marquer comme lu, compteur non lues (probablement dans la navigation
-« Compte »). Vérifier si un `NotificationType` du schéma Prisma reste inutilisé tant que
-`contact-requests` (Phase 3) n'est pas porté.
+Liste (`/notifications`, dans le groupe de routes `(app)` pour hériter d'`AccountNav`), marquer
+comme lue (par élément, action serveur sans confirmation), tout marquer comme lu
+(`MarkAllNotificationsReadUseCase`), compteur non lu dans `AccountNav` via `NotificationBadge`.
+**Temps réel choisi explicitement par l'utilisateur** (pas seulement un rafraîchissement à la
+navigation) : sondage client toutes les 15 s sur `GET /api/notifications/unread-count`
+(`Cache-Control: no-store`, jamais mis en cache), limité par une nouvelle politique
+`notificationPollByUser` (20/min). SSE/WebSockets écartés : ADR 0004 diffère le choix de
+l'hébergement à la bascule, le code doit rester compatible auto-hébergé et serverless.
+
+`NotificationReader` (nouveau port, `listForUser`/`unreadCountFor`) séparé de `NotificationWriter`
+(étendu de `record` à `markRead`/`markAllRead`) ; `GetUnreadNotificationCountUseCase` séparé de
+`GetNotificationsUseCase` pour que le sondage ne charge jamais les lignes enrichies qu'il jetterait.
+`UnitOfWorkContext.notifications` volontairement réduit à `Pick<NotificationWriter, 'record'>` —
+marquer comme lu ne doit jamais être transactionnel. `NotificationType` élargi aux 5 valeurs Prisma
+(les deux `CONTACT_REQUEST_*` restent inatteignables jusqu'à `contact-requests`, Phase 3, mais le
+côté lecture doit déjà les tolérer). Message volontairement simplifié par rapport au legacy : une
+ligne (qui + type + arbre), sans détail champ par champ (qui reste à un clic, sur `/pending`).
+
+**Un vrai bug d'accessibilité trouvé en testant, pas dans le plan** (même famille que celui de
+2.6b, mécanisme différent) : le bouton « Tout marquer comme lu » démonte tout son formulaire — et
+donc son message de confirmation — dès que `unreadCount` retombe à 0, ce que l'action elle-même
+provoque via `revalidatePath`. Corrigé en gardant le formulaire toujours monté (seul le bouton se
+cache une fois qu'il n'y a plus rien à marquer), à l'image de la convention déjà en place sur
+`NotificationBadge`.
+
+Legacy de référence : `ifumb/apps/api/src/notifications/` (`create`, `createForContactRequest`,
+`findForUser`), `ifumb/apps/web/src/hooks/useNotifications.ts`.
 
 #### Module 2.8 — Invitations + action « c'est moi » (claim)
 
