@@ -159,9 +159,8 @@ le modèle actuel (JWT en `localStorage`) est une faille à corriger, pas à por
 Points ouverts : pooler Supabase (6543) toujours non vérifié en conditions réelles ; la famille
 entière est chargée à chaque requête (acceptable en lecture, à revoir si les arbres grossissent) ;
 visites guidées driver.js du legacy non portées (elles montrent surtout des actions d'écriture —
-module à placer après la Phase 2) ; branches étrangères du graphe → Phase 3 (`cross-tree`) ;
-membres « découvrables » d'arbres privés dans la recherche → Phase 3 avec `contact-requests` (y
-trancher le cas des arbres `SHARED`, exclus par le legacy).
+module à placer après la Phase 2). Branches étrangères du graphe et membres « découvrables »
+d'arbres privés, reportés à la Phase 3 ici : faits (modules 3.3 et 3.1 respectivement).
 
 **Phase 1 terminée.**
 
@@ -336,7 +335,7 @@ Découpée en trois livraisons, la phase étant « la logique la plus dense » d
 |---|---|---|
 | 3.1 | Recherche découvrable + `contact-requests` : réglage `discoverable`, recherche globale complète (publique + privée découvrable), envoi/réponse/retrait d'une demande de contact, notifications | fait — `83057b3` |
 | 3.2 | Suggestions et demandes de connexion inter-arbres (pages liste, sans le graphe) | fait — `3e8580e` |
-| 3.3 | Branche étrangère intégrée dans le graphe (dépend de 3.2, touche le plus lourdement 1.2/1.3) | — |
+| 3.3 | Branche étrangère intégrée dans le graphe (dépend de 3.2, touche le plus lourdement 1.2/1.3) | fait — `d3b5fe2` |
 
 ##### Module 3.1 — Recherche découvrable + contact-requests (fait — `83057b3`)
 
@@ -422,6 +421,40 @@ module 3.3.
 
 Gate complet exécuté : typecheck, lint, test (866/866), audit, build, test:integration (124/124,
 Docker), test:e2e (85/85).
+
+##### Module 3.3 — Branche étrangère intégrée dans le graphe (fait — `d3b5fe2`)
+
+Plan complet des 14 points :
+[`ifumb-next/docs/plans/3.3-branche-etrangere-dans-le-graphe.md`](ifumb-next/docs/plans/3.3-branche-etrangere-dans-le-graphe.md).
+Dernier sous-module de la Phase 3, qui est donc terminée dans son intégralité. `GetCrossTreeBranchUseCase`
+charge la branche distante d'un `CrossTreeLink` : `otherSide()`/`ownSide()` (module 3.2) identifient
+le membre pivot des deux côtés, `toFamilyGraph` (module 1.2) est réutilisé tel quel pour construire
+le graphe de l'arbre distant, sans aucune modification de signature. Côté présentation,
+`mergeForeignBranch` (fonction pure, testée isolément) fusionne ce graphe distant dans le graphe
+local : le nœud pivot distant est retiré, ses arêtes réécrites vers l'id du membre-pont local, pour
+que dagre pose la branche comme un seul graphe connexe au lieu d'un amas disjoint. Nouvelle route
+`GET /api/tree/[id]/graph/branch` (session vérifiée, jamais cache, sur le modèle de
+`/api/notifications/unread-count`) qui renvoie le graphe fusionné déjà mis en page côté serveur à
+chaque bascule d'un bouton pont — le layout reste entièrement côté serveur (invariant déjà en place
+depuis le module 1.2), aucune dépendance dagre ajoutée au client.
+
+**Autorisation par lien** (fidèle au comportement legacy, volontaire) : `GetCrossTreeBranchUseCase`
+n'applique jamais `readableTree` sur l'arbre distant, uniquement sur l'arbre local. Un `CrossTreeLink`
+valide est la seule autorisation nécessaire pour voir sa branche, quelle que soit la visibilité
+réelle de l'arbre distant (y compris `PRIVATE`) — testé en unitaire, en intégration contre un vrai
+Postgres, et en E2E avec un arbre distant `PRIVATE` possédé par un compte totalement étranger.
+Décisions suivies du plan : branche = arbre distant entier, pas de profondeur limitée ; aucun badge
+« en attente » sur les nœuds distants, quel que soit le rôle réel du visiteur sur l'arbre distant ;
+nœuds distants jamais cliquables (membre ni union), l'accès accordé restant scopé à cette seule vue ;
+aucun bouton de branche sur un nœud lui-même distant (pas de chaînage récursif).
+
+**Deux bugs trouvés en écrivant les tests, pas en codant** : un `<div aria-label>` sans rôle valide
+sur un nœud-union distant violait `aria-prohibited-attr` (axe) — corrigé avec `role="img"` ; le
+compteur « N membres affichés » ne comptait que les membres de l'arbre local, jamais ceux ajoutés par
+une branche fusionnée — corrigé dans `toMergedFamilyGraphViewModel`.
+
+Gate complet exécuté : typecheck, lint, test (878/878), audit, build, test:integration (127/127,
+Docker), test:e2e (86/86).
 
 #### Phase 4 — Cutover
 
