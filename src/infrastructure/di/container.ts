@@ -73,6 +73,8 @@ import {
   RATE_LIMIT_POLICIES,
   type RateLimitPolicyName,
 } from '@/infrastructure/rate-limiting/rate-limit-policies'
+import { UpstashRateLimiter } from '@/infrastructure/rate-limiting/upstash-rate-limiter'
+import { Redis } from '@upstash/redis'
 import { BcryptjsPasswordHasher } from '@/infrastructure/security/bcryptjs-password-hasher'
 import { CryptoTokenGenerator } from '@/infrastructure/security/crypto-token-generator'
 import { SystemClock } from '@/infrastructure/system/system-clock'
@@ -178,11 +180,22 @@ function rateLimiters(): RateLimiters {
 }
 
 function buildRateLimiters(): RateLimiters {
+  const redis = configuredUpstashRedis()
   const entries = Object.entries(RATE_LIMIT_POLICIES).map(([name, policy]) => [
     name,
-    new InMemoryRateLimiter({ ...policy, clock: clock() }),
+    redis ? new UpstashRateLimiter(policy, redis) : new InMemoryRateLimiter({ ...policy, clock: clock() }),
   ])
   return Object.fromEntries(entries) as RateLimiters
+}
+
+/**
+ * Null when Upstash is not configured — the default everywhere except a multi-instance deployment
+ * (Phase 4 cutover to Vercel; see ADR 0009): dev, CI, tests and `next build` never need this secret.
+ */
+function configuredUpstashRedis(): Redis | null {
+  const url = process.env.UPSTASH_REDIS_REST_URL
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN
+  return url && token ? new Redis({ url, token }) : null
 }
 const passwordResetMailer = lazy(
   () =>

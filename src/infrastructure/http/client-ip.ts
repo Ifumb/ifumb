@@ -7,9 +7,9 @@ type HeaderSource = { get(name: string): string | null }
 
 /**
  * Best-effort client IP for rate-limit keys.
- * reason: `x-forwarded-for` is only trustworthy behind a proxy that overwrites it, and the hosting
- * target is decided at cutover (ADR 0004). Until then a client can forge it, which is why every
- * sensitive flow also limits by email or user id, never by IP alone.
+ * reason: `x-forwarded-for` is only trustworthy behind a proxy that overwrites it — true on Vercel,
+ * whose edge network sets it on every request reaching a function (ADR 0009). Kept best-effort
+ * regardless: every sensitive flow also limits by email or user id, never by IP alone.
  */
 export function clientIpFrom(headers: HeaderSource): string {
   const forwardedFor = headers.get('x-forwarded-for')?.split(',')[0]?.trim()

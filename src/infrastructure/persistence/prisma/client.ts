@@ -6,10 +6,17 @@ import { PrismaClient } from '@/infrastructure/persistence/prisma/generated/clie
 
 /**
  * reason: node-postgres defaults to 10 connections per process, and the database sits behind the
- * Supabase pooler it shares with the legacy API. 5 is a conservative starting point; recompute it
- * at cutover as (pooler connection limit / maximum concurrent instances) once the hosting is known.
+ * Supabase pooler it shares with the legacy API. 5 is a conservative default for a single
+ * long-running process; on Vercel, each serverless instance opens its own pool, so the real ceiling
+ * is `PRISMA_POOL_MAX_CONNECTIONS × concurrent instances` against the pooler's own connection limit
+ * — set the env var to retune this without a redeploy (ADR 0009).
  */
-const POOL_MAX_CONNECTIONS = 5
+const DEFAULT_POOL_MAX_CONNECTIONS = 5
+
+function poolMaxConnections(): number {
+  const configured = Number(process.env.PRISMA_POOL_MAX_CONNECTIONS)
+  return Number.isInteger(configured) && configured > 0 ? configured : DEFAULT_POOL_MAX_CONNECTIONS
+}
 
 const globalForPrisma = globalThis as unknown as { prisma: PrismaClient | undefined }
 
@@ -25,7 +32,7 @@ export function getPrismaClient(): PrismaClient {
 function createPrismaClient(): PrismaClient {
   const pool = new Pool({
     connectionString: requireServerEnv('DATABASE_URL'),
-    max: POOL_MAX_CONNECTIONS,
+    max: poolMaxConnections(),
   })
   return new PrismaClient({
     adapter: new PrismaPg(pool),
