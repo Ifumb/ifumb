@@ -458,10 +458,30 @@ Docker), test:e2e (86/86).
 
 #### Phase 4 — Cutover
 
-Non planifiée. Rappels des décisions déjà actées ailleurs dans ce document : la cible d'hébergement
-(Docker autonome vs Vercel) est tranchée à ce stade seulement (ADR 0004) ; c'est aussi le seul
-moment où `ifumb-next` peut écrire dans la base de **production** partagée (ADR 0005) ; dépréciation
-de `ifumb/apps/*` ; passage à un déploiement unique.
+En cours. Plan complet : [`ifumb-next/docs/plans/4-cutover.md`](ifumb-next/docs/plans/4-cutover.md).
+Cible d'hébergement tranchée (décision utilisateur du 2026-09-17, résout l'ADR 0004) : **Vercel**.
+Voir l'ADR 0009 pour le détail de chaque conséquence de ce choix (rate limiting, pool Prisma, IP
+cliente, sondes de santé, CI, dépendances ajoutées).
+
+**Partie code faite** (commit à suivre) : `UpstashRateLimiter` (nouveau, sélectionné dans
+`container.ts` seulement si `UPSTASH_REDIS_REST_URL`/`UPSTASH_REDIS_REST_TOKEN` sont définies —
+`InMemoryRateLimiter` reste le défaut en dev/CI/tests) ; `PRISMA_POOL_MAX_CONNECTIONS` configurable
+par variable d'environnement ; nouvelle sonde `GET /api/health/ready` (ping base) ; nouveau workflow
+`smoke.yml` (déclenché sur `deployment_status`) ; commentaires et message d'erreur de
+`business-writes.ts`/`client-ip.ts` mis à jour pour la cible Vercel ; `.env.example` complété.
+
+**Restent, tous opérationnels** (voir le runbook du plan, aucun n'est du code) : créer/connecter le
+projet Vercel, créer le compte Upstash, renseigner les variables d'environnement de production,
+vérifier en réel la compatibilité du pooler Supabase en mode transaction avec `@prisma/adapter-pg`
+(point ouvert depuis l'ADR 0003, jamais testé — le staging n'a jamais existé), basculer
+`BUSINESS_WRITES_ENABLED` en deux temps, rediriger le trafic, arrêter le legacy.
+
+**Renommage décidé, pas encore fait** (demande utilisateur du 2026-09-18, après le commit du code
+ci-dessus) : `ifumb-next` (ce dépôt) devient `ifumb` ; le legacy actuellement nommé `ifumb`
+(dépôt GitHub `Ifumb/ifumb`) devient `ifumb-legacy`. Couvre les deux dépôts GitHub
+(`gh repo rename`), les dossiers locaux, les remotes Git, les `name` de `package.json`, et les
+références dans la documentation. Pas de risque de production connu côté hébergement legacy
+(confirmé par l'utilisateur).
 
 #### Rappels transverses pour la suite
 
