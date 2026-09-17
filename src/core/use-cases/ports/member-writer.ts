@@ -11,4 +11,6 @@ export interface MemberWriter {
   updatePhoto(memberId: MemberId, photoUrl: string | null): Promise<void>
   /** Removes the member and its links as a child; unions keep their other people. */
   delete(memberId: MemberId): Promise<void>
+  /** Records who claimed this member ("this is me"). */
+  claim(memberId: MemberId, userId: string): Promise<void>
 }

@@ -42,6 +42,9 @@ function TreeSettings({ settings }: Readonly<{ settings: TreeSettings }>) {
         submit={UPDATE_TREE_SUBMIT}
         initialValues={{ name, description: description ?? '', visibility }}
       />
+      <p>
+        <Link href={`/tree/${id}/collaborators`}>Gérer les collaborateurs</Link>
+      </p>
     </section>
   )
 }

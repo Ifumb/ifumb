@@ -1,5 +1,6 @@
 import type { Clock } from '@/core/use-cases/ports/clock'
 import type { IdGenerator } from '@/core/use-cases/ports/id-generator'
+import type { InvitationMailer, InvitationMessage } from '@/core/use-cases/ports/invitation-mailer'
 import type { PasswordHasher } from '@/core/use-cases/ports/password-hasher'
 import type {
   PendingChangeAlertMailer,
@@ -67,6 +68,14 @@ export class RecordingPasswordResetMailer implements PasswordResetMailer {
   readonly sent: PasswordResetMessage[] = []
 
   async sendResetLink(message: PasswordResetMessage): Promise<void> {
+    this.sent.push(message)
+  }
+}
+
+export class RecordingInvitationMailer implements InvitationMailer {
+  readonly sent: InvitationMessage[] = []
+
+  async sendInvitation(message: InvitationMessage): Promise<void> {
     this.sent.push(message)
   }
 }

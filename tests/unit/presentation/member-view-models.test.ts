@@ -53,7 +53,13 @@ const profile: MemberProfile = {
       ],
     },
   ],
-  permissions: { canEdit: false, canDelete: false, canManageUnions: false },
+  permissions: {
+    canEdit: false,
+    canDelete: false,
+    canManageUnions: false,
+    canClaim: false,
+    claimedByViewer: false,
+  },
 }
 
 describe('member view models', () => {
@@ -84,15 +90,20 @@ describe('member view models', () => {
   })
 
   it.each([
-    [{ canEdit: false, canDelete: false, canManageUnions: false }, null, null, null],
     [
-      { canEdit: true, canDelete: false, canManageUnions: false },
+      { canEdit: false, canDelete: false, canManageUnions: false, canClaim: false, claimedByViewer: false },
+      null,
+      null,
+      null,
+    ],
+    [
+      { canEdit: true, canDelete: false, canManageUnions: false, canClaim: false, claimedByViewer: false },
       '/tree/tree_1/member/mbr_awa/edit',
       null,
       null,
     ],
     [
-      { canEdit: true, canDelete: true, canManageUnions: true },
+      { canEdit: true, canDelete: true, canManageUnions: true, canClaim: false, claimedByViewer: false },
       '/tree/tree_1/member/mbr_awa/edit',
       '/tree/tree_1/member/mbr_awa/delete',
       '/tree/tree_1/unions/new?parent=mbr_awa',

@@ -134,6 +134,16 @@ export class Member {
     }
   }
 
+  /**
+   * The member as claimed by this account ("this is me"). Whether that account may claim it at all
+   * — the member must be free, and the account must hold no other claim anywhere — is decided by
+   * `ClaimMemberUseCase`, not here: those checks reach beyond this one member.
+   */
+  claim(userId: string): Member {
+    if (userId === this.claimedById) return this
+    return new Member({ ...this.props, claimedById: userId })
+  }
+
   /** Every recorded fact, read-only. */
   get details(): MemberFacts {
     return this.props

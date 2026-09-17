@@ -30,6 +30,10 @@ export class PrismaMemberWriter implements MemberWriter {
     await this.db.unionChild.deleteMany({ where: { childId: memberId.value } })
     await this.db.member.delete({ where: { id: memberId.value } })
   }
+
+  async claim(memberId: MemberId, userId: string): Promise<void> {
+    await this.db.member.update({ where: { id: memberId.value }, data: { claimedByUserId: userId } })
+  }
 }
 
 function detailColumns(member: Member) {

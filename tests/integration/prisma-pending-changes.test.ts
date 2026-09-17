@@ -105,4 +105,21 @@ describe('pending changes through Prisma', () => {
     expect(await reader.findById(TreeId.fromString('tree_other'), 'pc_1')).toBeNull()
     expect(await reader.findById(TreeId.fromString(TREE), 'pc_missing')).toBeNull()
   })
+
+  it('rejects every pending proposal of a revoked author on this tree, leaving others untouched', async () => {
+    await writer.propose(aChange({ id: 'pc_1', authorId: EDITOR_A }))
+    await writer.propose(
+      aChange({ id: 'pc_2', authorId: EDITOR_A, targetId: 'mbr_other', snapshotAfter: { tribe: 'Peul' } }),
+    )
+    await writer.propose(aChange({ id: 'pc_3', authorId: EDITOR_B }))
+
+    await writer.rejectAllByAuthor(TREE, EDITOR_A, new Date('2026-09-17T12:00:00Z'))
+
+    const rows = await prisma.pendingChange.findMany({ orderBy: { id: 'asc' } })
+    expect(rows.map((row) => [row.id, row.status, row.rejectionComment])).toEqual([
+      ['pc_1', 'REJECTED', 'Accès révoqué'],
+      ['pc_2', 'REJECTED', 'Accès révoqué'],
+      ['pc_3', 'PENDING', null],
+    ])
+  })
 })

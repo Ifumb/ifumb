@@ -1,4 +1,6 @@
 import Link from 'next/link'
+import { claimMemberAction } from '@/app/actions/claim-actions'
+import { ClaimMemberForm } from '@/presentation/components/forms/claim-member-form'
 import { MemberPortrait } from '@/presentation/components/ui/member-portrait'
 import type { Fact } from '@/presentation/mappers/fact'
 import type { MemberProfileViewModel } from '@/presentation/mappers/member-view-models'
@@ -39,8 +41,15 @@ function ProfileHeader({ profile }: ProfileProps) {
       </div>
       {profile.nickname && <p>Surnom : « {profile.nickname} »</p>}
       <ProfileLinks profile={profile} />
+      <ClaimSection profile={profile} />
     </header>
   )
+}
+
+function ClaimSection({ profile }: ProfileProps) {
+  if (profile.claimedByViewer) return <p>Revendiquée par vous.</p>
+  if (!profile.canClaim) return null
+  return <ClaimMemberForm action={claimMemberAction.bind(null, { treeId: profile.treeId, memberId: profile.memberId })} />
 }
 
 /** Editing, deletion and new unions only appear for those allowed to use them. */

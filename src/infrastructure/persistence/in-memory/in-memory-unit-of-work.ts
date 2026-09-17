@@ -1,4 +1,5 @@
 import 'server-only'
+import type { Invitation } from '@/core/entities/invitation'
 import type { Member } from '@/core/entities/member'
 import type { PendingChange } from '@/core/entities/pending-change'
 import type { Tree } from '@/core/entities/tree'
@@ -17,6 +18,8 @@ type AddedUnionChild = {
 }
 type UpdatedPhoto = { readonly memberId: string; readonly photoUrl: string | null }
 type RemovedUnionChild = { readonly unionId: string; readonly childId: string }
+type ClaimedMember = { readonly memberId: string; readonly userId: string }
+type RejectedAllByAuthor = { readonly treeId: string; readonly authorId: string; readonly now: Date }
 
 type Writes = {
   insertedTrees: Tree[]
@@ -25,6 +28,7 @@ type Writes = {
   updatedMembers: Member[]
   deletedMemberIds: string[]
   updatedPhotos: UpdatedPhoto[]
+  claimedMembers: ClaimedMember[]
   insertedUnions: InsertedUnion[]
   updatedUnions: Union[]
   deletedUnionIds: string[]
@@ -33,7 +37,12 @@ type Writes = {
   auditRecords: AuditRecord[]
   proposedChanges: PendingChange[]
   resolvedChanges: PendingChange[]
+  rejectedAllByAuthor: RejectedAllByAuthor[]
   notifications: NotificationRecord[]
+  sentInvitations: Invitation[]
+  resolvedInvitations: Invitation[]
+  roleChangedInvitations: Invitation[]
+  revokedInvitationIds: string[]
 }
 
 const noWrites = (): Writes => ({
@@ -43,6 +52,7 @@ const noWrites = (): Writes => ({
   updatedMembers: [],
   deletedMemberIds: [],
   updatedPhotos: [],
+  claimedMembers: [],
   insertedUnions: [],
   updatedUnions: [],
   deletedUnionIds: [],
@@ -51,7 +61,12 @@ const noWrites = (): Writes => ({
   auditRecords: [],
   proposedChanges: [],
   resolvedChanges: [],
+  rejectedAllByAuthor: [],
   notifications: [],
+  sentInvitations: [],
+  resolvedInvitations: [],
+  roleChangedInvitations: [],
+  revokedInvitationIds: [],
 })
 
 /**
@@ -85,6 +100,9 @@ export class InMemoryUnitOfWork implements UnitOfWork, Readonly<Writes> {
   get updatedPhotos() {
     return this.committed.updatedPhotos
   }
+  get claimedMembers() {
+    return this.committed.claimedMembers
+  }
   get insertedUnions() {
     return this.committed.insertedUnions
   }
@@ -109,8 +127,23 @@ export class InMemoryUnitOfWork implements UnitOfWork, Readonly<Writes> {
   get resolvedChanges() {
     return this.committed.resolvedChanges
   }
+  get rejectedAllByAuthor() {
+    return this.committed.rejectedAllByAuthor
+  }
   get notifications() {
     return this.committed.notifications
+  }
+  get sentInvitations() {
+    return this.committed.sentInvitations
+  }
+  get resolvedInvitations() {
+    return this.committed.resolvedInvitations
+  }
+  get roleChangedInvitations() {
+    return this.committed.roleChangedInvitations
+  }
+  get revokedInvitationIds() {
+    return this.committed.revokedInvitationIds
   }
 
   /** Makes the next audit entry fail, as a database error inside the transaction would. */
@@ -146,14 +179,24 @@ export class InMemoryUnitOfWork implements UnitOfWork, Readonly<Writes> {
         delete: async (memberId) => void staged.deletedMemberIds.push(memberId.value),
         updatePhoto: async (memberId, photoUrl) =>
           void staged.updatedPhotos.push({ memberId: memberId.value, photoUrl }),
+        claim: async (memberId, userId) =>
+          void staged.claimedMembers.push({ memberId: memberId.value, userId }),
       },
       unions: unionWriterFor(staged),
       auditLog: { record: async (entry) => this.stageRecord(staged, entry) },
       pendingChanges: {
         propose: async (change) => void staged.proposedChanges.push(change),
         resolve: async (change) => void staged.resolvedChanges.push(change),
+        rejectAllByAuthor: async (treeId, authorId, now) =>
+          void staged.rejectedAllByAuthor.push({ treeId, authorId, now }),
       },
       notifications: { record: async (entry) => this.stageNotification(staged, entry) },
+      invitations: {
+        send: async (invitation) => void staged.sentInvitations.push(invitation),
+        resolve: async (invitation) => void staged.resolvedInvitations.push(invitation),
+        changeRole: async (invitation) => void staged.roleChangedInvitations.push(invitation),
+        revoke: async (invitationId) => void staged.revokedInvitationIds.push(invitationId),
+      },
     }
   }
 

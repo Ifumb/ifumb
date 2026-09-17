@@ -7,7 +7,7 @@ export type AuditRecord = {
   readonly treeId: string
   readonly authorId: string
   readonly action: AuditAction
-  readonly targetType: 'TREE' | 'MEMBER' | 'UNION'
+  readonly targetType: 'TREE' | 'MEMBER' | 'UNION' | 'INVITATION'
   readonly targetId: string
   readonly diff: AuditDiff
   readonly createdAt: Date

@@ -11,4 +11,9 @@ export interface PendingChangeWriter {
   propose(change: PendingChange): Promise<void>
   /** Stores a proposal's resolution: its status, its comment, who resolved it, and when. */
   resolve(change: PendingChange): Promise<void>
+  /**
+   * Rejects every PENDING proposal a revoked collaborator still has on this tree, so nothing of
+   * theirs is left waiting for a review they can no longer receive (module 2.8).
+   */
+  rejectAllByAuthor(treeId: string, authorId: string, now: Date): Promise<void>
 }

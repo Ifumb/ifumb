@@ -1,6 +1,7 @@
 import { TreeId } from '@/core/shared/value-objects/tree-id'
 import { UserId } from '@/core/shared/value-objects/user-id'
 import { InMemoryFamilyReader } from '@/infrastructure/persistence/in-memory/in-memory-family-reader'
+import { InMemoryMemberClaimReader } from '@/infrastructure/persistence/in-memory/in-memory-member-claim-reader'
 import { InMemoryPendingChangeReader } from '@/infrastructure/persistence/in-memory/in-memory-pending-change-reader'
 import { InMemoryTreeReader } from '@/infrastructure/persistence/in-memory/in-memory-tree-reader'
 import { InMemoryUnitOfWork } from '@/infrastructure/persistence/in-memory/in-memory-unit-of-work'
@@ -38,6 +39,8 @@ export function memberWriteWorld() {
   const storage = new InMemoryPhotoStorage()
   const photos = new FakePhotoProcessor()
   const pendingChanges = new InMemoryPendingChangeReader()
+  const memberClaims = new InMemoryMemberClaimReader()
+  memberClaims.seed(CLAIMER_ID, { treeId: 'tree_diallo', memberId: 'mbr_awa' })
   const mailer = new RecordingPendingChangeAlertMailer()
   const users = new InMemoryUserRepository()
   users.seed(
@@ -50,10 +53,21 @@ export function memberWriteWorld() {
     }),
   )
   const deps = () => ({
-    ...{ trees, families, unitOfWork, storage, photos, users, pendingChanges, mailer },
+    ...{ trees, families, unitOfWork, storage, photos, users, pendingChanges, memberClaims, mailer },
     ...{ ids: new SequentialIdGenerator(), clock: new FixedClock(MEMBER_WRITES_NOW) },
   })
-  return { trees, families, unitOfWork, storage, photos, users, pendingChanges, mailer, deps }
+  return {
+    trees,
+    families,
+    unitOfWork,
+    storage,
+    photos,
+    users,
+    pendingChanges,
+    memberClaims,
+    mailer,
+    deps,
+  }
 }
 
 function seededFamilies(): InMemoryFamilyReader {

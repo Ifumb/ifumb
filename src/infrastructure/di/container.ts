@@ -33,14 +33,18 @@ import { ResetPasswordUseCase } from '@/core/use-cases/reset-password'
 import { businessWritesEnabled } from '@/infrastructure/config/business-writes'
 import { requireServerEnv } from '@/infrastructure/config/server-env'
 import { lazy } from '@/infrastructure/di/lazy'
+import { invitationUseCases, type InvitationWriteDeps } from '@/infrastructure/di/invitation-use-cases'
 import { configuredPhotoStorage, photoUseCases } from '@/infrastructure/di/photo-use-cases'
 import { SharpPhotoProcessor } from '@/infrastructure/images/sharp-photo-processor'
 import { unionUseCases, type TreeContentWriteDeps } from '@/infrastructure/di/union-use-cases'
+import { ResendInvitationMailer } from '@/infrastructure/mail/resend-invitation-mailer'
 import { ResendPasswordResetMailer } from '@/infrastructure/mail/resend-password-reset-mailer'
 import { ResendPendingChangeAlertMailer } from '@/infrastructure/mail/resend-pending-change-alert-mailer'
 import { getPrismaClient } from '@/infrastructure/persistence/prisma/client'
 import { PrismaAuditLogReader } from '@/infrastructure/persistence/prisma/prisma-audit-log-reader'
 import { PrismaFamilyReader } from '@/infrastructure/persistence/prisma/prisma-family-reader'
+import { PrismaInvitationReader } from '@/infrastructure/persistence/prisma/prisma-invitation-reader'
+import { PrismaMemberClaimReader } from '@/infrastructure/persistence/prisma/prisma-member-claim-reader'
 import { RequestScopedFamilyReader } from '@/infrastructure/persistence/request-scoped-family-reader'
 import { PrismaUnitOfWork } from '@/infrastructure/persistence/prisma/prisma-unit-of-work'
 import { PrismaPublicMemberDirectory } from '@/infrastructure/persistence/prisma/prisma-public-member-directory'
@@ -71,6 +75,8 @@ const families = lazy(
   () => new RequestScopedFamilyReader(new PrismaFamilyReader(getPrismaClient())),
 )
 const pendingChanges = lazy(() => new PrismaPendingChangeReader(getPrismaClient()))
+const invitationReader = lazy(() => new PrismaInvitationReader(getPrismaClient()))
+const memberClaims = lazy(() => new PrismaMemberClaimReader(getPrismaClient()))
 const notificationReader = lazy(() => new PrismaNotificationReader(getPrismaClient()))
 // reason: standalone, never through the unit of work — marking a notification read is not a
 // business write and does not belong in that transaction (see `ports/unit-of-work.ts`).
@@ -93,6 +99,22 @@ const treeContentWrites = (): TreeContentWriteDeps => ({
   // Resend mailer, and so require RESEND_API_KEY/RESEND_FROM, on every one of those reads too.
   get mailer() {
     return pendingChangeAlertMailer()
+  },
+})
+const invitationWrites = (): InvitationWriteDeps => ({
+  trees: trees(),
+  families: families(),
+  invitations: invitationReader(),
+  memberClaims: memberClaims(),
+  users: users(),
+  unitOfWork: unitOfWork(),
+  ids: ids(),
+  tokens: new CryptoTokenGenerator(),
+  clock: clock(),
+  // reason: a getter, not a resolved value — `listCollaborators`, `getInvitationByToken` and
+  // `claimMember` never send mail and must not require RESEND_API_KEY/RESEND_FROM to read.
+  get mailer() {
+    return invitationMailer()
   },
 })
 const photoProcessor = lazy(() => new SharpPhotoProcessor())
@@ -127,6 +149,14 @@ const passwordResetMailer = lazy(
 const pendingChangeAlertMailer = lazy(
   () =>
     new ResendPendingChangeAlertMailer({
+      apiKey: requireServerEnv('RESEND_API_KEY'),
+      from: requireServerEnv('RESEND_FROM'),
+      appUrl: requireServerEnv('APP_URL'),
+    }),
+)
+const invitationMailer = lazy(
+  () =>
+    new ResendInvitationMailer({
       apiKey: requireServerEnv('RESEND_API_KEY'),
       from: requireServerEnv('RESEND_FROM'),
       appUrl: requireServerEnv('APP_URL'),
@@ -240,4 +270,5 @@ export const container = {
   markAllNotificationsRead: lazy(
     () => new MarkAllNotificationsReadUseCase({ notifications: notificationWriter() }),
   ),
+  ...invitationUseCases(invitationWrites),
 }

@@ -12,15 +12,11 @@ export const metadata: Metadata = {
 
 const PASSWORD_RESET_DONE = 'success'
 const PASSWORD_RESET_DONE_MESSAGE = 'Mot de passe réinitialisé. Vous pouvez vous connecter.'
-const LOGIN_LINKS = [
-  { href: '/forgot-password', label: 'Mot de passe oublié ?' },
-  { href: '/register', label: 'Créer un compte' },
-] as const
 
-type LoginPageProps = Readonly<{ searchParams: Promise<{ reset?: string }> }>
+type LoginPageProps = Readonly<{ searchParams: Promise<{ reset?: string; redirect?: string }> }>
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
-  const { reset } = await searchParams
+  const { reset, redirect } = await searchParams
   const resetNotice = reset === PASSWORD_RESET_DONE ? PASSWORD_RESET_DONE_MESSAGE : undefined
 
   return (
@@ -28,8 +24,18 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
       <h1 className="text-3xl font-bold">Connexion</h1>
       <p>Accédez à votre réseau généalogique.</p>
       <StatusMessage message={resetNotice} />
-      <ActionForm action={loginAction} {...LOGIN_FORM} />
-      <LinkList links={LOGIN_LINKS} />
+      <ActionForm action={loginAction} {...LOGIN_FORM} hiddenValues={redirect ? { redirect } : {}} />
+      <LinkList links={loginLinks(redirect)} />
     </>
   )
+}
+
+function loginLinks(redirect: string | undefined) {
+  const register = redirect
+    ? (`/register?redirect=${encodeURIComponent(redirect)}` as const)
+    : ('/register' as const)
+  return [
+    { href: '/forgot-password' as const, label: 'Mot de passe oublié ?' },
+    { href: register, label: 'Créer un compte' },
+  ]
 }

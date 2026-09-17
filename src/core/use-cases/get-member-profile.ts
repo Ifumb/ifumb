@@ -35,6 +35,9 @@ export type MemberProfile = {
     readonly canEdit: boolean
     readonly canDelete: boolean
     readonly canManageUnions: boolean
+    /** Signed in, and the member is not claimed yet — module 2.8's "this is me". */
+    readonly canClaim: boolean
+    readonly claimedByViewer: boolean
   }
 }
 
@@ -74,5 +77,7 @@ function permissionsOf(role: TreeRole, member: Member, viewerId: string | undefi
     canEdit: canEditMember(role, member, viewerId),
     canDelete: canDeleteMember(role),
     canManageUnions: canManageUnions(role),
+    canClaim: viewerId !== undefined && member.claimedById === null,
+    claimedByViewer: viewerId !== undefined && member.claimedById === viewerId,
   }
 }

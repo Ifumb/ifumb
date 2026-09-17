@@ -16,3 +16,20 @@ export async function seedAcceptedInvitation(
     ),
   )
 }
+
+/**
+ * The token of a still-pending invitation, read directly from the database. E2E runs never
+ * deliver a real invitation email (no RESEND_API_KEY), so this stands in for "the link the invitee
+ * would have clicked" — the UI never exposes a token to the owner, by design.
+ */
+export async function findInvitationToken(treeId: string, email: string): Promise<string> {
+  const token = await withTestClient(async (client) => {
+    const { rows } = await client.query<{ token: string | null }>(
+      `SELECT token FROM "Invitation" WHERE "treeId" = $1 AND email = $2`,
+      [treeId, email],
+    )
+    return rows[0]?.token ?? null
+  })
+  if (!token) throw new Error(`No pending invitation found for ${email} on tree ${treeId}`)
+  return token
+}

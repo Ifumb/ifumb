@@ -27,6 +27,8 @@ export type MemberListItemViewModel = {
 }
 
 export type MemberProfileViewModel = {
+  readonly treeId: string
+  readonly memberId: string
   readonly name: string
   readonly nickname: string | null
   readonly tree: { readonly name: string; readonly href: `/tree/${string}` }
@@ -40,6 +42,9 @@ export type MemberProfileViewModel = {
   readonly portrait: PortraitViewModel
   /** The union form with this member as first parent, for the owner only. */
   readonly newUnionHref: `/tree/${string}/unions/new?parent=${string}` | null
+  /** "This is me" — shown only when the member is free and the viewer is signed in. */
+  readonly canClaim: boolean
+  readonly claimedByViewer: boolean
   readonly identity: readonly Fact[]
   readonly datesAndPlaces: readonly Fact[]
   readonly culture: readonly Fact[]
@@ -65,11 +70,14 @@ export function toMemberProfileViewModel(
 ): MemberProfileViewModel {
   const { member, tree } = profile
   return {
+    treeId: tree.id,
+    memberId: member.id,
     name: memberLink(tree.id, member).name,
     nickname: member.nickname,
     tree: { name: tree.name, href: `/tree/${tree.id}` },
     lineageHref: lineageHref(tree.id, member.id, DEFAULT_LINEAGE_DEPTH),
     ...actionLinks(profile),
+    ...claimPermissions(profile),
     portrait: toPortrait(member, member.photoUrl, photos),
     identity: identityFacts(member),
     datesAndPlaces: datesAndPlacesFacts(member),
@@ -91,6 +99,10 @@ function actionLinks({ member, tree, permissions }: MemberProfile) {
       ? (`/tree/${tree.id}/unions/new?parent=${encodeURIComponent(member.id)}` as const)
       : null,
   }
+}
+
+function claimPermissions({ permissions }: MemberProfile) {
+  return { canClaim: permissions.canClaim, claimedByViewer: permissions.claimedByViewer }
 }
 
 function identityFacts(member: MemberDetails): Fact[] {

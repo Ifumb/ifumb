@@ -1,5 +1,6 @@
 'use server'
 import 'server-only'
+import type { Route } from 'next'
 import { AuthError } from 'next-auth'
 import { redirect } from 'next/navigation'
 import { signIn, signOut, TooManySignInAttempts } from '@/infrastructure/auth/auth'
@@ -17,6 +18,7 @@ import {
   validationFailed,
   type FormState,
 } from '@/presentation/forms/form-state'
+import { safeRedirectTarget } from '@/presentation/security/safe-redirect'
 import { loginSchema } from '@/presentation/schemas/login-schema'
 import { registerSchema } from '@/presentation/schemas/register-schema'
 
@@ -37,7 +39,7 @@ export async function registerAction(_previous: FormState, formData: FormData): 
   if (!result.ok) return failedAt(REGISTER_ERRORS[result.error.kind], values)
 
   await signInAfterRegistration(parsed.data.email, parsed.data.password)
-  redirect(HOME_AFTER_SIGN_IN)
+  redirect(destinationAfterSignIn(formData))
 }
 
 export async function loginAction(_previous: FormState, formData: FormData): Promise<FormState> {
@@ -52,7 +54,7 @@ export async function loginAction(_previous: FormState, formData: FormData): Pro
     if (error instanceof AuthError) return failed(INVALID_CREDENTIALS_MESSAGE, values)
     throw error
   }
-  redirect(HOME_AFTER_SIGN_IN)
+  redirect(destinationAfterSignIn(formData))
 }
 
 export async function logoutAction(): Promise<void> {
@@ -66,6 +68,16 @@ function registrationValues(formData: FormData) {
     lastName: textEntry(formData, 'lastName'),
     email: textEntry(formData, 'email'),
   }
+}
+
+/**
+ * Where a redirect from an invitation link sends the visitor back to, once signed in.
+ * reason: this path comes from a query parameter, not from the app's own static routes, so it can
+ * never be checked against the typed-routes registry the way a literal `href` is — `Route` here is
+ * an intentional escape hatch, not a bypass of `safeRedirectTarget`'s own runtime validation.
+ */
+function destinationAfterSignIn(formData: FormData): Route {
+  return (safeRedirectTarget(textEntry(formData, 'redirect')) ?? HOME_AFTER_SIGN_IN) as Route
 }
 
 async function isRegistrationAllowed(): Promise<boolean> {

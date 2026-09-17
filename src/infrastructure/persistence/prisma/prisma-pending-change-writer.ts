@@ -58,6 +58,14 @@ export class PrismaPendingChangeWriter implements PendingChangeWriter {
       },
     })
   }
+
+  /** Silent (no notification): the author is being revoked, not reviewed. */
+  async rejectAllByAuthor(treeId: string, authorId: string, now: Date): Promise<void> {
+    await this.db.pendingChange.updateMany({
+      where: { treeId, authorId, status: 'PENDING' },
+      data: { status: 'REJECTED', rejectionComment: 'Accès révoqué', resolvedAt: now },
+    })
+  }
 }
 
 function toJson(snapshot: AuditSnapshot | null): Prisma.InputJsonValue | typeof Prisma.DbNull {
