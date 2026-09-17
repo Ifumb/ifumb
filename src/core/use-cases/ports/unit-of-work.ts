@@ -1,6 +1,9 @@
 import 'server-only'
 import type { AuditLogWriter } from '@/core/use-cases/ports/audit-log-writer'
+import type { ConnectionRequestWriter } from '@/core/use-cases/ports/connection-request-writer'
 import type { ContactRequestWriter } from '@/core/use-cases/ports/contact-request-writer'
+import type { CrossTreeLinkWriter } from '@/core/use-cases/ports/cross-tree-link-writer'
+import type { CrossTreeSuggestionWriter } from '@/core/use-cases/ports/cross-tree-suggestion-writer'
 import type { InvitationWriter } from '@/core/use-cases/ports/invitation-writer'
 import type { MemberWriter } from '@/core/use-cases/ports/member-writer'
 import type { NotificationWriter } from '@/core/use-cases/ports/notification-writer'
@@ -17,6 +20,9 @@ export type UnitOfWorkContext = {
   readonly pendingChanges: PendingChangeWriter
   readonly invitations: InvitationWriter
   readonly contactRequests: ContactRequestWriter
+  readonly crossTreeSuggestions: CrossTreeSuggestionWriter
+  readonly connectionRequests: ConnectionRequestWriter
+  readonly crossTreeLinks: CrossTreeLinkWriter
   /** Only ever records one here — marking a notification read never belongs in a business
    * transaction, so that capability is not part of this narrower slice of `NotificationWriter`. */
   readonly notifications: Pick<NotificationWriter, 'record'>

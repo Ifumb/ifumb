@@ -30,6 +30,9 @@ function TreeLinks({ tree }: Readonly<{ tree: TreeViewModel }>) {
       <li>
         <Link href={`${tree.href}/graph`}>Voir le graphe</Link>
       </li>
+      <li>
+        <Link href={tree.linksHref}>Liaisons inter-arbres</Link>
+      </li>
       <ContributorLinks tree={tree} />
     </ul>
   )
@@ -41,6 +44,8 @@ function ContributorLinks({ tree }: Readonly<{ tree: TreeViewModel }>) {
     ...optionalLink(tree.newUnionHref, 'Ajouter une union'),
     ...optionalLink(tree.settingsHref, 'Modifier l’arbre'),
     ...optionalLink(tree.historyHref, 'Journal de l’arbre'),
+    ...optionalLink(tree.suggestionsHref, 'Suggestions inter-arbres'),
+    ...optionalLink(tree.connectionRequestsHref, 'Demandes de connexion'),
   ]
   return links.map((link) => (
     <li key={link.label}>

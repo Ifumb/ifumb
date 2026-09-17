@@ -1,5 +1,8 @@
 import 'server-only'
 import type { ContactRequest } from '@/core/entities/contact-request'
+import type { CrossTreeConnectionRequest } from '@/core/entities/connection-request'
+import type { CrossTreeLink } from '@/core/entities/cross-tree-link'
+import type { CrossTreeSuggestion } from '@/core/entities/cross-tree-suggestion'
 import type { Invitation } from '@/core/entities/invitation'
 import type { Member } from '@/core/entities/member'
 import type { PendingChange } from '@/core/entities/pending-change'
@@ -22,6 +25,7 @@ type RemovedUnionChild = { readonly unionId: string; readonly childId: string }
 type ClaimedMember = { readonly memberId: string; readonly userId: string }
 type UpdatedDiscoverable = { readonly memberId: string; readonly discoverable: boolean }
 type RejectedAllByAuthor = { readonly treeId: string; readonly authorId: string; readonly now: Date }
+type ExpiredStaleConnectionRequests = { readonly targetTreeId: string; readonly now: Date }
 
 type Writes = {
   insertedTrees: Tree[]
@@ -48,6 +52,12 @@ type Writes = {
   revokedInvitationIds: string[]
   sentContactRequests: ContactRequest[]
   resolvedContactRequests: ContactRequest[]
+  upsertedCrossTreeSuggestions: CrossTreeSuggestion[]
+  resolvedCrossTreeSuggestions: CrossTreeSuggestion[]
+  createdConnectionRequests: CrossTreeConnectionRequest[]
+  resolvedConnectionRequests: CrossTreeConnectionRequest[]
+  expiredStaleConnectionRequests: ExpiredStaleConnectionRequests[]
+  createdCrossTreeLinks: CrossTreeLink[]
 }
 
 const noWrites = (): Writes => ({
@@ -75,6 +85,12 @@ const noWrites = (): Writes => ({
   revokedInvitationIds: [],
   sentContactRequests: [],
   resolvedContactRequests: [],
+  upsertedCrossTreeSuggestions: [],
+  resolvedCrossTreeSuggestions: [],
+  createdConnectionRequests: [],
+  resolvedConnectionRequests: [],
+  expiredStaleConnectionRequests: [],
+  createdCrossTreeLinks: [],
 })
 
 /**
@@ -162,6 +178,24 @@ export class InMemoryUnitOfWork implements UnitOfWork, Readonly<Writes> {
   get resolvedContactRequests() {
     return this.committed.resolvedContactRequests
   }
+  get upsertedCrossTreeSuggestions() {
+    return this.committed.upsertedCrossTreeSuggestions
+  }
+  get resolvedCrossTreeSuggestions() {
+    return this.committed.resolvedCrossTreeSuggestions
+  }
+  get createdConnectionRequests() {
+    return this.committed.createdConnectionRequests
+  }
+  get resolvedConnectionRequests() {
+    return this.committed.resolvedConnectionRequests
+  }
+  get expiredStaleConnectionRequests() {
+    return this.committed.expiredStaleConnectionRequests
+  }
+  get createdCrossTreeLinks() {
+    return this.committed.createdCrossTreeLinks
+  }
 
   /** Makes the next audit entry fail, as a database error inside the transaction would. */
   failNextAuditRecord(): void {
@@ -219,6 +253,19 @@ export class InMemoryUnitOfWork implements UnitOfWork, Readonly<Writes> {
       contactRequests: {
         send: async (contactRequest) => void staged.sentContactRequests.push(contactRequest),
         resolve: async (contactRequest) => void staged.resolvedContactRequests.push(contactRequest),
+      },
+      crossTreeSuggestions: {
+        upsertMany: async (suggestions) => void staged.upsertedCrossTreeSuggestions.push(...suggestions),
+        resolve: async (suggestion) => void staged.resolvedCrossTreeSuggestions.push(suggestion),
+      },
+      connectionRequests: {
+        create: async (request) => void staged.createdConnectionRequests.push(request),
+        resolve: async (request) => void staged.resolvedConnectionRequests.push(request),
+        expireStale: async (targetTreeId, now) =>
+          void staged.expiredStaleConnectionRequests.push({ targetTreeId, now }),
+      },
+      crossTreeLinks: {
+        create: async (link) => void staged.createdCrossTreeLinks.push(link),
       },
     }
   }

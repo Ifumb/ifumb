@@ -20,6 +20,12 @@ export type TreeViewModel = {
   readonly newMemberHref: `/tree/${string}/members/new` | null
   /** The form creating a union, for its owner only. */
   readonly newUnionHref: `/tree/${string}/unions/new` | null
+  /** Cross-tree suggestions (module 3.2), for its owner and editors only. */
+  readonly suggestionsHref: `/tree/${string}/suggestions` | null
+  /** Pending connection requests (module 3.2), for its owner only. */
+  readonly connectionRequestsHref: `/tree/${string}/connection-requests` | null
+  /** Established cross-tree links (module 3.2), open to anyone who can already read this tree. */
+  readonly linksHref: `/tree/${string}/links`
 }
 
 export function toTreeViewModel(summary: TreeSummary): TreeViewModel {
@@ -36,5 +42,8 @@ export function toTreeViewModel(summary: TreeSummary): TreeViewModel {
     settingsHref: canManage(summary.role) ? `/tree/${summary.id}/settings` : null,
     newMemberHref: canManage(summary.role) ? `/tree/${summary.id}/members/new` : null,
     newUnionHref: canManage(summary.role) ? `/tree/${summary.id}/unions/new` : null,
+    suggestionsHref: canContribute(summary.role) ? `/tree/${summary.id}/suggestions` : null,
+    connectionRequestsHref: canManage(summary.role) ? `/tree/${summary.id}/connection-requests` : null,
+    linksHref: `/tree/${summary.id}/links`,
   }
 }

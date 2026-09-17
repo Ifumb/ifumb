@@ -38,6 +38,7 @@ import {
   contactRequestUseCases,
   type ContactRequestWriteDeps,
 } from '@/infrastructure/di/contact-request-use-cases'
+import { crossTreeUseCases, type CrossTreeWriteDeps } from '@/infrastructure/di/cross-tree-use-cases'
 import { invitationUseCases, type InvitationWriteDeps } from '@/infrastructure/di/invitation-use-cases'
 import { configuredPhotoStorage, photoUseCases } from '@/infrastructure/di/photo-use-cases'
 import { SharpPhotoProcessor } from '@/infrastructure/images/sharp-photo-processor'
@@ -47,7 +48,11 @@ import { ResendPasswordResetMailer } from '@/infrastructure/mail/resend-password
 import { ResendPendingChangeAlertMailer } from '@/infrastructure/mail/resend-pending-change-alert-mailer'
 import { getPrismaClient } from '@/infrastructure/persistence/prisma/client'
 import { PrismaAuditLogReader } from '@/infrastructure/persistence/prisma/prisma-audit-log-reader'
+import { PrismaConnectionRequestReader } from '@/infrastructure/persistence/prisma/prisma-connection-request-reader'
+import { PrismaConnectionRequestWriter } from '@/infrastructure/persistence/prisma/prisma-connection-request-writer'
 import { PrismaContactRequestReader } from '@/infrastructure/persistence/prisma/prisma-contact-request-reader'
+import { PrismaCrossTreeLinkReader } from '@/infrastructure/persistence/prisma/prisma-cross-tree-link-reader'
+import { PrismaCrossTreeSuggestionReader } from '@/infrastructure/persistence/prisma/prisma-cross-tree-suggestion-reader'
 import { PrismaDiscoverableMemberDirectory } from '@/infrastructure/persistence/prisma/prisma-discoverable-member-directory'
 import { PrismaFamilyReader } from '@/infrastructure/persistence/prisma/prisma-family-reader'
 import { PrismaInvitationReader } from '@/infrastructure/persistence/prisma/prisma-invitation-reader'
@@ -59,6 +64,7 @@ import { PrismaPublicTreeCatalog } from '@/infrastructure/persistence/prisma/pri
 import { PrismaNotificationReader } from '@/infrastructure/persistence/prisma/prisma-notification-reader'
 import { PrismaNotificationWriter } from '@/infrastructure/persistence/prisma/prisma-notification-writer'
 import { PrismaPendingChangeReader } from '@/infrastructure/persistence/prisma/prisma-pending-change-reader'
+import { PrismaTreeMemberPool } from '@/infrastructure/persistence/prisma/prisma-tree-member-pool'
 import { PrismaTreeReader } from '@/infrastructure/persistence/prisma/prisma-tree-reader'
 import { PrismaUserRepository } from '@/infrastructure/persistence/prisma/prisma-user-repository'
 import { isAttemptAllowed, type AttemptKey } from '@/infrastructure/rate-limiting/attempt-guard'
@@ -88,6 +94,15 @@ const discoverableMemberDirectory = lazy(
   () => new PrismaDiscoverableMemberDirectory(getPrismaClient()),
 )
 const contactRequestReader = lazy(() => new PrismaContactRequestReader(getPrismaClient()))
+const crossTreeSuggestionReader = lazy(
+  () => new PrismaCrossTreeSuggestionReader(getPrismaClient()),
+)
+const connectionRequestReader = lazy(() => new PrismaConnectionRequestReader(getPrismaClient()))
+// reason: standalone, never through the unit of work — the lazy expiry sweep is not a business
+// write and does not belong in that transaction (see `ports/unit-of-work.ts`).
+const connectionRequestWriter = lazy(() => new PrismaConnectionRequestWriter(getPrismaClient()))
+const crossTreeLinkReader = lazy(() => new PrismaCrossTreeLinkReader(getPrismaClient()))
+const treeMemberPool = lazy(() => new PrismaTreeMemberPool(getPrismaClient()))
 const notificationReader = lazy(() => new PrismaNotificationReader(getPrismaClient()))
 // reason: standalone, never through the unit of work — marking a notification read is not a
 // business write and does not belong in that transaction (see `ports/unit-of-work.ts`).
@@ -132,6 +147,18 @@ const contactRequestWrites = (): ContactRequestWriteDeps => ({
   directory: discoverableMemberDirectory(),
   contactRequests: contactRequestReader(),
   trees: trees(),
+  unitOfWork: unitOfWork(),
+  ids: ids(),
+  clock: clock(),
+})
+const crossTreeWrites = (): CrossTreeWriteDeps => ({
+  trees: trees(),
+  families: families(),
+  pool: treeMemberPool(),
+  suggestions: crossTreeSuggestionReader(),
+  connectionRequests: connectionRequestReader(),
+  connectionRequestWriter: connectionRequestWriter(),
+  links: crossTreeLinkReader(),
   unitOfWork: unitOfWork(),
   ids: ids(),
   clock: clock(),
@@ -294,4 +321,5 @@ export const container = {
   ),
   ...invitationUseCases(invitationWrites),
   ...contactRequestUseCases(contactRequestWrites),
+  ...crossTreeUseCases(crossTreeWrites),
 }

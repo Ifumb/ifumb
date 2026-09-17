@@ -26,6 +26,9 @@ export const RATE_LIMIT_POLICIES = {
   notificationPollByUser: { limit: 20, windowMs: MINUTE_MS },
   // Sending a contact request (module 3.1): a brake on scripted outreach to discoverable members.
   contactRequestByUser: { limit: 10, windowMs: HOUR_MS },
+  // Recomputing suggestions (module 3.2): scans every member of every accessible tree against the
+  // whole candidate pool — far stricter than treeWriteByUser, a brake on repeated full rescans.
+  computeSuggestionsByUser: { limit: 5, windowMs: 15 * MINUTE_MS },
 } as const satisfies Record<string, RateLimitPolicy>
 
 export type RateLimitPolicyName = keyof typeof RATE_LIMIT_POLICIES

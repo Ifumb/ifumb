@@ -3,7 +3,10 @@ import type { UnitOfWork, UnitOfWorkContext } from '@/core/use-cases/ports/unit-
 import { BusinessWritesDisabledError } from '@/infrastructure/config/business-writes'
 import type { PrismaClient } from '@/infrastructure/persistence/prisma/generated/client'
 import { PrismaAuditLogWriter } from '@/infrastructure/persistence/prisma/prisma-audit-log-writer'
+import { PrismaConnectionRequestWriter } from '@/infrastructure/persistence/prisma/prisma-connection-request-writer'
 import { PrismaContactRequestWriter } from '@/infrastructure/persistence/prisma/prisma-contact-request-writer'
+import { PrismaCrossTreeLinkWriter } from '@/infrastructure/persistence/prisma/prisma-cross-tree-link-writer'
+import { PrismaCrossTreeSuggestionWriter } from '@/infrastructure/persistence/prisma/prisma-cross-tree-suggestion-writer'
 import { PrismaInvitationWriter } from '@/infrastructure/persistence/prisma/prisma-invitation-writer'
 import { PrismaMemberWriter } from '@/infrastructure/persistence/prisma/prisma-member-writer'
 import { PrismaNotificationWriter } from '@/infrastructure/persistence/prisma/prisma-notification-writer'
@@ -36,6 +39,9 @@ export class PrismaUnitOfWork implements UnitOfWork {
         notifications: new PrismaNotificationWriter(transaction),
         invitations: new PrismaInvitationWriter(transaction),
         contactRequests: new PrismaContactRequestWriter(transaction),
+        crossTreeSuggestions: new PrismaCrossTreeSuggestionWriter(transaction),
+        connectionRequests: new PrismaConnectionRequestWriter(transaction),
+        crossTreeLinks: new PrismaCrossTreeLinkWriter(transaction),
       }),
     )
   }

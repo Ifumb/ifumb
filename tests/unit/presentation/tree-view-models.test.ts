@@ -37,18 +37,29 @@ describe('tree view models', () => {
       settingsHref: null,
       newMemberHref: null,
       newUnionHref: null,
+      suggestionsHref: '/tree/tree_diallo/suggestions',
+      connectionRequestsHref: null,
+      linksHref: '/tree/tree_diallo/links',
     })
   })
 
-  it('offers the history to contributors only', () => {
-    expect(toTreeViewModel({ ...summary, role: 'VIEWER' }).historyHref).toBeNull()
+  it('offers the history and the suggestions to contributors only', () => {
+    expect(toTreeViewModel({ ...summary, role: 'VIEWER' })).toMatchObject({
+      historyHref: null,
+      suggestionsHref: null,
+    })
   })
 
-  it('offers the settings and the member form to the owner only', () => {
+  it('offers the settings, the member form and the connection requests to the owner only', () => {
     expect(toTreeViewModel({ ...summary, role: 'OWNER' })).toMatchObject({
       settingsHref: '/tree/tree_diallo/settings',
       newMemberHref: '/tree/tree_diallo/members/new',
       newUnionHref: '/tree/tree_diallo/unions/new',
+      connectionRequestsHref: '/tree/tree_diallo/connection-requests',
     })
+  })
+
+  it('always offers the established links, to anyone who can already read the tree', () => {
+    expect(toTreeViewModel({ ...summary, role: 'VIEWER' }).linksHref).toBe('/tree/tree_diallo/links')
   })
 })
