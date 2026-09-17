@@ -22,6 +22,8 @@ export const RATE_LIMIT_POLICIES = {
   treeWriteByUser: { limit: 30, windowMs: 15 * MINUTE_MS },
   // Each photo is decoded and re-encoded on the server: a tighter budget than other writes.
   photoUploadByUser: { limit: 10, windowMs: HOUR_MS },
+  // Polled client-side every ~15s (module 2.7): generous for that, a brake on a script hammering it.
+  notificationPollByUser: { limit: 20, windowMs: MINUTE_MS },
 } as const satisfies Record<string, RateLimitPolicy>
 
 export type RateLimitPolicyName = keyof typeof RATE_LIMIT_POLICIES

@@ -13,7 +13,9 @@ export type UnitOfWorkContext = {
   readonly unions: UnionWriter
   readonly auditLog: AuditLogWriter
   readonly pendingChanges: PendingChangeWriter
-  readonly notifications: NotificationWriter
+  /** Only ever records one here — marking a notification read never belongs in a business
+   * transaction, so that capability is not part of this narrower slice of `NotificationWriter`. */
+  readonly notifications: Pick<NotificationWriter, 'record'>
 }
 
 /** Runs writes atomically: a change and its history entry are stored together, or not at all. */

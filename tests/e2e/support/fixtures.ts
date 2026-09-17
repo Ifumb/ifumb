@@ -36,6 +36,10 @@ export async function newVisitorContext(browser: Browser): Promise<BrowserContex
 }
 
 export async function expectNoAccessibilityViolations(page: Page): Promise<void> {
+  // After a client-side navigation, the page's content (and its heading) can render a tick before
+  // the App Router commits the new <title>. Waiting for it here avoids a flaky "document does not
+  // have a non-empty <title> element" violation that has nothing to do with the page under test.
+  await expect.poll(() => page.title()).not.toBe('')
   const results = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze()
   expect(results.violations).toEqual([])
 }

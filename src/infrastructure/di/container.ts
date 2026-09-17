@@ -3,7 +3,11 @@ import { AuthenticateUserUseCase } from '@/core/use-cases/authenticate-user'
 import { ChangePasswordUseCase } from '@/core/use-cases/change-password'
 import { GetAuditLogUseCase } from '@/core/use-cases/get-audit-log'
 import { ApprovePendingChangeUseCase } from '@/core/use-cases/approve-pending-change'
+import { GetNotificationsUseCase } from '@/core/use-cases/get-notifications'
+import { GetUnreadNotificationCountUseCase } from '@/core/use-cases/get-unread-notification-count'
 import { GetPendingChangesUseCase } from '@/core/use-cases/get-pending-changes'
+import { MarkAllNotificationsReadUseCase } from '@/core/use-cases/mark-all-notifications-read'
+import { MarkNotificationReadUseCase } from '@/core/use-cases/mark-notification-read'
 import { RejectPendingChangeUseCase } from '@/core/use-cases/reject-pending-change'
 import { ReviewAllPendingChangesUseCase } from '@/core/use-cases/review-all-pending-changes'
 import { CreateMemberUseCase } from '@/core/use-cases/create-member'
@@ -41,6 +45,8 @@ import { RequestScopedFamilyReader } from '@/infrastructure/persistence/request-
 import { PrismaUnitOfWork } from '@/infrastructure/persistence/prisma/prisma-unit-of-work'
 import { PrismaPublicMemberDirectory } from '@/infrastructure/persistence/prisma/prisma-public-member-directory'
 import { PrismaPublicTreeCatalog } from '@/infrastructure/persistence/prisma/prisma-public-tree-catalog'
+import { PrismaNotificationReader } from '@/infrastructure/persistence/prisma/prisma-notification-reader'
+import { PrismaNotificationWriter } from '@/infrastructure/persistence/prisma/prisma-notification-writer'
 import { PrismaPendingChangeReader } from '@/infrastructure/persistence/prisma/prisma-pending-change-reader'
 import { PrismaTreeReader } from '@/infrastructure/persistence/prisma/prisma-tree-reader'
 import { PrismaUserRepository } from '@/infrastructure/persistence/prisma/prisma-user-repository'
@@ -65,6 +71,10 @@ const families = lazy(
   () => new RequestScopedFamilyReader(new PrismaFamilyReader(getPrismaClient())),
 )
 const pendingChanges = lazy(() => new PrismaPendingChangeReader(getPrismaClient()))
+const notificationReader = lazy(() => new PrismaNotificationReader(getPrismaClient()))
+// reason: standalone, never through the unit of work — marking a notification read is not a
+// business write and does not belong in that transaction (see `ports/unit-of-work.ts`).
+const notificationWriter = lazy(() => new PrismaNotificationWriter(getPrismaClient()))
 const unitOfWork = lazy(
   () => new PrismaUnitOfWork(getPrismaClient(), { writesEnabled: businessWritesEnabled() }),
 )
@@ -218,4 +228,16 @@ export const container = {
   approvePendingChange: lazy(() => new ApprovePendingChangeUseCase(treeContentWrites())),
   rejectPendingChange: lazy(() => new RejectPendingChangeUseCase(treeContentWrites())),
   reviewAllPendingChanges: lazy(() => new ReviewAllPendingChangesUseCase(treeContentWrites())),
+  getNotifications: lazy(
+    () => new GetNotificationsUseCase({ notifications: notificationReader() }),
+  ),
+  getUnreadNotificationCount: lazy(
+    () => new GetUnreadNotificationCountUseCase({ notifications: notificationReader() }),
+  ),
+  markNotificationRead: lazy(
+    () => new MarkNotificationReadUseCase({ notifications: notificationWriter() }),
+  ),
+  markAllNotificationsRead: lazy(
+    () => new MarkAllNotificationsReadUseCase({ notifications: notificationWriter() }),
+  ),
 }

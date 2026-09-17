@@ -18,4 +18,16 @@ export class PrismaNotificationWriter implements NotificationWriter {
       },
     })
   }
+
+  async markRead(id: string, userId: string): Promise<void> {
+    await this.db.notification.updateMany({ where: { id, userId }, data: { read: true } })
+  }
+
+  async markAllRead(userId: string): Promise<number> {
+    const { count } = await this.db.notification.updateMany({
+      where: { userId, read: false },
+      data: { read: true },
+    })
+    return count
+  }
 }
