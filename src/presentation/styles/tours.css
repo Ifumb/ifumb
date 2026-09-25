@@ -1,17 +1,68 @@
-@layer utilities {
-  .tour-help {
-    @apply shrink-0 text-gray-500;
-  }
-  .family-graph > .tour-help {
-    @apply absolute bottom-4 left-14 z-10 rounded-full border border-gray-200 bg-white shadow-sm;
-  }
-  .guided-tour {
-    @apply fixed bottom-6 left-auto right-6 top-auto m-0 w-[calc(100%-3rem)] max-w-sm rounded-xl bg-white p-5 text-gray-900 shadow-xl;
-  }
-  .guided-tour::backdrop {
-    @apply bg-black/40;
-  }
-  .tour-highlight {
-    @apply outline-4 outline-offset-4 outline-brand;
-  }
+.tour-help {
+  @apply shrink-0 text-gray-500;
+}
+.family-graph > .tour-help {
+  @apply absolute bottom-4 left-14 z-10 rounded-full border border-gray-200 bg-white shadow-sm;
+}
+
+/* reason: hors des layers pour surcharger le CSS non stratifié fourni par driver.js. */
+.driver-popover.ifumb-tour-popover {
+  @apply rounded-xl border p-5;
+  background: var(--color-tour-surface);
+  border-color: var(--color-tour-border);
+  box-shadow: var(--shadow-tour);
+  width: min(340px, calc(100vw - 24px));
+  min-width: min(260px, calc(100vw - 24px));
+  max-width: 340px;
+  will-change: auto;
+  transform: none;
+}
+.ifumb-tour-popover .driver-popover-title {
+  @apply mb-2 pr-5 text-base font-semibold text-gray-900;
+}
+.ifumb-tour-popover .driver-popover-description {
+  @apply text-sm leading-normal text-gray-600;
+}
+.ifumb-tour-popover .driver-popover-footer {
+  @apply mt-4 flex items-center justify-between;
+}
+.ifumb-tour-popover .driver-popover-progress-text {
+  @apply text-xs text-gray-500;
+}
+.ifumb-tour-popover .driver-popover-navigation-btns {
+  @apply flex gap-2;
+}
+.ifumb-tour-popover button.driver-popover-next-btn {
+  @apply rounded-md border-0 px-3.5 py-1.5 text-sm font-medium text-white;
+  background: var(--color-tour-action);
+  text-shadow: none;
+}
+.ifumb-tour-popover button.driver-popover-next-btn:hover {
+  background: var(--color-tour-action-hover);
+}
+.ifumb-tour-popover button.driver-popover-prev-btn {
+  @apply rounded-md border border-gray-300 bg-transparent px-3.5 py-1.5 text-sm text-gray-500;
+  text-shadow: none;
+}
+.ifumb-tour-popover button.driver-popover-prev-btn:hover {
+  @apply border-gray-400 text-gray-700;
+}
+.ifumb-tour-popover button.driver-popover-close-btn {
+  @apply size-6 border-0 bg-transparent p-0.5 text-lg leading-none text-gray-500;
+}
+.ifumb-tour-popover button:focus-visible {
+  outline: var(--focus-ring-width) solid var(--color-brand-dark);
+  outline-offset: var(--focus-ring-offset);
+}
+.ifumb-tour-popover .driver-popover-arrow-side-left {
+  border-right-color: var(--color-tour-border);
+}
+.ifumb-tour-popover .driver-popover-arrow-side-right {
+  border-left-color: var(--color-tour-border);
+}
+.ifumb-tour-popover .driver-popover-arrow-side-top {
+  border-bottom-color: var(--color-tour-border);
+}
+.ifumb-tour-popover .driver-popover-arrow-side-bottom {
+  border-top-color: var(--color-tour-border);
 }

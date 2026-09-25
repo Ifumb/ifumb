@@ -76,12 +76,12 @@ function OwnerActions({
         href={`${tree.href}/collaborators?invite=1`}
         className="primary-action !min-h-7 !px-2 !py-1 !text-xs"
       >
-        <Icon name="people" />
+        <Icon name="invite" />
         <span>Inviter</span>
       </Link>
       <TreeAction href={`${tree.href}/collaborators`} icon="people" label="Collaborateurs" />
       {connectionCount > 0 && tree.connectionRequestsHref && (
-        <TreeAction href={tree.connectionRequestsHref} icon="branch" label="Demandes" />
+        <TreeAction href={tree.connectionRequestsHref} icon="network" label="Demandes" />
       )}
     </>
   )
@@ -128,7 +128,7 @@ export function TreeGraphActions({ tree }: TreeProps) {
           className="bg-forest hover:bg-forest-light"
           aria-label="Ajouter une union"
         >
-          <Icon name="branch" />
+          <Icon name="union" />
           Union
         </Link>
       )}
@@ -140,7 +140,7 @@ export function TreeConnections({ tree }: TreeProps) {
   return (
     <details>
       <summary id="tour-btn-connections" className="flex items-center gap-1">
-        <Icon name="branch" />
+        <Icon name="network" />
         Connexions
       </summary>
       <nav aria-label="Connexions inter-arbres" className="flex flex-col gap-3">

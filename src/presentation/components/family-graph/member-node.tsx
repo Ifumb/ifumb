@@ -56,6 +56,7 @@ export function MemberNode({
     <div
       style={{ width: MEMBER_NODE_SIZE.width, height }}
       className="relative flex flex-col items-stretch"
+      data-tour-member={data.foreign ? 'foreign' : data.bridgeLinks.length ? 'bridge' : undefined}
     >
       {data.foreign && <ForeignOriginTag treeName={data.foreign.treeName} />}
       {data.pending && <PendingBadgeTag badge={data.pending} />}

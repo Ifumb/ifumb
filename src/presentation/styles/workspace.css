@@ -158,3 +158,8 @@
     }
   }
 }
+
+/* reason: React Flow fournit cette règle hors layer ; Lucide doit rester un tracé non rempli. */
+.tree-stage .react-flow__controls-button svg.lucide {
+  @apply size-4 max-h-none max-w-none fill-none;
+}

@@ -44,7 +44,7 @@ function ToolSection({ tool, tools, children }: ToolSectionProps) {
         aria-label={TOOL_TITLES[tool]}
         className="flex cursor-pointer items-center gap-1 font-semibold"
       >
-        <Icon name={tool === 'ancestors' ? 'people' : 'branch'} />
+        <Icon name={tool === 'ancestors' ? 'people' : tool === 'lineage' ? 'lineage' : 'branch'} />
         {tool === 'kinship' ? 'Chemin' : tool === 'ancestors' ? 'Ancêtres' : 'Descendance'}
       </summary>
       {children}

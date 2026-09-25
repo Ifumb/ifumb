@@ -1,6 +1,6 @@
 'use client'
 
-import { GuidedTour } from '@/presentation/components/navigation/guided-tour'
+import { GraphGuidedTour } from './graph-guided-tour'
 import '@xyflow/react/dist/style.css'
 import {
   Background,
@@ -81,9 +81,7 @@ function FamilyGraphCanvas({
 
   return (
     <div className="family-graph">
-      <GuidedTour
-        tourId={graph.memberCount === 0 && actions ? 'tree-empty' : 'tree-with-members'}
-      />
+      <GraphGuidedTour graph={graph} canCreate={Boolean(actions)} />
       <div className="graph-primary-tools">
         {actions}
         <GraphToolbar nodes={graph.nodes} visible={visible} onCentre={centre} onReset={reset} />
@@ -149,7 +147,12 @@ function GraphCanvas({ graph, visible, inFocus }: GraphCanvasProps) {
         zoomOnPinch={!locked}
       >
         <Background color={BACKGROUND_DOT_COLOR} gap={20} />
-        <Controls showInteractive={false} position="bottom-left">
+        <Controls
+          showInteractive={false}
+          showZoom={false}
+          showFitView={false}
+          position="bottom-left"
+        >
           <GraphInteractionControls
             locked={locked}
             onToggle={() => setLocked(!locked)}

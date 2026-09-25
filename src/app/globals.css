@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@import 'driver.js/dist/driver.css';
 /* reason: les imports CSS relatifs sont résolus par Tailwind ; la règle @/ s’applique aux modules TypeScript. */
 @import '../presentation/styles/shell.css';
 @import '../presentation/styles/overlays.css';
@@ -24,6 +25,12 @@
 
   --color-forest: #2d5a27;
   --color-forest-light: #4a8c42;
+
+  --color-tour-surface: #faf7f2;
+  --color-tour-border: #d4a847;
+  --color-tour-action: #c0392b;
+  --color-tour-action-hover: #a93226;
+  --shadow-tour: 0 4px 24px rgb(0 0 0 / 12%);
 
   --radius-lg: 0.5rem;
   --radius-md: calc(0.5rem - 2px);

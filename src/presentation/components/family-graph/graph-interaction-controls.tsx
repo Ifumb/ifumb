@@ -22,13 +22,30 @@ export function GraphInteractionControls({
   }
   return (
     <>
+      <ControlButton onClick={() => void flow.zoomIn()} aria-label="Zoom avant" title="Zoom avant">
+        <Icon name="zoomIn" />
+      </ControlButton>
+      <ControlButton
+        onClick={() => void flow.zoomOut()}
+        aria-label="Zoom arrière"
+        title="Zoom arrière"
+      >
+        <Icon name="zoomOut" />
+      </ControlButton>
+      <ControlButton
+        onClick={() => void flow.fitView({ padding: 0.2 })}
+        aria-label="Ajuster la vue"
+        title="Ajuster la vue"
+      >
+        <Icon name="fit" />
+      </ControlButton>
       <ControlButton
         onClick={onToggle}
         aria-label={locked ? 'Déverrouiller le graphe' : 'Verrouiller le graphe'}
         title={locked ? 'Déverrouiller le graphe' : 'Verrouiller le graphe'}
         aria-pressed={locked}
       >
-        <Icon name="lock" />
+        <Icon name={locked ? 'lock' : 'unlock'} />
       </ControlButton>
       <ControlButton
         onClick={arrange}
