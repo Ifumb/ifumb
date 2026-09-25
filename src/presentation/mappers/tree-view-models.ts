@@ -16,9 +16,9 @@ export type TreeViewModel = {
   readonly historyHref: `/tree/${string}/history` | null
   /** The tree's settings, for its owner only. */
   readonly settingsHref: `/tree/${string}/settings` | null
-  /** The form adding a member, for its owner only. */
+  /** Owners add directly; editors submit a proposal through the same guarded form. */
   readonly newMemberHref: `/tree/${string}/members/new` | null
-  /** The form creating a union, for its owner only. */
+  /** The union form is available to contributors; the server decides direct write or proposal. */
   readonly newUnionHref: `/tree/${string}/unions/new` | null
   /** Cross-tree suggestions (module 3.2), for its owner and editors only. */
   readonly suggestionsHref: `/tree/${string}/suggestions` | null
@@ -28,6 +28,7 @@ export type TreeViewModel = {
   readonly linksHref: `/tree/${string}/links`
 }
 
+// reason: le mapping centralise les libellés et liens selon le rôle sans décision métier dans la vue.
 export function toTreeViewModel(summary: TreeSummary): TreeViewModel {
   return {
     id: summary.id,
@@ -40,10 +41,12 @@ export function toTreeViewModel(summary: TreeSummary): TreeViewModel {
     roleLabel: ROLE_LABELS[summary.role],
     historyHref: canContribute(summary.role) ? `/tree/${summary.id}/history` : null,
     settingsHref: canManage(summary.role) ? `/tree/${summary.id}/settings` : null,
-    newMemberHref: canManage(summary.role) ? `/tree/${summary.id}/members/new` : null,
-    newUnionHref: canManage(summary.role) ? `/tree/${summary.id}/unions/new` : null,
+    newMemberHref: canContribute(summary.role) ? `/tree/${summary.id}/members/new` : null,
+    newUnionHref: canContribute(summary.role) ? `/tree/${summary.id}/unions/new` : null,
     suggestionsHref: canContribute(summary.role) ? `/tree/${summary.id}/suggestions` : null,
-    connectionRequestsHref: canManage(summary.role) ? `/tree/${summary.id}/connection-requests` : null,
+    connectionRequestsHref: canManage(summary.role)
+      ? `/tree/${summary.id}/connection-requests`
+      : null,
     linksHref: `/tree/${summary.id}/links`,
   }
 }
