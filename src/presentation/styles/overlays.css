@@ -1,0 +1,49 @@
+@layer utilities {
+  .route-overlay {
+    @apply fixed max-h-[90dvh] w-[calc(100%-2rem)] max-w-lg overflow-auto rounded-2xl border border-earth-sand/40 bg-white p-6 text-gray-900 shadow-xl;
+    margin: auto;
+  }
+  .route-overlay::backdrop {
+    @apply bg-black/40;
+  }
+  .route-overlay-drawer {
+    @apply bottom-0 left-auto right-0 top-14 m-0 h-[calc(100dvh-3.5rem)] max-h-none w-full max-w-lg rounded-none border-y-0 border-r-0;
+  }
+  .route-overlay-notifications {
+    @apply bottom-auto left-auto right-4 top-16 m-0 max-w-sm rounded-xl;
+  }
+  .route-overlay-notifications::backdrop {
+    @apply bg-transparent;
+  }
+  .overlay-close {
+    @apply sticky left-full top-0 z-10 mb-2 bg-white;
+  }
+  .overlay-content {
+    @apply text-sm;
+  }
+  .overlay-content h1 {
+    @apply pr-6 text-xl font-semibold text-gray-800;
+  }
+  .overlay-content h2 {
+    @apply text-base font-semibold text-gray-700;
+  }
+  .overlay-content :is(article, section, header) {
+    @apply space-y-4;
+  }
+  .overlay-content :is(.md\:grid-cols-3, .md\:grid-cols-2) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .overlay-content label {
+    @apply text-sm;
+  }
+  .overlay-content > section > p:first-child:has(> a),
+  .overlay-content > article > header > p:first-child:has(> a) {
+    @apply sr-only;
+  }
+  .overlay-content ul:has(> li > a) {
+    @apply gap-x-3 gap-y-2;
+  }
+  .overlay-content [role='status']:empty {
+    display: none;
+  }
+}
