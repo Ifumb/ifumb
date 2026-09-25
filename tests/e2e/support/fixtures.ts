@@ -51,7 +51,7 @@ export { expect }
 // reason: les parcours métier démarrent après l’aide ; une suite dédiée vérifie la première visite.
 async function dismissAutomaticTours(context: BrowserContext) {
   await context.addInitScript(() => {
-    for (const id of ['dashboard', 'tree-empty', 'tree-with-members']) {
+    for (const id of ['dashboard', 'tree-empty', 'tree-with-members', 'tree-cross-tree']) {
       localStorage.setItem(`tour_seen:${id}`, 'true')
     }
   })

@@ -161,7 +161,7 @@ test('the guided tour opens for a first visit and can be replayed with the keybo
   const tour = page.getByRole('dialog', { name: 'Créer votre premier arbre' })
   await expect(tour).toBeVisible()
   await expectNoAccessibilityViolations(page)
-  await tour.getByRole('button', { name: 'Suivant' }).click()
+  await tour.getByRole('button', { name: 'Suivant →' }).click()
   await page
     .getByRole('dialog', { name: 'Vos arbres' })
     .getByRole('button', { name: 'Terminer' })
