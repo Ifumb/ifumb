@@ -14,7 +14,7 @@ import { INITIAL_FORM_STATE } from '@/presentation/forms/form-state'
 type MemberPhotoFormProps = Readonly<{ action: FormAction; hasPhoto: boolean }>
 
 const INPUT_CLASS_NAME = [
-  'block w-full rounded-md border border-earth-bark bg-white p-2',
+  'block w-full rounded-md border border-gray-300 bg-white p-2',
   'aria-invalid:border-2 aria-invalid:border-brand-dark',
 ].join(' ')
 
@@ -43,6 +43,7 @@ export function MemberPhotoForm({ action, hasPhoto }: MemberPhotoFormProps) {
   )
 }
 
+// reason: le JSX garde ensemble la structure sémantique, ses libellés et les états de ce composant.
 function PhotoFileField({ error }: Readonly<{ error?: string }>) {
   const id = fieldId(PHOTO_FIELD.name)
   const [hintId, errorId] = [`${id}-hint`, `${id}-error`]

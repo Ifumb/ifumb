@@ -1,3 +1,4 @@
+import type { TreeRole } from '@/core/entities/tree'
 import type { PartialDate } from '@/core/shared/value-objects/partial-date'
 import type { MemberDetails, MemberSummary } from '@/core/use-cases/member-views'
 import type { MemberProfile } from '@/core/use-cases/get-member-profile'
@@ -68,9 +69,11 @@ export function toMemberListItem(treeId: string, member: MemberSummary): MemberL
   }
 }
 
+// reason: le mapping rassemble les seuls champs autorisés du DTO vers la vue.
 export function toMemberProfileViewModel(
   profile: MemberProfile,
   photos: PhotoSourcePolicy | null = null,
+  role: TreeRole = 'VIEWER',
 ): MemberProfileViewModel {
   const { member, tree } = profile
   return {
@@ -80,7 +83,7 @@ export function toMemberProfileViewModel(
     nickname: member.nickname,
     tree: { name: tree.name, href: `/tree/${tree.id}` },
     lineageHref: lineageHref(tree.id, member.id, DEFAULT_LINEAGE_DEPTH),
-    ...actionLinks(profile),
+    ...actionLinks(profile, role === 'EDITOR'),
     ...claimPermissions(profile),
     discoverable: profile.discoverable,
     canToggleDiscoverable: profile.permissions.canEdit,
@@ -95,15 +98,16 @@ export function toMemberProfileViewModel(
 }
 
 /** The pages acting on this member, each only for those allowed to use it. */
-function actionLinks({ member, tree, permissions }: MemberProfile) {
+function actionLinks({ member, tree, permissions }: MemberProfile, canPropose: boolean) {
   const href = memberLink(tree.id, member).href
   return {
-    editHref: permissions.canEdit ? (`${href}/edit` as const) : null,
+    editHref: permissions.canEdit || canPropose ? (`${href}/edit` as const) : null,
     deleteHref: permissions.canDelete ? (`${href}/delete` as const) : null,
     photoHref: permissions.canEdit ? (`${href}/photo` as const) : null,
-    newUnionHref: permissions.canManageUnions
-      ? (`/tree/${tree.id}/unions/new?parent=${encodeURIComponent(member.id)}` as const)
-      : null,
+    newUnionHref:
+      permissions.canManageUnions || canPropose
+        ? (`/tree/${tree.id}/unions/new?parent=${encodeURIComponent(member.id)}` as const)
+        : null,
   }
 }
 

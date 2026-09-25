@@ -11,11 +11,12 @@ type TextAreaFieldProps = Readonly<{
 }>
 
 const TEXT_AREA_CLASS_NAME = [
-  'min-h-28 w-full rounded-md border border-earth-bark bg-white px-3 py-2',
+  'min-h-28 w-full rounded-md border border-gray-300 bg-white px-3 py-2',
   'aria-invalid:border-2 aria-invalid:border-brand-dark',
 ].join(' ')
 
 /** An optional multi-line field; its hint and error are read with it. */
+// reason: le JSX garde ensemble la structure sémantique, ses libellés et les états de ce composant.
 export function TextAreaField({ name, label, hint, error, defaultValue }: TextAreaFieldProps) {
   const id = fieldId(name)
   const [hintId, errorId] = [`${id}-hint`, `${id}-error`]

@@ -1,8 +1,5 @@
 import Link from 'next/link'
-import {
-  approvePendingChangeAction,
-  rejectPendingChangeAction,
-} from '@/app/actions/review-actions'
+import { approvePendingChangeAction, rejectPendingChangeAction } from '@/app/actions/review-actions'
 import { ApproveChangeForm } from '@/presentation/components/forms/approve-change-form'
 import { RejectChangeForm } from '@/presentation/components/forms/reject-change-form'
 import { LocalDateTime } from '@/presentation/components/ui/local-date-time'
@@ -18,6 +15,7 @@ type PendingChangesProps = Readonly<{
    * the item they resolved has just left this very list, so the confirmation lives here instead,
    * in a region that survives that change. */
   reviewResult: ReviewResult | null
+  bulkResult?: string | null
 }>
 
 const STATUS_CLASS_NAMES: Readonly<Record<string, string>> = {
@@ -30,7 +28,8 @@ const REVIEW_RESULT_MESSAGES: Readonly<Record<ReviewResult, string>> = {
   rejected: 'Modification rejetée.',
 }
 
-export function PendingChangesView({ list, reviewResult }: PendingChangesProps) {
+// reason: le JSX garde ensemble la structure sémantique, ses libellés et les états de ce composant.
+export function PendingChangesView({ list, reviewResult, bulkResult }: PendingChangesProps) {
   const pendingCount = list.items.filter((item) => item.isPending).length
   return (
     <section aria-labelledby="pending-title" className="space-y-6">
@@ -41,6 +40,7 @@ export function PendingChangesView({ list, reviewResult }: PendingChangesProps) 
         {list.canReview ? `Modifications en attente — ${list.treeName}` : 'Mes propositions'}
       </h1>
       <p role="status">
+        {list.canReview && bulkResult && `${bulkResult} `}
         {reviewResult && `${REVIEW_RESULT_MESSAGES[reviewResult]} `}
         {list.status}
       </p>
@@ -53,7 +53,12 @@ export function PendingChangesView({ list, reviewResult }: PendingChangesProps) 
       {list.items.length > 0 && (
         <ol className="space-y-4">
           {list.items.map((item) => (
-            <PendingChangeItem key={item.id} item={item} treeId={list.treeId} canReview={list.canReview} />
+            <PendingChangeItem
+              key={item.id}
+              item={item}
+              treeId={list.treeId}
+              canReview={list.canReview}
+            />
           ))}
         </ol>
       )}
@@ -67,6 +72,7 @@ type PendingChangeItemProps = Readonly<{
   canReview: boolean
 }>
 
+// reason: le JSX garde ensemble la structure sémantique, ses libellés et les états de ce composant.
 function PendingChangeItem({ item, treeId, canReview }: PendingChangeItemProps) {
   const target = { treeId, pendingChangeId: item.id }
   return (

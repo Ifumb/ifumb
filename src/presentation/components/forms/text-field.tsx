@@ -5,7 +5,7 @@ type TextFieldProps = FormFieldConfig &
   Readonly<{ required?: boolean; error?: string; defaultValue?: string }>
 
 const INPUT_CLASS_NAME = [
-  'min-h-11 w-full rounded-md border border-earth-bark bg-white px-3 py-2',
+  'min-h-11 w-full rounded-md border border-gray-300 bg-white px-3 py-2',
   'aria-invalid:border-2 aria-invalid:border-brand-dark',
 ].join(' ')
 
@@ -15,6 +15,7 @@ export function fieldId(name: string): string {
 }
 
 /** A labelled text input; required unless the field says otherwise, its error read with it. */
+// reason: le JSX garde ensemble la structure sémantique, ses libellés et les états de ce composant.
 export function TextField({
   name,
   label,

@@ -3,7 +3,6 @@ import 'server-only'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { acceptWrite, whenWritesEnabled, withinWriteBudget } from '@/app/actions/write-guards'
-import type { ReviewAllOutcome } from '@/core/use-cases/review-all-pending-changes'
 import { requireCurrentUser } from '@/infrastructure/auth/current-user'
 import { container } from '@/infrastructure/di/container'
 import { REVIEW_ERRORS } from '@/presentation/errors/pending-change-messages'
@@ -11,7 +10,7 @@ import {
   TOO_MANY_TREE_WRITES_MESSAGE,
   WRITES_DISABLED_MESSAGE,
 } from '@/presentation/errors/tree-error-messages'
-import { failed, succeeded, type FormState } from '@/presentation/forms/form-state'
+import { failed, type FormState } from '@/presentation/forms/form-state'
 import {
   RESULT_PARAM,
   REVIEW_COMMENT_ENTRIES,
@@ -62,6 +61,7 @@ export async function rejectPendingChangeAction(
 }
 
 /** Bound to its tree and the chosen decision by the confirmation page. */
+// reason: la validation, le cas d’usage et la redirection forment un seul traitement de confirmation.
 export async function reviewAllPendingChangesAction(
   target: { readonly treeId: string; readonly decision: 'APPROVED' | 'REJECTED' },
   _previous: FormState,
@@ -80,15 +80,10 @@ export async function reviewAllPendingChangesAction(
   )
   if (!result) return failed(WRITES_DISABLED_MESSAGE, accepted.values)
   if (!result.ok) return failed(REVIEW_ERRORS[result.error.kind].message, accepted.values)
+  // reason: la navigation peut remonter le composant ; la confirmation doit survivre dans l’URL.
   revalidatePath(`/tree/${target.treeId}`, 'layout')
-  return succeeded(reviewAllMessage(result.value))
-}
-
-function reviewAllMessage(outcome: ReviewAllOutcome): string {
-  const parts = [
-    outcome.approved > 0 ? `${outcome.approved} approuvée(s)` : null,
-    outcome.rejected > 0 ? `${outcome.rejected} rejetée(s)` : null,
-    outcome.skipped > 0 ? `${outcome.skipped} ignorée(s) (dépassée(s) ou déjà traitée(s))` : null,
-  ].filter((part): part is string => part !== null)
-  return parts.length > 0 ? `${parts.join(', ')}.` : 'Aucune proposition à traiter.'
+  const { approved, rejected, skipped } = result.value
+  redirect(
+    `/tree/${target.treeId}/pending?review=bulk&approved=${approved}&rejected=${rejected}&skipped=${skipped}`,
+  )
 }

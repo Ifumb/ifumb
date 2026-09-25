@@ -3,6 +3,7 @@ import { claimMemberAction } from '@/app/actions/claim-actions'
 import { toggleMemberDiscoverableAction } from '@/app/actions/discoverable-actions'
 import { ClaimMemberForm } from '@/presentation/components/forms/claim-member-form'
 import { DiscoverableToggleForm } from '@/presentation/components/forms/discoverable-toggle-form'
+import { ContentTabs } from '@/presentation/components/ui/content-tabs'
 import { MemberPortrait } from '@/presentation/components/ui/member-portrait'
 import type { Fact } from '@/presentation/mappers/fact'
 import type { MemberProfileViewModel } from '@/presentation/mappers/member-view-models'
@@ -11,16 +12,30 @@ import { UnionRelationsView } from '@/presentation/views/union-relations-view'
 
 type ProfileProps = Readonly<{ profile: MemberProfileViewModel }>
 
+// reason: le JSX garde ensemble la structure sémantique, ses libellés et les états de ce composant.
 export function MemberProfileView({ profile }: ProfileProps) {
   return (
-    <article aria-labelledby="member-title" className="space-y-8">
+    <article aria-labelledby="member-title" className="member-profile mx-auto max-w-2xl space-y-4">
       <ProfileHeader profile={profile} />
-      <div className="grid gap-6 md:grid-cols-3">
-        <FactSection id="identity" title="Identité" facts={profile.identity} />
-        <FactSection id="dates-places" title="Dates & lieux" facts={profile.datesAndPlaces} />
-        <FactSection id="culture" title="Culture" facts={profile.culture} />
-      </div>
-      <BiographySection biography={profile.biography} />
+      <ContentTabs
+        tabs={[
+          {
+            label: 'Identité',
+            content: <FactSection id="identity" title="Identité" facts={profile.identity} />,
+          },
+          {
+            label: 'Dates & Lieux',
+            content: (
+              <FactSection id="dates-places" title="Dates & lieux" facts={profile.datesAndPlaces} />
+            ),
+          },
+          {
+            label: 'Culture',
+            content: <FactSection id="culture" title="Culture" facts={profile.culture} />,
+          },
+          { label: 'Bio', content: <BiographySection biography={profile.biography} /> },
+        ]}
+      />
       <UnionRelationsView
         parentUnions={profile.parentUnions}
         partnerUnions={profile.partnerUnions}
@@ -31,13 +46,13 @@ export function MemberProfileView({ profile }: ProfileProps) {
 
 function ProfileHeader({ profile }: ProfileProps) {
   return (
-    <header className="space-y-2">
+    <header className="space-y-4 rounded-2xl bg-white p-5 shadow-sm">
       <p>
         <Link href={profile.tree.href}>Retour à {profile.tree.name}</Link>
       </p>
       <div className="flex flex-wrap items-center gap-4">
         <MemberPortrait portrait={profile.portrait} size="md" priority />
-        <h1 id="member-title" className="text-3xl font-bold">
+        <h1 id="member-title" className="text-xl font-bold sm:text-2xl">
           {profile.name}
         </h1>
       </div>
@@ -52,7 +67,11 @@ function ProfileHeader({ profile }: ProfileProps) {
 function ClaimSection({ profile }: ProfileProps) {
   if (profile.claimedByViewer) return <p>Revendiquée par vous.</p>
   if (!profile.canClaim) return null
-  return <ClaimMemberForm action={claimMemberAction.bind(null, { treeId: profile.treeId, memberId: profile.memberId })} />
+  return (
+    <ClaimMemberForm
+      action={claimMemberAction.bind(null, { treeId: profile.treeId, memberId: profile.memberId })}
+    />
+  )
 }
 
 function DiscoverableSection({ profile }: ProfileProps) {
@@ -77,6 +96,7 @@ function DiscoverableSection({ profile }: ProfileProps) {
 }
 
 /** Editing, deletion and new unions only appear for those allowed to use them. */
+// reason: le JSX garde ensemble la structure sémantique, ses libellés et les états de ce composant.
 function ProfileLinks({ profile }: ProfileProps) {
   const links = [
     { href: profile.lineageHref, label: 'Voir sa descendance dans le graphe' },
@@ -89,7 +109,12 @@ function ProfileLinks({ profile }: ProfileProps) {
     <ul className="flex flex-wrap gap-x-6 gap-y-2">
       {links.map((link) => (
         <li key={link.label}>
-          <Link href={link.href}>{link.label}</Link>
+          <Link
+            href={link.href}
+            className="inline-flex min-h-8 items-center rounded-lg border border-gray-200 px-3 py-1 text-xs text-gray-700 no-underline hover:bg-gray-50"
+          >
+            {link.label}
+          </Link>
         </li>
       ))}
     </ul>
@@ -103,7 +128,7 @@ function optionalLink<H extends string>(href: H | null, label: string) {
 function BiographySection({ biography }: Readonly<{ biography: string | null }>) {
   return (
     <section aria-labelledby="biography" className="space-y-2">
-      <h2 id="biography" className="text-xl font-bold">
+      <h2 id="biography" className="sr-only">
         Biographie
       </h2>
       <p className="max-w-prose whitespace-pre-line">
@@ -117,11 +142,8 @@ type FactSectionProps = Readonly<{ id: string; title: string; facts: readonly Fa
 
 function FactSection({ id, title, facts }: FactSectionProps) {
   return (
-    <section
-      aria-labelledby={id}
-      className="space-y-2 rounded-lg border border-earth-sand bg-white p-4"
-    >
-      <h2 id={id} className="text-xl font-bold">
+    <section aria-labelledby={id} className="space-y-3">
+      <h2 id={id} className="sr-only">
         {title}
       </h2>
       <FactList facts={facts} />

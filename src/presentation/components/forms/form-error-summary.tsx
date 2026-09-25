@@ -7,10 +7,12 @@ import type { FormState } from '@/presentation/forms/form-state'
 
 type FormErrorSummaryProps = Readonly<{
   state: FormState
+  onFieldFocus?: (name: string) => void
   fields: readonly Pick<FormFieldConfig, 'name' | 'label'>[]
 }>
 
-export function FormErrorSummary({ state, fields }: FormErrorSummaryProps) {
+// reason: le JSX garde ensemble la structure sémantique, ses libellés et les états de ce composant.
+export function FormErrorSummary({ state, fields, onFieldFocus }: FormErrorSummaryProps) {
   const summaryRef = useRef<HTMLDivElement>(null)
   const fieldItems = fields.flatMap(({ name, label }) => {
     const message = state.fieldErrors?.[name]?.[0]
@@ -40,7 +42,18 @@ export function FormErrorSummary({ state, fields }: FormErrorSummaryProps) {
         {state.message && <li>{state.message}</li>}
         {fieldItems.map(({ name, label, message }) => (
           <li key={name}>
-            <a href={`#${fieldId(name)}`}>{`${label} : ${message}`}</a>
+            <a
+              href={`#${fieldId(name)}`}
+              onClick={
+                onFieldFocus
+                  ? (event) => {
+                      event.preventDefault()
+                      onFieldFocus(name)
+                      requestAnimationFrame(() => document.getElementById(fieldId(name))?.focus())
+                    }
+                  : undefined
+              }
+            >{`${label} : ${message}`}</a>
           </li>
         ))}
       </ul>

@@ -13,6 +13,7 @@ import type {
 
 type NotificationsProps = Readonly<{ list: NotificationsViewModel }>
 
+// reason: le JSX garde ensemble la structure sémantique, ses libellés et les états de ce composant.
 export function NotificationsView({ list }: NotificationsProps) {
   return (
     <section aria-labelledby="notifications-title" className="space-y-6">
@@ -39,16 +40,17 @@ export function NotificationsView({ list }: NotificationsProps) {
   )
 }
 
+// reason: le JSX garde ensemble la structure sémantique, ses libellés et les états de ce composant.
 function NotificationItem({ item }: Readonly<{ item: NotificationItemViewModel }>) {
   return (
     <li
       className={`flex flex-wrap items-center justify-between gap-3 rounded-lg border p-4 ${
-        item.read ? 'border-earth-sand bg-white' : 'border-brand-dark bg-accent-light'
+        item.read ? 'border-earth-sand bg-white' : 'border-brand/30 bg-brand/5'
       }`}
     >
       <div>
         <p>{item.href ? <Link href={item.href}>{item.message}</Link> : item.message}</p>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-gray-600">
           <LocalDateTime iso={item.createdAtIso} />
         </p>
       </div>

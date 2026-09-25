@@ -1,6 +1,6 @@
 'use server'
 import 'server-only'
-import { revalidatePath } from 'next/cache'
+import { refresh } from 'next/cache'
 import { whenWritesEnabled, withinWriteBudget } from '@/app/actions/write-guards'
 import type { MemberTarget } from '@/core/use-cases/member-write-access'
 import { requireCurrentUser } from '@/infrastructure/auth/current-user'
@@ -60,7 +60,8 @@ async function savePhoto(
   )
   if (!result) return failed(WRITES_DISABLED_MESSAGE)
   if (!result.ok) return failedAt(CHANGE_MEMBER_PHOTO_ERRORS[result.error.kind])
-  revalidatePath(`/tree/${target.treeId}`, 'layout')
+  // reason: lectures non cachées ; conserver la modale et son annonce après la mutation.
+  refresh()
   return succeeded(PHOTO_SAVED_MESSAGE)
 }
 
@@ -71,6 +72,7 @@ async function removePhoto(target: MemberTarget): Promise<FormState> {
   if (!result) return failed(WRITES_DISABLED_MESSAGE)
   if (!result.ok) return failed(MEMBER_WRITE_ERRORS[result.error.kind].message)
   if (!result.value.changed) return succeeded(NO_PHOTO_MESSAGE)
-  revalidatePath(`/tree/${target.treeId}`, 'layout')
+  // reason: lectures non cachées ; conserver la modale et son annonce après la mutation.
+  refresh()
   return succeeded(PHOTO_REMOVED_MESSAGE)
 }
