@@ -624,3 +624,13 @@ Le legacy reste sur `pnpm@10.31.0` : ne pas aligner l'un sur l'autre.
   `commit-msg`). La version n'est jamais éditée à la main dans `package.json`.
 - Langue : explications, plans et prose en **français**. Code, identifiants, chemins et
   commentaires en **anglais**.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->

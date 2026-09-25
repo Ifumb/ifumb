@@ -23,8 +23,12 @@ src/infrastructure/persistence/prisma/generated/
 
 # env files (secrets never committed; .env.example is)
 .env
+.env*
 .env.*
 !.env.example
+
+# vercel
+.vercel
 
 # misc
 .DS_Store
