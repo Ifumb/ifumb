@@ -1,4 +1,5 @@
 import type { Gender } from '@/core/entities/member'
+import type { GraphHref } from './graph-view-urls'
 import type { MemberHref, UnionHref } from '@/presentation/mappers/union-view-models'
 
 /** A marker telling owners and editors that a change waits for review. */
@@ -20,6 +21,9 @@ export type BridgeLink = {
 export type MemberNodeData = {
   readonly kind: 'member'
   readonly name: string
+  readonly firstName: string
+  readonly lastName: string | null
+  readonly pivotHref: GraphHref | null
   readonly href: MemberHref
   readonly initial: string
   readonly lifespan: string | null

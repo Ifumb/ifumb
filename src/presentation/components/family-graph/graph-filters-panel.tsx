@@ -31,7 +31,7 @@ export function GraphFiltersPanel(props: GraphFiltersPanelProps) {
   const count = activeFilterCount(props.filters)
   return (
     <details className="rounded-lg border border-earth-sand bg-white p-3">
-      <summary className="cursor-pointer font-semibold">
+      <summary id="tour-btn-filters" className="cursor-pointer font-semibold">
         Filtres{count > 0 && ` (${count} actif${count > 1 ? 's' : ''})`}
       </summary>
       <FilterFieldset {...props} />
@@ -60,6 +60,7 @@ function FilterFieldset({ options, filters, onChange }: GraphFiltersPanelProps) 
 }
 
 /** The filters worth offering: a filter with nothing to choose from is left out. */
+// reason: la table de configuration réunit les quatre facettes sans multiplier les composants.
 function filterFields(options: FilterOptions): FilterField[] {
   const asOptions = (values: readonly string[]) => values.map((value) => ({ value, label: value }))
   const generations = options.generations.length > 1 ? options.generations : []

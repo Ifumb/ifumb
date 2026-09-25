@@ -50,6 +50,7 @@ export function toFamilyGraphViewModel(
  * stays one connected component — without that, dagre would place the branch as a disconnected,
  * arbitrarily positioned cluster.
  */
+// reason: la composition associe quatre entrées distinctes sans modifier les graphes sources.
 export function toMergedFamilyGraphViewModel(
   localGraph: FamilyGraph,
   links: readonly CrossTreeLinkView[],
@@ -77,6 +78,7 @@ export function toMergedFamilyGraphViewModel(
 }
 
 /** Merges one foreign branch into an already-built graph; pure, so it is tested on its own. */
+// reason: le remappage du pivot et la déduplication des arêtes partagent la même correspondance.
 export function mergeForeignBranch(
   accumulated: UnlaidGraph,
   branch: CrossTreeBranch,
@@ -112,6 +114,7 @@ export function mergeForeignBranch(
  * Positions nodes with dagre, then orders them top to bottom and left to right: React Flow renders
  * nodes in array order, so this order is also the keyboard order through the member links.
  */
+// reason: les mutations de dagre restent confinées à cette fonction de placement.
 export function layoutNodes(
   nodes: readonly UnlaidNode[],
   edges: readonly GraphEdge[],
@@ -137,7 +140,10 @@ export function layoutNodes(
 
 function sizeOf(node: UnlaidNode) {
   if (node.data.kind !== 'member') return UNION_NODE_SIZE
-  return { width: MEMBER_NODE_SIZE.width, height: memberNodeHeight(node.data.bridgeLinks.length) }
+  return {
+    width: MEMBER_NODE_SIZE.width,
+    height: memberNodeHeight(node.data.bridgeLinks.length, node.data.pivotHref !== null),
+  }
 }
 
 function centerOf(node: PositionedNode) {

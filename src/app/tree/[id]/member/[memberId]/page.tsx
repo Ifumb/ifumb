@@ -1,3 +1,4 @@
+import { loadTreeOverview } from '@/app/tree/[id]/load-tree-overview'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { loadMemberProfile } from '@/app/tree/[id]/member/[memberId]/load-member-profile'
@@ -32,7 +33,12 @@ export default async function MemberPage({ params }: MemberPageProps) {
   const { signedIn, result } = await loadMemberProfile(id, memberId)
 
   if (result.ok) {
-    const profile = toMemberProfileViewModel(result.value, configuredMemberPhotoSource())
+    const tree = await loadTreeOverview(id)
+    const profile = toMemberProfileViewModel(
+      result.value,
+      configuredMemberPhotoSource(),
+      tree.result.ok ? tree.result.value.role : 'VIEWER',
+    )
     return <MemberProfileView profile={profile} />
   }
   if (NOT_FOUND_KINDS.has(result.error.kind)) notFound()

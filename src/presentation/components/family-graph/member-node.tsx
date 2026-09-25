@@ -7,6 +7,7 @@ import type { FocusEventHandler } from 'react'
 import { BridgeLinkButtons } from '@/presentation/components/family-graph/bridge-link-buttons'
 import { ForeignOriginTag } from '@/presentation/components/family-graph/foreign-origin-tag'
 import { PendingBadgeTag } from '@/presentation/components/family-graph/pending-badge-tag'
+import { MemberPivotButton } from './member-pivot-button'
 import { usePanToFocusedNode } from '@/presentation/components/family-graph/use-pan-to-focused-node'
 import type { MemberNodeData } from '@/presentation/graph/family-graph-types'
 import { MEMBER_NODE_SIZE, memberNodeHeight } from '@/presentation/graph/graph-dimensions'
@@ -28,13 +29,13 @@ const CARD_CLASS_NAMES = [
 // A card merged in from another tree's branch (module 3.3): never a link, styled apart.
 const FOREIGN_CARD_CLASS_NAMES = [
   'pointer-events-auto flex h-full w-full flex-col items-center justify-center gap-1 p-2',
-  'rounded-lg border-2 border-forest-light bg-forest-light/10 shadow-sm',
+  'rounded-xl border-2 border-indigo-300 bg-indigo-50 shadow-sm',
   'cursor-default text-center text-foreground',
 ]
 
 const GENERATION_TAG_CLASS_NAMES = [
   'absolute -top-3 right-1 z-10 whitespace-nowrap rounded-full px-2 shadow-sm',
-  'bg-forest text-xs leading-5 font-semibold text-earth-ivory',
+  'bg-violet-700 text-xs leading-5 font-semibold text-white',
 ]
 
 const INITIAL_CLASS_NAMES = [
@@ -42,13 +43,14 @@ const INITIAL_CLASS_NAMES = [
   'bg-earth-sand font-semibold text-earth-bark',
 ]
 
+// reason: les badges et contrôles restent dans le nœud pour suivre le déplacement du graphe.
 export function MemberNode({
   data,
   positionAbsoluteX,
   positionAbsoluteY,
 }: NodeProps<MemberFlowNode>) {
   const panToNode = usePanToFocusedNode(positionAbsoluteX, positionAbsoluteY, MEMBER_NODE_SIZE)
-  const height = memberNodeHeight(data.bridgeLinks.length)
+  const height = memberNodeHeight(data.bridgeLinks.length, data.pivotHref !== null)
 
   return (
     <div
@@ -64,6 +66,7 @@ export function MemberNode({
       <div style={{ height: MEMBER_NODE_SIZE.height }}>
         <MemberCard data={data} onFocus={panToNode} />
       </div>
+      {data.pivotHref && <MemberPivotButton href={data.pivotHref} name={data.name} />}
       {data.bridgeLinks.length > 0 && <BridgeLinkButtons links={data.bridgeLinks} />}
       <Handle
         type="source"
@@ -86,7 +89,12 @@ function MemberCard({ data, onFocus }: MemberCardProps) {
     )
   }
   return (
-    <Link href={data.href} onFocus={onFocus} className={CARD_CLASS_NAMES.join(' ')}>
+    <Link
+      href={data.href}
+      aria-label={data.name}
+      onFocus={onFocus}
+      className={CARD_CLASS_NAMES.join(' ')}
+    >
       <MemberCardBody data={data} />
     </Link>
   )
@@ -96,9 +104,14 @@ function MemberCardBody({ data }: MemberDataProps) {
   return (
     <>
       <MemberAvatar data={data} />
-      <span className="line-clamp-2 text-sm leading-tight font-semibold">{data.name}</span>
+      <span className="line-clamp-2 text-sm leading-tight font-semibold">{data.firstName}</span>
+      {data.lastName && (
+        <span className="line-clamp-2 text-xs leading-tight font-semibold text-gray-600">
+          {data.lastName}
+        </span>
+      )}
       {data.tribesLabel && (
-        <span className="w-full truncate text-xs text-earth-bark">{data.tribesLabel}</span>
+        <span className="w-full truncate text-xs text-brand">{data.tribesLabel}</span>
       )}
       <MemberDates data={data} />
     </>

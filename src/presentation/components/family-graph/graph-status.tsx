@@ -17,6 +17,7 @@ export function GraphStatus({ nodes, visible, total }: GraphStatusProps) {
 }
 
 function statusText(shown: number, total: number): string {
+  if (total === 0) return 'Cet arbre ne contient encore aucun membre.'
   if (shown === 0) return 'Aucun membre ne correspond aux filtres.'
   const plural = total > 1 ? 's' : ''
   if (shown === total) return `${total} membre${plural} affiché${plural}.`

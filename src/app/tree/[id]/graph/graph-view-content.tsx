@@ -21,6 +21,8 @@ import { GraphToolsView } from '@/presentation/views/graph-tools-view'
 
 type GraphViewContentProps = Readonly<{
   treeId: string
+  actions?: ReactNode
+  connections?: ReactNode
   request: GraphViewRequest
   graph: FamilyGraph
   mode: GraphMode
@@ -30,25 +32,35 @@ type GraphViewContentProps = Readonly<{
 type ModeOutcome = { readonly view: ReactNode; readonly emphasis: readonly string[] | null }
 
 /** Composes the graph page once everything is readable: tools, the active result, the graph. */
+// reason: le JSX garde ensemble la structure sémantique, ses libellés et les états de ce composant.
 export function GraphViewContent({
   treeId,
   request,
   graph,
   mode,
   crossTreeLinks,
+  actions,
+  connections,
 }: GraphViewContentProps) {
   const outcome = modeOutcome(treeId, graph, mode)
-  const graphViewModel = toFamilyGraphViewModel(graph, configuredMemberPhotoSource(), crossTreeLinks)
+  const graphViewModel = toFamilyGraphViewModel(
+    graph,
+    configuredMemberPhotoSource(),
+    crossTreeLinks,
+  )
   const tools = toGraphToolsViewModel(treeId, graph.people, request)
   return (
     <FamilyGraphView
       graph={{ ...graphViewModel, emphasis: outcome.emphasis }}
       tools={<GraphToolsView tools={tools} />}
       result={outcome.view}
+      actions={actions}
+      connections={connections}
     />
   )
 }
 
+// reason: le switch exhaustif garde visibles tous les modes du graphe et leurs résultats typés.
 function modeOutcome(treeId: string, graph: FamilyGraph, mode: GraphMode): ModeOutcome {
   const quitHref = graphHref(treeId)
   if (mode.kind === 'kinship' && mode.result.ok) {

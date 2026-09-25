@@ -24,15 +24,19 @@ export default async function EditMemberPage({ params }: EditMemberPageProps) {
   return <EditMember form={result.value} />
 }
 
+// reason: le JSX garde ensemble la structure sémantique, ses libellés et les états de ce composant.
 function EditMember({ form }: Readonly<{ form: EditableMember }>) {
   const { href, name } = memberLink(form.tree.id, form.member)
   const target = { treeId: form.tree.id, memberId: form.member.id }
   return (
-    <section aria-labelledby="edit-member-title" className="space-y-6">
+    <section
+      aria-labelledby="edit-member-title"
+      className="mx-auto max-w-2xl space-y-6 rounded-2xl bg-white p-5 shadow-sm"
+    >
       <p>
         <Link href={href}>Retour à la fiche de {name}</Link>
       </p>
-      <h1 id="edit-member-title" className="text-3xl font-bold">
+      <h1 id="edit-member-title" className="text-xl font-bold">
         Modifier la fiche de {name}
       </h1>
       <MemberForm

@@ -16,6 +16,8 @@ import type {
 import { UNION_TYPE_LABELS } from '@/presentation/labels/member-labels'
 import { relativeGenerationLabel } from '@/presentation/mappers/lineage-view-models'
 import { memberLink, unionHref } from '@/presentation/mappers/union-view-models'
+import { DEFAULT_LINEAGE_DEPTH } from '@/presentation/schemas/graph-view-schema'
+import { lineageHref } from './graph-view-urls'
 
 export type UnlaidNode = { readonly id: string; readonly data: MemberNodeData | UnionNodeData }
 
@@ -41,6 +43,7 @@ const UNION_ICONS: Readonly<Record<UnionType, UnionNodeData['icon']>> = {
 export const memberNodeId = (memberId: string) => `member_${memberId}`
 export const unionNodeId = (unionId: string) => `union_${unionId}`
 
+// reason: les nœuds, arêtes et actions utilisent le même instantané autorisé du graphe.
 export function toUnlaidGraph(
   graph: FamilyGraph,
   photos: PhotoSourcePolicy | null,
@@ -49,12 +52,19 @@ export function toUnlaidGraph(
   const { foreign = null, bridgesByMember } = options
   const treeId = graph.tree.id
   const pivotId = graph.lineage?.pivot.id ?? null
+  const connected = new Set(
+    graph.unions.flatMap((union) => [
+      ...union.parentIds,
+      ...union.children.map(({ childId }) => childId),
+    ]),
+  )
   return {
     nodes: [
       ...graph.members.map((member) => ({
         id: memberNodeId(member.id),
         data: toMemberNodeData(treeId, member, photos, {
           pivotId,
+          connected: connected.has(member.id),
           foreign,
           bridgeLinks: bridgesByMember?.get(member.id) ?? [],
         }),
@@ -69,11 +79,13 @@ export function toUnlaidGraph(
 }
 
 type MemberNodeContext = {
+  readonly connected?: boolean
   readonly pivotId?: string | null
   readonly foreign?: ForeignOrigin | null
   readonly bridgeLinks?: readonly BridgeLink[]
 }
 
+// reason: ce mapping explicite conserve les données affichables et leur contexte visuel au même endroit.
 export function toMemberNodeData(
   treeId: string,
   member: GraphMember,
@@ -85,6 +97,12 @@ export function toMemberNodeData(
   return {
     kind: 'member',
     name,
+    firstName: member.firstName,
+    lastName: member.lastName,
+    pivotHref:
+      context.connected && !foreign && member.id !== pivotId
+        ? lineageHref(treeId, member.id, DEFAULT_LINEAGE_DEPTH)
+        : null,
     href,
     initial: member.firstName.charAt(0).toLocaleUpperCase('fr'),
     lifespan: lifespanLabel(member.birthDate, member.deathDate),

@@ -1,6 +1,6 @@
 const TAG_CLASS_NAMES = [
   'absolute -top-3 left-1 z-10 whitespace-nowrap rounded-full px-2 shadow-sm',
-  'bg-forest-light text-xs leading-5 font-semibold text-earth-ivory',
+  'bg-indigo-100 text-xs leading-5 font-semibold text-indigo-800',
 ]
 
 /** Which tree a merged-in node comes from, in text — never a colour alone (module 3.3). */

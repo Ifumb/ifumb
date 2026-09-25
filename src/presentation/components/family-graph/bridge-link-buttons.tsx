@@ -5,8 +5,8 @@ import type { BridgeLink } from '@/presentation/graph/family-graph-types'
 import { BRIDGE_BUTTONS_HEIGHT } from '@/presentation/graph/graph-dimensions'
 
 const BUTTON_CLASS_NAMES = [
-  'pointer-events-auto rounded-full border border-forest-light px-2 text-xs font-semibold',
-  'text-forest disabled:opacity-70',
+  'nodrag pointer-events-auto min-h-11 max-w-full rounded border border-indigo-300 bg-indigo-100 px-2 text-xs font-semibold',
+  'text-indigo-800 hover:bg-indigo-200 disabled:opacity-70',
 ]
 
 /** One toggle per tree this member bridges into (module 3.3); outside the card's own link. */
@@ -14,7 +14,7 @@ export function BridgeLinkButtons({ links }: Readonly<{ links: readonly BridgeLi
   const { pendingLinkId } = useCrossTreeBranchContext()
   return (
     <div
-      style={{ height: BRIDGE_BUTTONS_HEIGHT }}
+      style={{ height: BRIDGE_BUTTONS_HEIGHT * links.length }}
       className="pointer-events-none flex flex-wrap items-center justify-center gap-1 py-1"
     >
       {links.map((link) => (
@@ -24,6 +24,7 @@ export function BridgeLinkButtons({ links }: Readonly<{ links: readonly BridgeLi
   )
 }
 
+// reason: le bouton conserve ensemble état de chargement, libellé accessible et activation.
 function BridgeLinkButton({ link, pending }: Readonly<{ link: BridgeLink; pending: boolean }>) {
   const { onToggle } = useCrossTreeBranchContext()
   const label = link.expanded
@@ -39,7 +40,7 @@ function BridgeLinkButton({ link, pending }: Readonly<{ link: BridgeLink; pendin
       onClick={() => onToggle(link.linkId)}
       className={BUTTON_CLASS_NAMES.join(' ')}
     >
-      <span aria-hidden="true">
+      <span aria-hidden="true" className="block truncate">
         ↗ {link.treeName} {pending ? '…' : link.expanded ? '−' : '+'}
       </span>
     </button>

@@ -1,0 +1,160 @@
+@layer utilities {
+  .tree-workspace {
+    @apply flex h-[calc(100dvh-3.5rem)] min-h-96 flex-col bg-earth-ivory;
+  }
+  .tree-header {
+    @apply flex min-h-12 shrink-0 flex-wrap items-center gap-2 border-b border-earth-sand/40 bg-white px-3 py-2 sm:px-4;
+  }
+  .tree-header a {
+    @apply no-underline;
+  }
+  .tree-header-action {
+    @apply inline-flex min-h-7 items-center gap-1 rounded px-2 py-1 text-xs text-gray-500 hover:bg-gray-100 hover:text-brand;
+  }
+  .tree-body {
+    @apply relative flex min-h-0 flex-1 overflow-hidden;
+  }
+  .tree-sidebar {
+    @apply relative z-20 flex w-10 shrink-0 flex-col border-r border-earth-sand/40 bg-white;
+  }
+  .tree-sidebar[open] {
+    @apply w-64;
+  }
+  .tree-sidebar > summary {
+    @apply flex min-h-11 cursor-pointer items-center justify-end border-b border-earth-sand/40 px-3 text-gray-500;
+    list-style: none;
+  }
+  .tree-sidebar > summary::-webkit-details-marker {
+    display: none;
+  }
+  .tree-sidebar[open] > summary svg {
+    transform: rotate(180deg);
+  }
+  .tree-sidebar-content {
+    @apply min-h-0 overflow-auto p-3 text-sm;
+    height: calc(100% - 2.75rem);
+  }
+  .tree-sidebar-content input {
+    @apply w-full min-w-0;
+  }
+  .tree-sidebar-content form {
+    @apply flex flex-col items-stretch gap-2;
+  }
+  .tree-sidebar-content ul {
+    @apply grid-cols-1 gap-0;
+  }
+  .tree-sidebar-content li > div {
+    @apply rounded-none border-0 border-b border-gray-100 px-0 py-3;
+  }
+  .tree-sidebar-content a {
+    @apply text-sm font-medium text-gray-700 no-underline;
+  }
+  .tree-sidebar-content h2 {
+    @apply text-sm font-semibold text-gray-600;
+  }
+  .tree-stage {
+    @apply relative min-h-0 min-w-0 flex-1;
+  }
+  .family-graph {
+    @apply relative h-full w-full;
+  }
+  .graph-canvas {
+    @apply h-full w-full bg-earth-ivory;
+  }
+  .graph-primary-tools {
+    @apply absolute left-4 top-4 z-10 flex flex-col items-start gap-2;
+  }
+  .graph-actions {
+    @apply flex gap-2;
+  }
+  .graph-actions a {
+    @apply inline-flex min-h-8 items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-medium text-white no-underline shadow-sm;
+  }
+  .graph-centre {
+    @apply flex max-w-64 items-center gap-1 rounded-lg border border-gray-300 bg-white px-2 shadow-sm;
+  }
+  .graph-centre input {
+    @apply min-h-8 w-56 min-w-0 rounded border-0 bg-transparent px-1 py-1 text-xs;
+  }
+  .graph-reset {
+    @apply flex min-h-8 items-center gap-1 rounded-lg border border-gray-200 bg-white px-3 py-1 text-xs text-gray-600 shadow-sm;
+  }
+  .graph-centre label {
+    @apply sr-only;
+  }
+  .graph-centre button {
+    @apply size-7 min-h-7 p-1 text-xs;
+  }
+  .graph-side-tools {
+    @apply absolute right-4 top-4 z-20 flex max-h-[calc(100%-4rem)] max-w-[calc(100%-2rem)] flex-col items-end gap-2 overflow-y-auto;
+  }
+  .graph-side-tools details {
+    @apply max-w-80 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs shadow-sm;
+  }
+  .graph-side-tools summary {
+    @apply cursor-pointer list-none font-normal text-gray-700;
+  }
+  .graph-side-tools summary::-webkit-details-marker {
+    display: none;
+  }
+  .graph-side-tools details[open] {
+    @apply w-72;
+  }
+  .graph-side-tools details[open] summary {
+    @apply mb-3 font-semibold;
+  }
+  .graph-side-tools fieldset,
+  .graph-side-tools form {
+    @apply flex-col items-stretch gap-3;
+  }
+  .graph-side-tools select {
+    @apply w-full min-w-0 text-sm;
+  }
+  .graph-mode-tools {
+    @apply flex flex-col items-end gap-2;
+  }
+  .graph-result {
+    @apply absolute bottom-4 left-16 z-10 max-h-60 max-w-lg overflow-auto rounded-lg border border-earth-sand/40 bg-white p-3 text-sm shadow;
+  }
+  .graph-result:empty {
+    display: none;
+  }
+  .graph-result h2 {
+    @apply text-base;
+  }
+  .graph-minimap-toggle {
+    @apply absolute bottom-8 right-3 z-10 min-h-6 rounded border border-gray-200 bg-white px-2 py-1 text-xs text-gray-600 shadow-sm;
+  }
+  .tree-stage .react-flow__attribution a {
+    @apply inline-flex min-h-6 items-center;
+  }
+  .graph-status {
+    @apply sr-only;
+  }
+  .tree-stage .react-flow__controls {
+    @apply bottom-8 left-4 m-0 gap-1 bg-transparent shadow-none;
+  }
+  .tree-stage .react-flow__controls-button {
+    @apply size-8 rounded-lg border border-gray-200 bg-white text-gray-700 shadow-sm;
+  }
+  .tree-stage .react-flow__node-member > div a {
+    @apply rounded-xl;
+  }
+  @media (max-width: 767px) {
+    .tree-header h1 {
+      flex-basis: calc(100% - 3.5rem);
+    }
+    .tree-sidebar[open] {
+      @apply absolute inset-y-0 left-0 z-30 w-64 shadow-xl;
+    }
+    .graph-primary-tools {
+      @apply left-2;
+    }
+    .graph-side-tools {
+      @apply right-2 top-24;
+    }
+    .tree-header-action span {
+      @apply sr-only;
+    }
+  }
+}

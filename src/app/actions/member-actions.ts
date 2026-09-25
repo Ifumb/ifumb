@@ -39,7 +39,8 @@ export async function createMemberAction(
   if (!result.ok) return failedAt(CREATE_MEMBER_ERRORS[result.error.kind], values)
   revalidatePath(`/tree/${treeId}`, 'layout')
   if (result.value.outcome === 'proposed') return succeeded(MEMBER_PROPOSED_MESSAGE)
-  redirect(`/tree/${treeId}/member/${result.value.memberId}`)
+  // reason: après création, retrouver le graphe actualisé comme dans le parcours legacy.
+  redirect(`/tree/${treeId}`)
 }
 
 /** Bound to its tree and member by the page; the right to edit is checked again by the use case. */

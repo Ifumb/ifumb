@@ -1,3 +1,4 @@
+import { Icon } from '@/presentation/components/ui/icon'
 import Form from 'next/form'
 import type { ReactNode } from 'react'
 import { Button } from '@/presentation/components/ui/button'
@@ -16,7 +17,7 @@ const TOOL_TITLES: Readonly<Record<GraphTool, string>> = {
 /** The graph tools as plain GET forms: their result is a URL, readable and shareable. */
 export function GraphToolsView({ tools }: ToolsProps) {
   return (
-    <div className="space-y-2">
+    <div className="graph-mode-tools">
       <ToolSection tool="lineage" tools={tools}>
         <LineageForm tools={tools} />
       </ToolSection>
@@ -38,12 +39,20 @@ function ToolSection({ tool, tools, children }: ToolSectionProps) {
       open={tools.active === tool}
       className="rounded-lg border border-earth-sand bg-white p-3"
     >
-      <summary className="cursor-pointer font-semibold">{TOOL_TITLES[tool]}</summary>
+      <summary
+        id={`tour-btn-${tool}`}
+        aria-label={TOOL_TITLES[tool]}
+        className="flex cursor-pointer items-center gap-1 font-semibold"
+      >
+        <Icon name={tool === 'ancestors' ? 'people' : 'branch'} />
+        {tool === 'kinship' ? 'Chemin' : tool === 'ancestors' ? 'Ancêtres' : 'Descendance'}
+      </summary>
       {children}
     </details>
   )
 }
 
+// reason: le JSX garde ensemble la structure sémantique, ses libellés et les états de ce composant.
 function LineageForm({ tools }: ToolsProps) {
   const errorId = problemIdFor(tools, 'lineage')
   return (

@@ -53,7 +53,8 @@ export async function createUnionAction(
   if (!result.ok) return failedAt(CREATE_UNION_ERRORS[result.error.kind], values)
   revalidatePath(`/tree/${treeId}`, 'layout')
   if (result.value.outcome === 'proposed') return succeeded(UNION_PROPOSED_MESSAGE)
-  redirect(unionPath({ treeId, unionId: result.value.unionId }))
+  // reason: après création, retrouver le graphe actualisé comme dans le parcours legacy.
+  redirect(`/tree/${treeId}`)
 }
 
 /** Bound to its union by the page; cycles and parents from elsewhere are refused by the use case. */

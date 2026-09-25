@@ -1,3 +1,4 @@
+import { bulkReviewMessage } from '@/presentation/schemas/bulk-review-result'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { loadPendingChanges } from '@/app/tree/[id]/pending/load-pending-changes'
@@ -31,10 +32,18 @@ export default async function PendingChangesPage({ params, searchParams }: Pendi
   const { signedIn, result } = await loadPendingChanges(id)
   if (!result.ok) return unreadablePendingChanges(id, result.error, signedIn)
 
-  const reviewResult = parseReviewResult(await searchParams)
-  return <PendingChangesView list={toPendingChangesViewModel(result.value)} reviewResult={reviewResult} />
+  const query = await searchParams
+  const reviewResult = parseReviewResult(query)
+  return (
+    <PendingChangesView
+      list={toPendingChangesViewModel(result.value)}
+      reviewResult={reviewResult}
+      bulkResult={bulkReviewMessage(query)}
+    />
+  )
 }
 
+// reason: le switch distingue explicitement absence, accès refusé et authentification.
 function unreadablePendingChanges(
   treeId: string,
   error: GetPendingChangesError,
