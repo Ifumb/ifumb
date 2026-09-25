@@ -92,19 +92,37 @@ describe('member view models', () => {
 
   it.each([
     [
-      { canEdit: false, canDelete: false, canManageUnions: false, canClaim: false, claimedByViewer: false },
+      {
+        canEdit: false,
+        canDelete: false,
+        canManageUnions: false,
+        canClaim: false,
+        claimedByViewer: false,
+      },
       null,
       null,
       null,
     ],
     [
-      { canEdit: true, canDelete: false, canManageUnions: false, canClaim: false, claimedByViewer: false },
+      {
+        canEdit: true,
+        canDelete: false,
+        canManageUnions: false,
+        canClaim: false,
+        claimedByViewer: false,
+      },
       '/tree/tree_1/member/mbr_awa/edit',
       null,
       null,
     ],
     [
-      { canEdit: true, canDelete: true, canManageUnions: true, canClaim: false, claimedByViewer: false },
+      {
+        canEdit: true,
+        canDelete: true,
+        canManageUnions: true,
+        canClaim: false,
+        claimedByViewer: false,
+      },
       '/tree/tree_1/member/mbr_awa/edit',
       '/tree/tree_1/member/mbr_awa/delete',
       '/tree/tree_1/unions/new?parent=mbr_awa',
@@ -143,4 +161,13 @@ describe('member view models', () => {
   ])('labels union dates from %o to %o', (start, end, label) => {
     expect(unionDatesLabel(start, end)).toBe(label)
   })
+})
+
+it('offers an editor the proposal form without photo, discoverability or deletion rights', () => {
+  const view = toMemberProfileViewModel(profile, null, 'EDITOR')
+  expect(view.editHref).toBe('/tree/tree_1/member/mbr_awa/edit')
+  expect(view.newUnionHref).toBe('/tree/tree_1/unions/new?parent=mbr_awa')
+  expect(view.photoHref).toBeNull()
+  expect(view.deleteHref).toBeNull()
+  expect(view.canToggleDiscoverable).toBe(false)
 })

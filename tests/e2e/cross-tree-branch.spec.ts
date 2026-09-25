@@ -46,9 +46,7 @@ test('a member bridges into a linked tree; its branch merges into the graph, aut
   await seedCrossTreeLink(sourceTreeId, awa, foreignTreeId, fatou)
 
   await page.goto(`/tree/${sourceTreeId}/graph`)
-  await expect(
-    page.getByRole('heading', { level: 1, name: 'Graphe — Arbre Source' }),
-  ).toBeVisible()
+  await expect(page.getByRole('heading', { level: 1, name: 'Arbre Source' })).toBeVisible()
   await expect(memberNode(page, 'Moussa')).toHaveCount(0)
 
   const toggle = page.getByRole('button', { name: /^Afficher la branche de Arbre Distant/ })

@@ -23,6 +23,7 @@ export const test = base.extend({
   // The fixture callback is named `provide` rather than Playwright's usual `use`: the React hooks
   // lint rule would otherwise mistake it for React's `use` hook.
   context: async ({ context }, provide) => {
+    await dismissAutomaticTours(context)
     await context.setExtraHTTPHeaders({ 'x-forwarded-for': uniqueClientIp() })
     await provide(context)
   },
@@ -31,6 +32,7 @@ export const test = base.extend({
 /** A second, separate visitor (anonymous until it signs in), with its own client IP. */
 export async function newVisitorContext(browser: Browser): Promise<BrowserContext> {
   const context = await browser.newContext()
+  await dismissAutomaticTours(context)
   await context.setExtraHTTPHeaders({ 'x-forwarded-for': uniqueClientIp() })
   return context
 }
@@ -45,3 +47,12 @@ export async function expectNoAccessibilityViolations(page: Page): Promise<void>
 }
 
 export { expect }
+
+// reason: les parcours métier démarrent après l’aide ; une suite dédiée vérifie la première visite.
+async function dismissAutomaticTours(context: BrowserContext) {
+  await context.addInitScript(() => {
+    for (const id of ['dashboard', 'tree-empty', 'tree-with-members']) {
+      localStorage.setItem(`tour_seen:${id}`, 'true')
+    }
+  })
+}

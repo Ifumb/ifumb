@@ -39,17 +39,13 @@ test('the graph opens from the tree page and each member leads to their profile'
   const { treeId } = await seedGraphFamily(page)
   await page.goto(`/tree/${treeId}`)
 
-  await page.getByRole('link', { name: 'Voir le graphe' }).click()
-  await expect(
-    page.getByRole('heading', { level: 1, name: 'Graphe — Famille Diallo' }),
-  ).toBeVisible()
+  await expect(page.getByRole('heading', { level: 1, name: 'Famille Diallo' })).toBeVisible()
   await expect(memberLinks(page)).toHaveCount(4)
   await expect(page.getByRole('status').filter({ hasText: 'membres' })).toHaveText(
     '4 membres affichés.',
   )
 
-  await page.getByText('Filtres', { exact: true }).focus()
-  await page.keyboard.press('Tab')
+  await memberLinks(page).first().focus()
   await expect(canvas(page).getByRole('link', { name: /^(Moussa|Awa) Diallo/ })).toHaveCount(2)
   const focusedName = await page.evaluate(() => document.activeElement?.textContent ?? '')
   expect(focusedName).toMatch(/^[A-Z]/)
@@ -123,8 +119,8 @@ test('centring on a member makes distant relatives inert until the view is reset
   const ibrahimaNode = canvas(page).locator(`[data-id="member_${ibrahima}"]`)
   await expect(memberLinks(page)).toHaveCount(4)
 
-  await page.getByLabel('Centrer sur un membre').selectOption({ label: 'Moussa Diallo' })
-  await page.getByRole('button', { name: 'Centrer', exact: true }).click()
+  await page.getByLabel('Centrer sur un membre').fill('Moussa Diallo')
+  await page.getByLabel('Centrer sur un membre').press('Enter')
 
   await expect(ibrahimaNode).toHaveAttribute('inert')
   await expect(canvas(page).locator(`[data-id="member_${moussa}"]`)).not.toHaveAttribute('inert')

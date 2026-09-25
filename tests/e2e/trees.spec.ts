@@ -48,7 +48,9 @@ test('a public tree can be read without an account', async ({ page, browser }) =
   await visitor.goto(`/tree/${treeId}`)
 
   await expect(visitor.getByRole('heading', { level: 1, name: 'Famille ouverte' })).toBeVisible()
-  await expect(visitor.getByText('Lecteur')).toBeVisible()
+  await expect(visitor.locator('.react-flow')).toBeVisible()
+  await expect(visitor.getByRole('link', { name: 'Ajouter un membre' })).toHaveCount(0)
+  await expect(visitor.getByRole('link', { name: 'Modifier l’arbre' })).toHaveCount(0)
   await visitorContext.close()
 })
 
@@ -70,7 +72,7 @@ test('a private tree asks an anonymous visitor to sign in, without revealing its
   await expect(
     visitor.getByRole('heading', { level: 1, name: 'Cet arbre est privé' }),
   ).toBeVisible()
-  await expect(visitor.getByRole('link', { name: 'Se connecter' })).toBeVisible()
+  await expect(visitor.getByRole('main').getByRole('link', { name: 'Se connecter' })).toBeVisible()
   await expect(visitor).toHaveTitle(/Arbre privé/)
   await expect(visitor.getByText('Famille secrète')).toHaveCount(0)
   await expectNoAccessibilityViolations(visitor)

@@ -44,7 +44,7 @@ test('the owner invites by email; a new visitor registers, is sent back, and acc
   await expect(heading(visitor, 'Invitation à collaborer')).toBeVisible()
   await expect(visitor.getByText('Famille Diallo')).toBeVisible()
 
-  await visitor.getByRole('link', { name: 'Créer un compte' }).click()
+  await visitor.getByRole('main').getByRole('link', { name: 'Créer un compte' }).click()
   await visitor.getByLabel('Prénom', { exact: true }).fill('Fatou')
   await visitor.getByLabel('Nom', { exact: true }).fill('Sow')
   await visitor.getByLabel('Email', { exact: true }).fill('fatou@example.com')
@@ -74,11 +74,10 @@ test('the owner changes a collaborator’s role, then revokes access and its pen
   await seedAcceptedInvitation(treeId, account.email, 'EDITOR')
 
   await editor.goto(`/tree/${treeId}/member/${awa}/edit`)
+  await editor.getByRole('tab', { name: 'Culture', exact: true }).click()
   await editor.getByLabel('Tribu').fill('Soninke')
   await editor.getByRole('button', { name: 'Enregistrer les modifications' }).click()
-  await expect(
-    editor.getByRole('status').filter({ hasText: 'Proposition envoyée' }),
-  ).toBeVisible()
+  await expect(editor.getByRole('status').filter({ hasText: 'Proposition envoyée' })).toBeVisible()
 
   await page.goto(`/tree/${treeId}/collaborators`)
   const row = page.getByRole('listitem')

@@ -17,6 +17,9 @@ function memberNode(id: string, overrides: Partial<MemberNodeData> = {}): Positi
     data: {
       kind: 'member',
       name: id,
+      firstName: id,
+      lastName: null,
+      pivotHref: null,
       href: `/tree/t/member/${id}`,
       initial: 'X',
       lifespan: null,

@@ -29,6 +29,7 @@ test('the owner adds a member, guided by the date errors', async ({ page }) => {
   const death = page.getByRole('group', { name: 'Date de décès' })
   await page.getByLabel('Prénom').fill('Awa')
   await page.getByLabel('Nom', { exact: true }).fill('Diallo')
+  await page.getByRole('tab', { name: 'Dates & Lieux' }).click()
   await birth.getByLabel('Mois').selectOption({ label: 'mars' })
   await page.getByRole('button', { name: 'Ajouter le membre' }).click()
   await expect(errorSummary(page)).toBeFocused()
@@ -48,9 +49,13 @@ test('the owner adds a member, guided by the date errors', async ({ page }) => {
 
   await death.getByLabel('Année').fill('2001')
   await page.getByRole('button', { name: 'Ajouter le membre' }).click()
+  await expect(page).toHaveURL(`/tree/${treeId}`)
+  await expect(page.getByRole('dialog')).toHaveCount(0)
+  await page.locator('.react-flow__node-member').getByRole('link', { name: 'Awa Diallo' }).click()
   await expect(
     page.getByRole('heading', { level: 1, name: 'Awa Diallo', exact: true }),
   ).toBeVisible()
+  await page.getByRole('tab', { name: 'Dates & Lieux' }).click()
   await expect(page.getByText('vers 7 mars 1954')).toBeVisible()
   await page.goto(`/tree/${treeId}/history`)
   await expect(page.getByRole('main').locator('ol > li')).toContainText(['Membre créé'])
@@ -66,6 +71,7 @@ test('the owner clears a field, and the history records only that change', async
 
   await page.getByRole('button', { name: 'Enregistrer les modifications' }).click()
   await expect(page.getByRole('status').filter({ hasText: 'Aucune modification' })).toBeVisible()
+  await page.getByRole('tab', { name: 'Culture', exact: true }).click()
   await page.getByLabel('Tribu').fill('')
   await page.getByRole('button', { name: 'Enregistrer les modifications' }).click()
   await expect(
@@ -96,6 +102,7 @@ test('the owner deletes a member who is a child in a union', async ({ page }) =>
   await page.getByRole('button', { name: 'Supprimer définitivement' }).click()
 
   await expect(page.getByRole('heading', { level: 1, name: 'Famille Diallo' })).toBeVisible()
+  await page.locator('.tree-sidebar > summary').click()
   const members = page.getByRole('region', { name: 'Membres' }).getByRole('link')
   await expect(members).toHaveText(['Moussa Diallo'])
   await page.goto(`/tree/${treeId}/member/${moussa}`)
@@ -114,28 +121,33 @@ test('an editor proposes member changes instead of writing directly; the account
   const awa = await seedMember(treeId, { firstName: 'Awa', claimedByEmail: claimer.email })
   const moussa = await seedMember(treeId, { firstName: 'Moussa' })
 
-  // The dashboard and profile links to these forms stay hidden from a plain editor; only the
-  // owner is invited to write directly. Module 2.6 opens the forms themselves, reached by URL, so
-  // that an editor can propose instead — see below.
+  // L’éditeur atteint les formulaires depuis le graphe ; les écritures restent des propositions.
   await editor.goto(`/tree/${treeId}`)
-  await expect(editor.getByRole('link', { name: 'Ajouter un membre' })).toHaveCount(0)
+  await expect(editor.locator('.react-flow')).toBeVisible()
+  await expect(editor.getByRole('link', { name: 'Ajouter un membre' })).toBeVisible()
   await editor.goto(`/tree/${treeId}/member/${moussa}`)
-  await expect(editor.getByRole('link', { name: 'Modifier la fiche' })).toHaveCount(0)
+  await expect(editor.getByRole('link', { name: 'Modifier la fiche' })).toBeVisible()
 
-  await editor.goto(`/tree/${treeId}/members/new`)
+  await editor.goto(`/tree/${treeId}`)
+  await editor.getByRole('link', { name: 'Ajouter un membre' }).click()
+  const creationDialog = editor.getByRole('dialog', { name: 'Ajouter un membre' })
   await editor.getByLabel('Prénom').fill('Binta')
   await editor.getByRole('button', { name: 'Ajouter le membre' }).click()
   await expect(
-    editor.getByRole('status').filter({ hasText: 'Proposition envoyée' }),
+    creationDialog.getByRole('status').filter({ hasText: 'Proposition envoyée' }),
   ).toBeVisible()
+  await editor.keyboard.press('Escape')
+  await expect(editor).toHaveURL(`/tree/${treeId}`)
+  await expect(
+    editor.locator('.react-flow__node-member').getByRole('link', { name: 'Binta' }),
+  ).toHaveCount(0)
   await expect(editor.getByRole('main')).not.toContainText('Binta')
 
   await editor.goto(`/tree/${treeId}/member/${moussa}/edit`)
+  await editor.getByRole('tab', { name: 'Bio', exact: true }).click()
   await editor.getByLabel('Biographie').fill('Vécut à Labé.')
   await editor.getByRole('button', { name: 'Enregistrer les modifications' }).click()
-  await expect(
-    editor.getByRole('status').filter({ hasText: 'Proposition envoyée' }),
-  ).toBeVisible()
+  await expect(editor.getByRole('status').filter({ hasText: 'Proposition envoyée' })).toBeVisible()
   await editor.goto(`/tree/${treeId}/member/${moussa}`)
   await expect(editor.getByRole('main')).not.toContainText('Vécut à Labé.')
 
@@ -145,9 +157,11 @@ test('an editor proposes member changes instead of writing directly; the account
   await expect(
     editor.getByRole('heading', { level: 1, name: 'Modifier la fiche de Awa' }),
   ).toBeVisible()
+  await editor.getByRole('tab', { name: 'Bio', exact: true }).click()
   await editor.getByLabel('Biographie').fill('Née au Fouta Djallon.')
   await editor.getByRole('button', { name: 'Enregistrer les modifications' }).click()
   await expect(editor.getByRole('heading', { level: 1, name: 'Awa', exact: true })).toBeVisible()
+  await editor.getByRole('tab', { name: 'Bio', exact: true }).click()
   await expect(editor.getByText('Née au Fouta Djallon.')).toBeVisible()
   await editor.goto(`/tree/${treeId}/member/${awa}/delete`)
   await expect(

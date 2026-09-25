@@ -41,6 +41,9 @@ test('the owner creates a union from a profile and links a child', async ({ page
   await page.getByLabel('Mariage', { exact: true }).check()
   await page.getByRole('group', { name: 'Début' }).getByLabel('Année').fill('1955')
   await page.getByRole('button', { name: 'Créer l’union' }).click()
+  await expect(page).toHaveURL(`/tree/${treeId}`)
+  await expect(page.getByRole('dialog')).toHaveCount(0)
+  await page.locator('.react-flow__node-union').getByRole('link').click()
   await expect(heading(page, 'Union de Moussa Diallo et Awa Diallo')).toBeVisible()
   await expectNoAccessibilityViolations(page)
 
@@ -152,9 +155,7 @@ test('an editor reads a union but may not change it', async ({ page, browser }) 
   await editor.goto(`/tree/${treeId}/union/${union}/edit`)
   await editor.getByRole('group', { name: 'Début' }).getByLabel('Année').fill('1955')
   await editor.getByRole('button', { name: 'Enregistrer les modifications' }).click()
-  await expect(
-    editor.getByRole('status').filter({ hasText: 'Proposition envoyée' }),
-  ).toBeVisible()
+  await expect(editor.getByRole('status').filter({ hasText: 'Proposition envoyée' })).toBeVisible()
   await editor.goto(`/tree/${treeId}/union/${union}`)
   await expect(editor.getByText('1955')).toHaveCount(0)
 

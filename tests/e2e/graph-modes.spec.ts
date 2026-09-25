@@ -40,7 +40,17 @@ async function seedFourGenerations(page: Page) {
 }
 
 const memberLinks = (page: Page) => page.locator('.react-flow__node-member').getByRole('link')
-const tool = (page: Page, title: string) => page.locator('details').filter({ hasText: title })
+const tool = (page: Page, title: string) =>
+  page.locator('details').filter({
+    has: page.locator('summary').filter({
+      hasText:
+        title === 'Chemin de parenté'
+          ? 'Chemin'
+          : title === 'Ancêtres communs'
+            ? 'Ancêtres'
+            : title,
+    }),
+  })
 
 async function usePairTool(
   page: Page,

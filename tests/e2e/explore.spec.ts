@@ -19,7 +19,8 @@ const treeCards = (page: Page) =>
 
 // The page also has a "discoverable members" status region (module 3.1): scoped here so a search
 // that matches nothing on that side never makes `getByRole('status')` ambiguous.
-const publicMembers = (page: Page) => page.getByRole('region', { name: 'Membres des arbres publics' })
+const publicMembers = (page: Page) =>
+  page.getByRole('region', { name: 'Membres des arbres publics' })
 
 test('an anonymous visitor explores public trees, never private ones', async ({
   page,
@@ -43,8 +44,8 @@ test('an anonymous visitor explores public trees, never private ones', async ({
   const visitor = await visitorContext.newPage()
   await visitor.goto('/')
   await visitor
-    .getByRole('navigation', { name: 'Site' })
-    .getByRole('link', { name: 'Explorer' })
+    .getByRole('main')
+    .getByRole('link', { name: /Explorer/ })
     .click()
   await expect(visitor.getByRole('heading', { level: 1, name: 'Explorer' })).toBeVisible()
   await expectNoAccessibilityViolations(visitor)
@@ -124,7 +125,9 @@ test('the member search finds members of public trees only, and leads to their p
   await page.getByLabel('Rechercher un membre').fill(token)
   await page.getByRole('button', { name: 'Rechercher' }).click()
 
-  await expect(publicMembers(page).getByRole('status')).toHaveText(`1 membre trouvé pour « ${token} ».`)
+  await expect(publicMembers(page).getByRole('status')).toHaveText(
+    `1 membre trouvé pour « ${token} ».`,
+  )
   await expect(page.getByText('Secret')).toHaveCount(0)
   await expectNoAccessibilityViolations(page)
   await page.getByRole('link', { name: `Awa${token} Diallo` }).click()

@@ -4,7 +4,9 @@ import { E2E_PASSWORD, registerThroughUi, uniqueEmail } from '@tests/e2e/support
 test('a visitor registers, signs out, then signs back in', async ({ page }) => {
   const account = await registerThroughUi(page)
   await expect(page.getByRole('heading', { level: 1, name: 'Mes arbres' })).toBeVisible()
-  await expect(page.getByText(`Connecté en tant que ${account.fullName}`)).toBeVisible()
+  await expect(
+    page.getByRole('banner').getByText(account.fullName, { exact: true }).filter({ visible: true }),
+  ).toBeVisible()
 
   await page.getByRole('button', { name: 'Se déconnecter' }).click()
   await expect(page).toHaveURL(/\/login$/)

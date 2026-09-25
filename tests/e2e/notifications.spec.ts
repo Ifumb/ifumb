@@ -35,11 +35,10 @@ test('a proposal notifies the owner, who reads it then marks it read', async ({
   await seedAcceptedInvitation(treeId, account.email, 'EDITOR')
 
   await editor.goto(`/tree/${treeId}/member/${awa}/edit`)
+  await editor.getByRole('tab', { name: 'Culture', exact: true }).click()
   await editor.getByLabel('Tribu').fill('Soninke')
   await editor.getByRole('button', { name: 'Enregistrer les modifications' }).click()
-  await expect(
-    editor.getByRole('status').filter({ hasText: 'Proposition envoyée' }),
-  ).toBeVisible()
+  await expect(editor.getByRole('status').filter({ hasText: 'Proposition envoyée' })).toBeVisible()
 
   await page.goto(`/notifications`)
   await expect(heading(page, 'Notifications')).toBeVisible()
@@ -67,6 +66,7 @@ test('the owner marks every notification read at once', async ({ page, browser }
 
   for (const memberId of [awa, moussa]) {
     await editor.goto(`/tree/${treeId}/member/${memberId}/edit`)
+    await editor.getByRole('tab', { name: 'Bio', exact: true }).click()
     await editor.getByLabel('Biographie').fill('Texte.')
     await editor.getByRole('button', { name: 'Enregistrer les modifications' }).click()
     await expect(
@@ -96,6 +96,7 @@ test('the account badge picks up a new notification without reloading the page',
   const account = await registerThroughUi(editor)
   await seedAcceptedInvitation(treeId, account.email, 'EDITOR')
   await editor.goto(`/tree/${treeId}/member/${awa}/edit`)
+  await editor.getByRole('tab', { name: 'Culture', exact: true }).click()
   await editor.getByLabel('Tribu').fill('Soninke')
   await editor.getByRole('button', { name: 'Enregistrer les modifications' }).click()
 

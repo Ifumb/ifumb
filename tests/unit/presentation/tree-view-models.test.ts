@@ -35,8 +35,8 @@ describe('tree view models', () => {
       roleLabel: 'Éditeur',
       historyHref: '/tree/tree_diallo/history',
       settingsHref: null,
-      newMemberHref: null,
-      newUnionHref: null,
+      newMemberHref: '/tree/tree_diallo/members/new',
+      newUnionHref: '/tree/tree_diallo/unions/new',
       suggestionsHref: '/tree/tree_diallo/suggestions',
       connectionRequestsHref: null,
       linksHref: '/tree/tree_diallo/links',
@@ -46,11 +46,13 @@ describe('tree view models', () => {
   it('offers the history and the suggestions to contributors only', () => {
     expect(toTreeViewModel({ ...summary, role: 'VIEWER' })).toMatchObject({
       historyHref: null,
+      newMemberHref: null,
+      newUnionHref: null,
       suggestionsHref: null,
     })
   })
 
-  it('offers the settings, the member form and the connection requests to the owner only', () => {
+  it('offers the settings and connection requests to the owner only', () => {
     expect(toTreeViewModel({ ...summary, role: 'OWNER' })).toMatchObject({
       settingsHref: '/tree/tree_diallo/settings',
       newMemberHref: '/tree/tree_diallo/members/new',
@@ -60,6 +62,8 @@ describe('tree view models', () => {
   })
 
   it('always offers the established links, to anyone who can already read the tree', () => {
-    expect(toTreeViewModel({ ...summary, role: 'VIEWER' }).linksHref).toBe('/tree/tree_diallo/links')
+    expect(toTreeViewModel({ ...summary, role: 'VIEWER' }).linksHref).toBe(
+      '/tree/tree_diallo/links',
+    )
   })
 })

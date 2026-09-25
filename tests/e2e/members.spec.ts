@@ -46,6 +46,7 @@ test('the tree page lists its members, and the search narrows them', async ({ pa
   const { treeId } = await seedDialloFamily(page)
   await page.goto(`/tree/${treeId}`)
 
+  await page.locator('.tree-sidebar > summary').click()
   await expect(memberNames(page)).toHaveText(['Awa Diallo', 'Fatou Sow', 'Moussa Diallo'])
   await expectNoAccessibilityViolations(page)
 
@@ -64,6 +65,7 @@ test('a member profile shows facts and relations, and leads to relatives', async
   await page.goto(`/tree/${treeId}/member/${awa}`)
 
   await expect(page.getByRole('heading', { level: 1, name: 'Awa Diallo' })).toBeVisible()
+  await page.getByRole('tab', { name: 'Dates & Lieux' }).click()
   await expect(page.getByText('vers 12 mai 1932')).toBeVisible()
   const partnerUnions = page.getByRole('region', { name: 'Parent dans' })
   await expect(partnerUnions).toContainText('Mariage (depuis 1955)')

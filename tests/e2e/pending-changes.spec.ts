@@ -33,11 +33,10 @@ test('the owner approves a proposal, which the editor sees applied', async ({ pa
   await seedAcceptedInvitation(treeId, account.email, 'EDITOR')
 
   await editor.goto(`/tree/${treeId}/member/${awa}/edit`)
+  await editor.getByRole('tab', { name: 'Culture', exact: true }).click()
   await editor.getByLabel('Tribu').fill('Soninke')
   await editor.getByRole('button', { name: 'Enregistrer les modifications' }).click()
-  await expect(
-    editor.getByRole('status').filter({ hasText: 'Proposition envoyée' }),
-  ).toBeVisible()
+  await expect(editor.getByRole('status').filter({ hasText: 'Proposition envoyée' })).toBeVisible()
 
   await page.goto(`/tree/${treeId}/pending`)
   await expect(heading(page, `Modifications en attente — Famille Diallo`)).toBeVisible()
@@ -48,6 +47,7 @@ test('the owner approves a proposal, which the editor sees applied', async ({ pa
   await expect(page.getByRole('status').filter({ hasText: 'approuvée' })).toBeVisible()
 
   await page.goto(`/tree/${treeId}/member/${awa}`)
+  await page.getByRole('tab', { name: 'Culture', exact: true }).click()
   await expect(page.getByText('Soninke')).toBeVisible()
   await editorContext.close()
 })
@@ -63,11 +63,10 @@ test('the owner rejects a proposal with a comment, which its author reads', asyn
   await seedAcceptedInvitation(treeId, account.email, 'EDITOR')
 
   await editor.goto(`/tree/${treeId}/member/${awa}/edit`)
+  await editor.getByRole('tab', { name: 'Bio', exact: true }).click()
   await editor.getByLabel('Biographie').fill('Texte à vérifier.')
   await editor.getByRole('button', { name: 'Enregistrer les modifications' }).click()
-  await expect(
-    editor.getByRole('status').filter({ hasText: 'Proposition envoyée' }),
-  ).toBeVisible()
+  await expect(editor.getByRole('status').filter({ hasText: 'Proposition envoyée' })).toBeVisible()
 
   await page.goto(`/tree/${treeId}/pending`)
   await page.getByLabel('Commentaire (facultatif)').fill('Merci de citer une source.')
@@ -95,14 +94,14 @@ test('the owner approves every pending proposal at once, after confirming', asyn
   await seedAcceptedInvitation(treeId, account.email, 'EDITOR')
 
   await editor.goto(`/tree/${treeId}/member/${awa}/edit`)
+  await editor.getByRole('tab', { name: 'Culture', exact: true }).click()
   await editor.getByLabel('Tribu').fill('Soninke')
   await editor.getByRole('button', { name: 'Enregistrer les modifications' }).click()
   await editor.goto(`/tree/${treeId}/member/${moussa}/edit`)
+  await editor.getByRole('tab', { name: 'Bio', exact: true }).click()
   await editor.getByLabel('Biographie').fill('Né à Labé.')
   await editor.getByRole('button', { name: 'Enregistrer les modifications' }).click()
-  await expect(
-    editor.getByRole('status').filter({ hasText: 'Proposition envoyée' }),
-  ).toBeVisible()
+  await expect(editor.getByRole('status').filter({ hasText: 'Proposition envoyée' })).toBeVisible()
 
   await page.goto(`/tree/${treeId}/pending`)
   await page.getByRole('link', { name: 'Tout approuver' }).click()
@@ -112,6 +111,7 @@ test('the owner approves every pending proposal at once, after confirming', asyn
   await expect(page.getByRole('status').filter({ hasText: '2 approuvée' })).toBeVisible()
 
   await page.goto(`/tree/${treeId}/member/${awa}`)
+  await page.getByRole('tab', { name: 'Culture', exact: true }).click()
   await expect(page.getByText('Soninke')).toBeVisible()
   await editorContext.close()
 })

@@ -40,6 +40,9 @@ describe('toMemberNodeData', () => {
     expect(toMemberNodeData('tree_1', aGraphMember(), PHOTOS)).toEqual({
       kind: 'member',
       name: 'awa Diallo',
+      firstName: 'awa',
+      lastName: 'Diallo',
+      pivotHref: null,
       href: '/tree/tree_1/member/mbr_awa',
       initial: 'A',
       lifespan: '1932 – 2001',
@@ -59,6 +62,22 @@ describe('toMemberNodeData', () => {
 
   it('has no tribe label when none is recorded', () => {
     expect(toMemberNodeData('tree_1', aGraphMember({ tribes: [] }), PHOTOS).tribesLabel).toBeNull()
+  })
+
+  it('offers a pivot only for a connected local member other than the current pivot', () => {
+    const member = aGraphMember()
+    expect(toMemberNodeData('tree_1', member, PHOTOS, { connected: true }).pivotHref).toBe(
+      '/tree/tree_1/graph?view=lineage&member=mbr_awa&up=1&down=4',
+    )
+    expect(
+      toMemberNodeData('tree_1', member, PHOTOS, { connected: true, pivotId: member.id }).pivotHref,
+    ).toBeNull()
+    expect(
+      toMemberNodeData('tree_1', member, PHOTOS, {
+        connected: true,
+        foreign: { treeId: 'foreign', treeName: 'Autre arbre' },
+      }).pivotHref,
+    ).toBeNull()
   })
 
   it('keeps a photo from the member photos bucket', () => {

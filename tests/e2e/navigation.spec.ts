@@ -15,7 +15,7 @@ test('signed-in readers keep their account navigation on tree pages', async ({ p
 
   await page.goto(`/tree/${treeId}`)
 
-  const accountNav = page.getByRole('navigation', { name: 'Compte' })
+  const accountNav = page.getByRole('banner')
   await expect(accountNav.getByRole('button', { name: 'Se déconnecter' })).toBeVisible()
 })
 
@@ -32,7 +32,7 @@ test('the account navigation marks the current page and never prefetches it', as
   await page.reload()
   await page.waitForTimeout(PREFETCH_OBSERVATION_MS)
 
-  const currentLink = page.getByRole('navigation', { name: 'Compte' }).getByRole('link', {
+  const currentLink = page.getByRole('banner').getByRole('link', {
     name: 'Mes arbres',
   })
   await expect(currentLink).toHaveAttribute('aria-current', 'page')
