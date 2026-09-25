@@ -1,7 +1,7 @@
 import type { ComponentPropsWithoutRef } from 'react'
 
-export type ButtonVariant = 'primary' | 'secondary'
-export type ButtonSize = 'md'
+export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'forest'
+export type ButtonSize = 'md' | 'sm'
 
 type ButtonProps = ComponentPropsWithoutRef<'button'> & {
   variant?: ButtonVariant
@@ -10,15 +10,19 @@ type ButtonProps = ComponentPropsWithoutRef<'button'> & {
   loading?: boolean
 }
 
-const BASE_CLASS_NAME = 'rounded-md font-semibold disabled:opacity-70'
+const BASE_CLASS_NAME =
+  'inline-flex items-center justify-center gap-1.5 rounded-lg text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60'
 
 const VARIANT_CLASS_NAMES: Readonly<Record<ButtonVariant, string>> = {
-  primary: 'bg-brand-dark text-earth-ivory',
-  secondary: 'border-2 border-brand-dark text-brand-dark',
+  primary: 'bg-brand text-white hover:bg-brand-dark',
+  secondary: 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50',
+  ghost: 'text-gray-600 hover:bg-gray-100 hover:text-brand',
+  forest: 'bg-forest text-white hover:bg-forest-light',
 }
 
 const SIZE_CLASS_NAMES: Readonly<Record<ButtonSize, string>> = {
   md: 'min-h-11 px-4 py-2',
+  sm: 'min-h-8 px-3 py-1.5',
 }
 
 /** The classes of a button, for links that must look like one. */

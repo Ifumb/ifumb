@@ -3,17 +3,19 @@
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
+import { Icon } from '@/presentation/components/ui/icon'
 
 const POLL_INTERVAL_MS = 15_000
 
-type NotificationBadgeProps = Readonly<{ initialUnreadCount: number }>
+type NotificationBadgeProps = Readonly<{ initialUnreadCount: number; onNavigate?: () => void }>
 
 /**
  * The unread count from the server render, kept fresh by a light client poll (module 2.7 — real
  * time was chosen over the RSC-only default; see the plan and ADR 0004). Failing polls are
  * ignored: the badge just keeps its last known count and tries again next time.
  */
-export function NotificationBadge({ initialUnreadCount }: NotificationBadgeProps) {
+// reason: le badge conserve son compteur et son cycle de polling lors des navigations.
+export function NotificationBadge({ initialUnreadCount, onNavigate }: NotificationBadgeProps) {
   const [unreadCount, setUnreadCount] = useState(initialUnreadCount)
   const pathname = usePathname()
 
@@ -40,12 +42,18 @@ export function NotificationBadge({ initialUnreadCount }: NotificationBadgeProps
     <Link
       href="/notifications"
       prefetch={false}
+      className="icon-button relative"
+      onClick={onNavigate}
+      aria-label={unreadCount > 0 ? `Notifications (${unreadCount})` : 'Notifications'}
+      title="Notifications"
       aria-current={pathname === '/notifications' ? 'page' : undefined}
     >
-      Notifications
+      <Icon name="bell" />
       {/* reason: always mounted, like StatusMessage — a region only inserted once there is
           something to say is not reliably announced when that first change happens. */}
-      <span aria-live="polite">{unreadCount > 0 ? ` (${unreadCount})` : ''}</span>
+      <span aria-live="polite" className={unreadCount > 0 ? 'notification-count' : 'sr-only'}>
+        {unreadCount > 0 ? unreadCount : ''}
+      </span>
     </Link>
   )
 }

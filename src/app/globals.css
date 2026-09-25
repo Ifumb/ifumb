@@ -1,8 +1,15 @@
 @import 'tailwindcss';
+/* reason: les imports CSS relatifs sont résolus par Tailwind ; la règle @/ s’applique aux modules TypeScript. */
+@import '../presentation/styles/shell.css';
+@import '../presentation/styles/overlays.css';
+@import '../presentation/styles/workspace.css';
+@import '../presentation/styles/tours.css';
 
 /* IFUMB palette — terracotta, gold, ivory, forest green (ported from the legacy Tailwind config). */
 @theme {
   --color-foreground: #1e140a;
+  --color-muted-foreground: #606b7a;
+  --color-gray-500: #606b7a;
 
   --color-brand: #c1440e;
   --color-brand-dark: #8b2e06;
@@ -31,7 +38,7 @@
 
 @layer base {
   body {
-    @apply bg-earth-ivory text-foreground antialiased;
+    @apply bg-earth-ivory font-sans text-gray-900 antialiased;
   }
 
   /* Visible focus everywhere; brand-dark keeps a contrast above 3:1 on ivory (WCAG 1.4.11). */
@@ -41,14 +48,29 @@
   }
 
   a {
-    @apply text-brand-dark underline underline-offset-2;
+    @apply text-brand-dark underline-offset-2;
+  }
+
+  :is(p, dd, h2, h3) a {
+    @apply underline;
+  }
+
+  button,
+  summary {
+    cursor: pointer;
+  }
+
+  input:not([type='checkbox']):not([type='radio']):not([type='hidden']),
+  select,
+  textarea {
+    @apply border-gray-300 text-sm;
   }
 }
 
 @layer components {
   /* Skip link: off-screen until focused, then shown as the first thing on the page. */
   .skip-link {
-    @apply absolute left-2 -translate-y-24 rounded-md bg-foreground px-4 py-2 text-earth-ivory no-underline;
+    @apply absolute left-2 z-50 -translate-y-24 rounded-md bg-foreground px-4 py-2 text-earth-ivory no-underline;
   }
 
   .skip-link:focus-visible {

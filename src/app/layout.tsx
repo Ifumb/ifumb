@@ -13,9 +13,9 @@ export const metadata: Metadata = {
   description: 'Construisez et partagez votre arbre généalogique familial et culturel.',
 }
 
-type RootLayoutProps = Readonly<{ children: ReactNode }>
+type RootLayoutProps = Readonly<{ children: ReactNode; overlay: ReactNode }>
 
-export default function RootLayout({ children }: RootLayoutProps) {
+export default function RootLayout({ children, overlay }: RootLayoutProps) {
   return (
     <html lang="fr">
       <body>
@@ -23,9 +23,10 @@ export default function RootLayout({ children }: RootLayoutProps) {
           Aller au contenu
         </a>
         <SiteHeader />
-        <main id="main" tabIndex={-1} className="mx-auto max-w-5xl px-4 py-10">
+        <main id="main" tabIndex={-1} className="page-shell">
           {children}
         </main>
+        {overlay}
       </body>
     </html>
   )

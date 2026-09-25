@@ -1,7 +1,7 @@
 import type { Ref } from 'react'
 
 const SELECT_CLASS_NAME = [
-  'min-h-11 rounded-md border border-earth-bark bg-white px-3 py-2',
+  'min-h-11 rounded-md border border-gray-300 bg-white px-3 py-2',
   'aria-invalid:border-2 aria-invalid:border-brand-dark',
 ].join(' ')
 

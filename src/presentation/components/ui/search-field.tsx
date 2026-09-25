@@ -20,7 +20,7 @@ export function SearchField({ id, name, label, defaultValue }: SearchFieldProps)
         type="search"
         defaultValue={defaultValue}
         maxLength={SEARCH_TEXT_MAX_LENGTH}
-        className="min-h-11 rounded-md border border-earth-bark bg-white px-3 py-2"
+        className="min-h-11 rounded-md border border-gray-300 bg-white px-3 py-2"
       />
     </div>
   )
