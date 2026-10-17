@@ -22,6 +22,10 @@ export default defineConfig({
   use: {
     baseURL: BASE_URL,
     trace: 'on-first-retry',
+    // reason: driver.js's entrance fade (respects prefers-reduced-motion) otherwise lets axe
+    // sample a popover mid-transition, catching a blended, under-contrast interpolated color
+    // instead of the final one — flaky, not a real contrast defect.
+    reducedMotion: 'reduce',
   },
   webServer: [
     {
