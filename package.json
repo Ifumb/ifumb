@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "IFUMB — réseau généalogique culturel (Next.js)",
+  "description": "IFUMB — réseau généalogique culturel",
   "packageManager": "pnpm@12.3.4",
   "engines": {
     "node": "22.x"
