@@ -17,9 +17,16 @@ test('the home page renders without console errors', async ({ page }) => {
       consoleErrors.push(message.text())
     }
   })
+  // reason: Vercel injects its own toolbar script (team member "Live Feedback"), which probes
+  // vercel.com/api/jwt to check whether the visitor is a team member — an anonymous visitor
+  // (including this check) correctly gets a 403 there. Not our origin, not our bug.
+  const deployedOrigin = new URL(process.env.SMOKE_BASE_URL!).origin
   const failedRequests: string[] = []
   page.on('response', (response) => {
-    if (response.status() >= 400) failedRequests.push(`${response.status()} ${response.url()}`)
+    const sameOrigin = new URL(response.url()).origin === deployedOrigin
+    if (sameOrigin && response.status() >= 400) {
+      failedRequests.push(`${response.status()} ${response.url()}`)
+    }
   })
 
   await page.goto('/')
