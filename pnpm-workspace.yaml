@@ -10,6 +10,13 @@ allowBuilds:
   unrs-resolver: true
 
 # Remove each override once `pnpm why <package>` shows the upstream dependency requiring it by itself.
+auditConfig:
+  ignoreGhsas:
+    # reason: braces <=3.0.3 has no patched version at all (dev-only, via eslint-config-next's
+    # @next/eslint-plugin-next > fast-glob > micromatch, never shipped to production). Remove
+    # once a fix is published upstream.
+    - GHSA-vfj7-8cjw-p6xm
+
 overrides:
   # reason: only reached through the Prisma CLI 7.10.0, which still pins vulnerable versions.
   mysql2: 3.24.4 # GHSA-rgwj-5xj2-c3m3 and the auth-plugin downgrade advisory
@@ -17,3 +24,13 @@ overrides:
   # reason: eslint-plugin-react-hooks resolves `zod@^4` to a release younger than pnpm's minimum
   # release age; one pinned version everywhere avoids adding an exception to that supply-chain policy.
   zod: 4.6.2
+  # reason: dev-only, deep inside eslint-config-next's own dependency tree (minimatch, ajv,
+  # postcss) ; `pnpm audit --fix` picked these ranges to cover every vulnerable minor found.
+  brace-expansion@<1.1.19: ^1.1.19
+  brace-expansion@<1.1.20: ^1.1.20
+  brace-expansion@<1.1.21: ^1.1.21
+  brace-expansion@>=4.0.0 <5.0.10: ^5.0.10
+  brace-expansion@>=4.0.0 <5.0.11: ^5.0.11
+  brace-expansion@>=4.0.0 <5.0.12: ^5.0.12
+  fast-uri@>=3.0.0 <3.1.8: ^3.1.8
+  source-map-js@>=1.0.0 <1.2.2: ^1.2.2
