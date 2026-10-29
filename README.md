@@ -1,8 +1,17 @@
 # ifumb
 
-Migration de l'application IFUMB (réseau généalogique culturel) vers Next.js 16, en Clean
-Architecture. Les règles de migration sont dans le `CLAUDE.md` du dépôt parent ; les règles
-d'architecture dans le skill `nextjs-clean-architect`.
+IFUMB est un réseau généalogique pensé pour l'Afrique et sa diaspora. Les grandes plateformes
+généalogiques (Ancestry, MyHeritage, FamilySearch, Geni…) sont construites autour de registres
+d'état civil occidentaux numérisés — un modèle qui ne correspond pas à la réalité de la plupart
+des familles africaines, où la généalogie se transmet oralement, par la tribu, le clan, la
+lignée. IFUMB part de cette réalité plutôt que de l'ignorer : la tribu, le clan et l'ethnie sont
+des champs de premier niveau sur chaque membre, la structure familiale est pensée autour de
+l'union plutôt que du couple nucléaire unique, et des arbres peuvent être reliés entre eux pour
+reconnecter les branches dispersées par la diaspora.
+
+Ce dépôt est la migration de l'application vers Next.js 16, en Clean Architecture. Les règles de
+migration sont dans le `CLAUDE.md` du dépôt parent ; les règles d'architecture dans le skill
+`nextjs-clean-architect`.
 
 ## Prérequis
 
