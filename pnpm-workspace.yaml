@@ -23,7 +23,9 @@ overrides:
   deepmerge-ts: 8.0.2 # stack exhaustion on recursive object graphs (via @prisma/config)
   # reason: eslint-plugin-react-hooks resolves `zod@^4` to a release younger than pnpm's minimum
   # release age; one pinned version everywhere avoids adding an exception to that supply-chain policy.
-  zod: 4.6.2
+  # GHSA-mrhx-c7xc-m3w5 (memory exhaustion on oversized constrained collections, <4.6.6) forces
+  # this forward from 4.6.2 — 4.6.7 was already 17 days old when pinned, clear of that policy.
+  zod: 4.6.7
   # reason: dev-only, deep inside eslint-config-next's own dependency tree (minimatch, ajv,
   # postcss) ; `pnpm audit --fix` picked these ranges to cover every vulnerable minor found.
   brace-expansion@<1.1.19: ^1.1.19
@@ -34,3 +36,6 @@ overrides:
   brace-expansion@>=4.0.0 <5.0.12: ^5.0.12
   fast-uri@>=3.0.0 <3.1.8: ^3.1.8
   source-map-js@>=1.0.0 <1.2.2: ^1.2.2
+  # reason: dev-only, via vitest's bundler dependency (launch-editor's fs.existsSync bypass on
+  # Windows, GHSA-587h-7wmj-h5pm, <=8.3.2) ; never shipped to production.
+  vite@>=8.3.0 <8.3.3: ^8.3.5
