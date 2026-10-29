@@ -2,7 +2,7 @@
 import 'server-only'
 import type { Route } from 'next'
 import { AuthError } from 'next-auth'
-import { redirect } from 'next/navigation'
+import { redirect, unstable_rethrow } from 'next/navigation'
 import { signIn, signOut, TooManySignInAttempts } from '@/infrastructure/auth/auth'
 import { container } from '@/infrastructure/di/container'
 import { currentClientIp } from '@/infrastructure/http/client-ip'
@@ -88,12 +88,16 @@ async function signInWithPassword(email: string, password: string): Promise<void
   await signIn('credentials', { email, password, redirect: false })
 }
 
-/** The account exists at this point: if signing in is refused, the user can still log in later. */
+/**
+ * The account exists at this point: whatever goes wrong here — a credentials refusal, a database
+ * hiccup, anything — the user can still sign in from `/login` once it clears, rather than being
+ * left on an unhandled Server Action error with no visible account creation.
+ */
 async function signInAfterRegistration(email: string, password: string): Promise<void> {
   try {
     await signInWithPassword(email, password)
   } catch (error) {
-    if (error instanceof AuthError) redirect('/login')
-    throw error
+    unstable_rethrow(error)
+    redirect('/login')
   }
 }
