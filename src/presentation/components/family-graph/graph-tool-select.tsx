@@ -175,7 +175,7 @@ export function GraphToolSelect({
                 onClick={() => commit(index)}
                 className={[
                   'cursor-pointer px-3 py-1.5 text-sm outline-none',
-                  index === activeIndex ? 'bg-brand text-white' : 'text-gray-700',
+                  index === activeIndex ? 'bg-brand text-white' : 'text-gray-700 hover:bg-gray-100',
                 ].join(' ')}
               >
                 {entry.label}
