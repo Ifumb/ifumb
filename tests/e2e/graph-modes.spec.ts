@@ -40,31 +40,9 @@ async function seedFourGenerations(page: Page) {
 }
 
 const memberLinks = (page: Page) => page.locator('.react-flow__node-member').getByRole('link')
+/** The one remaining `<details>` tool: Descendance. */
 const tool = (page: Page, title: string) =>
-  page.locator('details').filter({
-    has: page.locator('summary').filter({
-      hasText:
-        title === 'Chemin de parenté'
-          ? 'Chemin'
-          : title === 'Ancêtres communs'
-            ? 'Ancêtres'
-            : title,
-    }),
-  })
-
-async function usePairTool(
-  page: Page,
-  title: string,
-  first: string,
-  second: string,
-  submit: string,
-) {
-  const section = tool(page, title)
-  await section.locator('summary').click()
-  await section.getByLabel('Membre A').selectOption({ label: first })
-  await section.getByLabel('Membre B').selectOption({ label: second })
-  await section.getByRole('button', { name: submit }).click()
-}
+  page.locator('details').filter({ has: page.locator('summary').filter({ hasText: title }) })
 
 /** A custom listbox (module: graph tools parity): its options portal to `document.body`, outside
  * whichever popover its combobox button sits in — scoped by the listbox's own accessible name
@@ -74,15 +52,28 @@ async function selectGraphToolOption(page: Page, panel: Locator, label: string, 
   await page.getByRole('listbox', { name: label }).getByRole('option', { name: optionLabel, exact: true }).click()
 }
 
-/** Chemin de parenté is a floating popover (module: graph tools parity), not an inline form. */
-async function useKinshipPanel(page: Page, first: string, second: string) {
-  await page.getByRole('button', { name: 'Chemin', exact: true }).click()
-  const panel = page.getByRole('region', { name: 'Chemin de parenté' })
+/** Chemin de parenté and Ancêtres communs are floating popovers (module: graph tools parity),
+ * not inline forms — each field already excludes the other's own choice. */
+async function usePairPanel(
+  page: Page,
+  trigger: string,
+  regionName: string,
+  first: string,
+  second: string,
+) {
+  await page.getByRole('button', { name: trigger, exact: true }).click()
+  const panel = page.getByRole('region', { name: regionName })
   await selectGraphToolOption(page, panel, 'Membre A', first)
   await selectGraphToolOption(page, panel, 'Membre B', second)
   await panel.getByRole('button', { name: 'Calculer' }).click()
   return panel
 }
+
+const useKinshipPanel = (page: Page, first: string, second: string) =>
+  usePairPanel(page, 'Chemin', 'Chemin de parenté', first, second)
+
+const useCommonAncestorsPanel = (page: Page, first: string, second: string) =>
+  usePairPanel(page, 'Ancêtres', 'Ancêtres communs', first, second)
 
 test('the lineage of a member opens from their profile and widens on demand', async ({ page }) => {
   const { treeId, ids } = await seedFourGenerations(page)
@@ -168,50 +159,23 @@ test('common ancestors are listed with their distances', async ({ page }) => {
   const { treeId } = await seedFourGenerations(page)
   await page.goto(`/tree/${treeId}/graph`)
 
-  await usePairTool(
-    page,
-    'Ancêtres communs',
-    'Fatou Sow',
-    'Ibrahima Sow',
-    'Chercher les ancêtres communs',
-  )
+  const panel = await useCommonAncestorsPanel(page, 'Fatou Sow', 'Ibrahima Sow')
 
-  const result = page.getByRole('region', { name: 'Ancêtres communs' })
-  await expect(result.getByRole('status')).toHaveText(
+  await expect(panel.getByRole('status')).toContainText(
     '3 ancêtres communs à Fatou Sow et Ibrahima Sow.',
   )
-  await expect(result.getByRole('listitem').getByRole('link')).toHaveText([
-    'Awa Diallo',
-    'Moussa Diallo',
-    'Alpha Diallo',
-  ])
-  await expect(result).toContainText(
+  const ancestors = panel.getByRole('list', { name: 'Ancêtres communs' }).getByRole('listitem')
+  await expect(ancestors).toHaveCount(3)
+  await expect(ancestors.nth(0)).toContainText('Awa Diallo')
+  await expect(ancestors.nth(0)).toContainText(
     '1 génération depuis Fatou Sow · 2 générations depuis Ibrahima Sow',
   )
+  await expect(ancestors.nth(1)).toContainText('Moussa Diallo')
+  await expect(ancestors.nth(2)).toContainText('Alpha Diallo')
   await expectNoAccessibilityViolations(page)
-})
 
-test('the tools explain an incomplete choice', async ({ page }) => {
-  const { treeId } = await seedFourGenerations(page)
-  await page.goto(`/tree/${treeId}/graph`)
-
-  // Chemin de parenté no longer reaches this: each select now excludes the other's own choice
-  // (module: graph tools parity), the same prevention the legacy panel always had. Ancêtres
-  // communs is not converted yet and still reaches it through a real submission.
-  await usePairTool(
-    page,
-    'Ancêtres communs',
-    'Awa Diallo',
-    'Awa Diallo',
-    'Chercher les ancêtres communs',
-  )
-
-  await expect(tool(page, 'Ancêtres communs').getByRole('alert')).toHaveText(
-    'Choisissez deux membres différents.',
-  )
-  await expect(tool(page, 'Ancêtres communs').getByLabel('Membre A')).toHaveAccessibleDescription(
-    'Choisissez deux membres différents.',
-  )
+  await panel.getByRole('button', { name: 'Fermer' }).click()
+  await expect(panel).toHaveCount(0)
 })
 
 test('a private tree names nobody through the tools, and unknown members are a 404', async ({
