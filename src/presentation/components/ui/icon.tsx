@@ -1,7 +1,10 @@
 import {
+  ArrowDown,
+  ArrowUp,
   Bell,
   ChevronLeft,
   ChevronRight,
+  ChevronsDown,
   CircleHelp,
   Copy,
   Dna,
@@ -59,6 +62,9 @@ const ICONS = {
   fit: Maximize2,
   heart: Heart,
   dna: Dna,
+  up: ArrowUp,
+  down: ArrowDown,
+  descend: ChevronsDown,
 } as const
 
 export type IconName = keyof typeof ICONS
