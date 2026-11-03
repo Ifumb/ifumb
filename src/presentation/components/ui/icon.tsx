@@ -2,6 +2,7 @@ import {
   ArrowDown,
   ArrowUp,
   Bell,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
   ChevronsDown,
@@ -65,6 +66,7 @@ const ICONS = {
   up: ArrowUp,
   down: ArrowDown,
   descend: ChevronsDown,
+  chevronDown: ChevronDown,
 } as const
 
 export type IconName = keyof typeof ICONS

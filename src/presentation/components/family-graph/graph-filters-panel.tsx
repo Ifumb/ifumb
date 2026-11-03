@@ -2,8 +2,9 @@
 
 import { useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { GraphToolSelect } from '@/presentation/components/family-graph/graph-tool-select'
 import { Button } from '@/presentation/components/ui/button'
-import { LabelledSelect, type SelectOption } from '@/presentation/components/ui/labelled-select'
+import type { SelectOption } from '@/presentation/components/ui/labelled-select'
 import {
   activeFilterCount,
   GENDERS,
@@ -85,7 +86,7 @@ function FilterFieldset({ options, filters, onChange }: GraphFiltersPanelProps) 
     <fieldset className="space-y-3">
       <legend className="sr-only">Filtrer les membres affichés</legend>
       {filterFields(options).map(({ key, ...field }) => (
-        <LabelledSelect
+        <GraphToolSelect
           key={key}
           id={`graph-filter-${key}`}
           {...field}
