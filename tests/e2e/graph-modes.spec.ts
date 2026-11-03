@@ -71,18 +71,21 @@ test('the lineage of a member opens from their profile and widens on demand', as
   await page.goto(`/tree/${treeId}/member/${ids.fatou}`)
 
   await page.getByRole('link', { name: 'Voir sa descendance dans le graphe' }).click()
-  const banner = page.getByRole('region', { name: 'Descendance de Fatou Sow' })
-  await expect(banner.getByRole('status')).toHaveText('Générations affichées : de −1 à +4.')
+  const banner = page.getByRole('region', { name: 'Pivot : Fatou Sow' })
+  await expect(banner).toContainText('gen −1 à +4')
   await expect(memberLinks(page)).toHaveCount(4)
   await expect(page.locator(`[data-id="member_${ids.fatou}"]`)).toContainText('Pivot')
   await expect(page.locator(`[data-id="member_${ids.ibrahima}"]`)).toContainText('+1')
   await expectNoAccessibilityViolations(page)
 
-  await banner.getByRole('link', { name: 'Une génération d’ancêtres de plus' }).click()
+  // Instant, in place: no navigation, the URL this page opened on stays as it is.
+  await banner.getByRole('button', { name: 'ancêtres' }).click()
   await expect(memberLinks(page)).toHaveCount(5)
   await expect(page.locator(`[data-id="member_${ids.sekou}"]`)).toHaveCount(0)
+  await expect(page).toHaveURL(new RegExp(`/tree/${treeId}/graph\\?view=lineage`))
 
-  await page.getByRole('link', { name: 'Quitter la vue descendance' }).click()
+  await banner.getByRole('button', { name: 'Quitter' }).click()
+  await expect(banner).toHaveCount(0)
   await expect(memberLinks(page)).toHaveCount(6)
 })
 
@@ -96,7 +99,7 @@ test('the descendance tool narrows the graph to the chosen member', async ({ pag
   await section.getByRole('button', { name: 'Voir la descendance' }).click()
 
   await expect(page).toHaveURL(/view=lineage/)
-  await expect(page.getByRole('region', { name: 'Descendance de Moussa Diallo' })).toBeVisible()
+  await expect(page.getByRole('region', { name: 'Pivot : Moussa Diallo' })).toBeVisible()
   // Moussa, Alpha above, Awa as co-parent of Fatou, Fatou and Ibrahima below; not Sekou.
   await expect(memberLinks(page)).toHaveCount(5)
 })

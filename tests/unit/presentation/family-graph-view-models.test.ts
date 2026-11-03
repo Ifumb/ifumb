@@ -42,7 +42,7 @@ describe('toMemberNodeData', () => {
       name: 'awa Diallo',
       firstName: 'awa',
       lastName: 'Diallo',
-      pivotHref: null,
+      pivotMemberId: null,
       href: '/tree/tree_1/member/mbr_awa',
       initial: 'A',
       lifespan: '1932 – 2001',
@@ -66,17 +66,18 @@ describe('toMemberNodeData', () => {
 
   it('offers a pivot only for a connected local member other than the current pivot', () => {
     const member = aGraphMember()
-    expect(toMemberNodeData('tree_1', member, PHOTOS, { connected: true }).pivotHref).toBe(
-      '/tree/tree_1/graph?view=lineage&member=mbr_awa&up=1&down=4',
+    expect(toMemberNodeData('tree_1', member, PHOTOS, { connected: true }).pivotMemberId).toBe(
+      'mbr_awa',
     )
     expect(
-      toMemberNodeData('tree_1', member, PHOTOS, { connected: true, pivotId: member.id }).pivotHref,
+      toMemberNodeData('tree_1', member, PHOTOS, { connected: true, pivotId: member.id })
+        .pivotMemberId,
     ).toBeNull()
     expect(
       toMemberNodeData('tree_1', member, PHOTOS, {
         connected: true,
         foreign: { treeId: 'foreign', treeName: 'Autre arbre' },
-      }).pivotHref,
+      }).pivotMemberId,
     ).toBeNull()
   })
 

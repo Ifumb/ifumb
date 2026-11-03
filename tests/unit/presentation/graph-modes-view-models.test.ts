@@ -1,13 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import type { LineageView } from '@/core/use-cases/family-graph-views'
 import type { GenderedPerson, KinshipResult } from '@/core/use-cases/kinship-views'
 import { toCommonAncestorsViewModel } from '@/presentation/mappers/common-ancestors-view-models'
 import { toGraphToolsViewModel } from '@/presentation/mappers/graph-tools-view-models'
 import { toKinshipResultViewModel } from '@/presentation/mappers/kinship-view-models'
-import {
-  relativeGenerationLabel,
-  toLineageBannerViewModel,
-} from '@/presentation/mappers/lineage-view-models'
+import { relativeGenerationLabel } from '@/presentation/mappers/lineage-view-models'
 
 const person = (id: string, firstName: string, gender: GenderedPerson['gender'] = null) => ({
   id,
@@ -116,45 +112,6 @@ describe('toCommonAncestorsViewModel', () => {
       '2 ancêtres communs à Fatou Diallo et Ibrahima Diallo.',
       'Aucun ancêtre commun trouvé entre Fatou Diallo et Ibrahima Diallo.',
     ])
-  })
-})
-
-describe('toLineageBannerViewModel', () => {
-  const lineage: LineageView = {
-    pivot: { id: 'fatou', firstName: 'Fatou', lastName: 'Diallo' },
-    ancestors: 1,
-    descendants: 4,
-    hasDescendants: true,
-    deepestDescendantShown: 2,
-  }
-  const href = (up: number, down: number) =>
-    `/tree/t/graph?view=lineage&member=fatou&up=${up}&down=${down}`
-
-  it('offers to widen or narrow the generations shown', () => {
-    const banner = toLineageBannerViewModel('t', lineage)
-
-    expect(banner.rangeLabel).toBe('Générations affichées : de −1 à +4.')
-    expect(banner.actions.map((action) => action.href)).toEqual([
-      href(2, 4),
-      href(1, 5),
-      href(1, 1),
-    ])
-    expect([banner.noDescendantsMessage, banner.quitHref]).toEqual([null, '/tree/t/graph'])
-  })
-
-  it('offers no action that would change nothing', () => {
-    const banner = toLineageBannerViewModel('t', {
-      ...lineage,
-      ancestors: 20,
-      descendants: 0,
-      hasDescendants: false,
-      deepestDescendantShown: 0,
-    })
-
-    expect(banner.actions.map((action) => action.href)).toEqual([null, href(20, 1), null])
-    expect(banner.noDescendantsMessage).toBe(
-      'Fatou Diallo n’a pas de descendant enregistré dans cet arbre.',
-    )
   })
 })
 
