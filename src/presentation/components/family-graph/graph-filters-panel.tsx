@@ -1,5 +1,7 @@
 'use client'
 
+import { useLayoutEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Button } from '@/presentation/components/ui/button'
 import { LabelledSelect, type SelectOption } from '@/presentation/components/ui/labelled-select'
 import {
@@ -27,21 +29,60 @@ type FilterField = {
 
 const GENDER_OPTIONS = GENDERS.map((gender) => ({ value: gender, label: GENDER_LABELS[gender] }))
 
+/** The legacy filter button, a toggle over a floating panel — not an inline accordion, so opening
+ * it never pushes the other side tools down. The panel portals to `document.body`: the side-tools
+ * stack it sits in scrolls (`overflow-y-auto`, for a tall stack on a short screen), which would
+ * otherwise clip a panel positioned past that stack's own box. */
 export function GraphFiltersPanel(props: GraphFiltersPanelProps) {
+  const [open, setOpen] = useState(false)
+  const buttonRef = useRef<HTMLButtonElement>(null)
+  const [position, setPosition] = useState({ top: 0, right: 0 })
   const count = activeFilterCount(props.filters)
+
+  useLayoutEffect(() => {
+    if (!open || !buttonRef.current) return
+    const rect = buttonRef.current.getBoundingClientRect()
+    setPosition({ top: rect.bottom + 4, right: window.innerWidth - rect.right })
+  }, [open])
+
   return (
-    <details className="rounded-lg border border-earth-sand bg-white p-3">
-      <summary id="tour-btn-filters" className="cursor-pointer font-semibold">
-        Filtres{count > 0 && ` (${count} actif${count > 1 ? 's' : ''})`}
-      </summary>
-      <FilterFieldset {...props} />
-    </details>
+    <div className="relative">
+      <button
+        ref={buttonRef}
+        type="button"
+        id="tour-btn-filters"
+        aria-expanded={open}
+        onClick={() => setOpen((value) => !value)}
+        className={[
+          'flex items-center gap-2 rounded-lg border bg-white px-3 py-1.5 text-sm shadow-sm transition-colors hover:bg-gray-50',
+          count > 0 ? 'border-brand text-brand' : 'border-earth-sand text-gray-700',
+        ].join(' ')}
+      >
+        Filtres
+        {count > 0 && (
+          <span className="flex size-4 items-center justify-center rounded-full bg-brand text-xs text-white">
+            {count}
+          </span>
+        )}
+      </button>
+      {open &&
+        createPortal(
+          <div
+            style={{ top: position.top, right: position.right }}
+            className="fixed z-30 w-60 rounded-xl border border-earth-sand bg-white p-4 shadow-lg"
+          >
+            <FilterFieldset {...props} />
+          </div>,
+          document.body,
+        )}
+    </div>
   )
 }
 
 function FilterFieldset({ options, filters, onChange }: GraphFiltersPanelProps) {
+  const count = activeFilterCount(filters)
   return (
-    <fieldset className="mt-3 flex flex-wrap items-end gap-4">
+    <fieldset className="space-y-3">
       <legend className="sr-only">Filtrer les membres affichés</legend>
       {filterFields(options).map(({ key, ...field }) => (
         <LabelledSelect
@@ -52,14 +93,23 @@ function FilterFieldset({ options, filters, onChange }: GraphFiltersPanelProps) 
           onChange={(value) => onChange(withFilter(filters, key, value))}
         />
       ))}
-      <Button type="button" variant="secondary" onClick={() => onChange(NO_FILTERS)}>
-        Réinitialiser les filtres
-      </Button>
+      {count > 0 && (
+        <Button
+          type="button"
+          variant="secondary"
+          size="sm"
+          className="w-full"
+          onClick={() => onChange(NO_FILTERS)}
+        >
+          Réinitialiser les filtres
+        </Button>
+      )}
     </fieldset>
   )
 }
 
-/** The filters worth offering: a filter with nothing to choose from is left out. */
+/** Tribu is always offered, even with nothing to choose from — the same as the legacy panel.
+ * The others are left out once there is nothing to filter by. */
 // reason: la table de configuration réunit les quatre facettes sans multiplier les composants.
 function filterFields(options: FilterOptions): FilterField[] {
   const asOptions = (values: readonly string[]) => values.map((value) => ({ value, label: value }))
@@ -80,5 +130,5 @@ function filterFields(options: FilterOptions): FilterField[] {
       options: generations.map((g) => ({ value: String(g), label: `Génération ${g + 1}` })),
     },
   ]
-  return fields.filter((field) => field.options.length > 0)
+  return fields.filter((field) => field.key === 'tribe' || field.options.length > 0)
 }
