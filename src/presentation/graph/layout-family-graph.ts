@@ -142,7 +142,7 @@ function sizeOf(node: UnlaidNode) {
   if (node.data.kind !== 'member') return UNION_NODE_SIZE
   return {
     width: MEMBER_NODE_SIZE.width,
-    height: memberNodeHeight(node.data.bridgeLinks.length, node.data.pivotHref !== null),
+    height: memberNodeHeight(node.data.bridgeLinks.length, node.data.pivotMemberId !== null),
   }
 }
 

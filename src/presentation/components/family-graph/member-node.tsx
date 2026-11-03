@@ -50,7 +50,7 @@ export function MemberNode({
   positionAbsoluteY,
 }: NodeProps<MemberFlowNode>) {
   const panToNode = usePanToFocusedNode(positionAbsoluteX, positionAbsoluteY, MEMBER_NODE_SIZE)
-  const height = memberNodeHeight(data.bridgeLinks.length, data.pivotHref !== null)
+  const height = memberNodeHeight(data.bridgeLinks.length, data.pivotMemberId !== null)
 
   return (
     <div
@@ -67,7 +67,9 @@ export function MemberNode({
       <div style={{ height: MEMBER_NODE_SIZE.height }}>
         <MemberCard data={data} onFocus={panToNode} />
       </div>
-      {data.pivotHref && <MemberPivotButton href={data.pivotHref} name={data.name} />}
+      {data.pivotMemberId && (
+        <MemberPivotButton memberId={data.pivotMemberId} name={data.name} />
+      )}
       {data.bridgeLinks.length > 0 && <BridgeLinkButtons links={data.bridgeLinks} />}
       <Handle
         type="source"

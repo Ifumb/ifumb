@@ -1,7 +1,7 @@
 .tour-help {
   @apply shrink-0 text-gray-500;
 }
-.family-graph > .tour-help {
+.family-graph-canvas-area > .tour-help {
   @apply absolute bottom-4 left-14 z-10 rounded-full border border-gray-200 bg-white shadow-sm;
 }
 

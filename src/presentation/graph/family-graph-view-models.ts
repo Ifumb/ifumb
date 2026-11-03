@@ -1,6 +1,11 @@
 import 'server-only'
 import type { UnionType } from '@/core/entities/union'
-import type { FamilyGraph, GraphMember, GraphUnion } from '@/core/use-cases/family-graph-views'
+import type {
+  FamilyGraph,
+  GraphMember,
+  GraphUnion,
+  LineageView,
+} from '@/core/use-cases/family-graph-views'
 import type { CrossTreeLinkView } from '@/core/use-cases/ports/cross-tree-link-reader'
 import type { PendingAction } from '@/core/use-cases/ports/pending-change-reader'
 import { lifespanLabel } from '@/presentation/formatting/partial-date-format'
@@ -9,6 +14,7 @@ import type {
   BridgeLink,
   ForeignOrigin,
   GraphEdge,
+  LineagePivotViewModel,
   MemberNodeData,
   PendingBadge,
   UnionNodeData,
@@ -16,8 +22,6 @@ import type {
 import { UNION_TYPE_LABELS } from '@/presentation/labels/member-labels'
 import { relativeGenerationLabel } from '@/presentation/mappers/lineage-view-models'
 import { memberLink, unionHref } from '@/presentation/mappers/union-view-models'
-import { DEFAULT_LINEAGE_DEPTH } from '@/presentation/schemas/graph-view-schema'
-import { lineageHref } from './graph-view-urls'
 
 export type UnlaidNode = { readonly id: string; readonly data: MemberNodeData | UnionNodeData }
 
@@ -99,10 +103,7 @@ export function toMemberNodeData(
     name,
     firstName: member.firstName,
     lastName: member.lastName,
-    pivotHref:
-      context.connected && !foreign && member.id !== pivotId
-        ? lineageHref(treeId, member.id, DEFAULT_LINEAGE_DEPTH)
-        : null,
+    pivotMemberId: context.connected && !foreign && member.id !== pivotId ? member.id : null,
     href,
     initial: member.firstName.charAt(0).toLocaleUpperCase('fr'),
     lifespan: lifespanLabel(member.birthDate, member.deathDate),
@@ -178,6 +179,23 @@ function unionEdges(union: GraphUnion): GraphEdge[] {
       target: memberNodeId(childId),
     })),
   ]
+}
+
+/** The active pivot's own state, shared by the initial page render and the client-fetched route
+ * that moves its generation window (module: pivot parity). */
+export function toLineagePivotViewModel(
+  treeId: string,
+  lineage: LineageView | null,
+): LineagePivotViewModel | null {
+  if (!lineage) return null
+  return {
+    memberId: lineage.pivot.id,
+    memberName: memberLink(treeId, lineage.pivot).name,
+    ancestors: lineage.ancestors,
+    descendants: lineage.descendants,
+    hasDescendants: lineage.hasDescendants,
+    deepestDescendantShown: lineage.deepestDescendantShown,
+  }
 }
 
 export function pendingBadge(action: PendingAction | null): PendingBadge | null {

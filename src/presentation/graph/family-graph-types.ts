@@ -1,5 +1,4 @@
 import type { Gender } from '@/core/entities/member'
-import type { GraphHref } from './graph-view-urls'
 import type { MemberHref, UnionHref } from '@/presentation/mappers/union-view-models'
 
 /** A marker telling owners and editors that a change waits for review. */
@@ -23,7 +22,8 @@ export type MemberNodeData = {
   readonly name: string
   readonly firstName: string
   readonly lastName: string | null
-  readonly pivotHref: GraphHref | null
+  /** Set when this member can become a pivot; activating one is a client-side action (not a link). */
+  readonly pivotMemberId: string | null
   readonly href: MemberHref
   readonly initial: string
   readonly lifespan: string | null
@@ -76,6 +76,16 @@ export type FamilyGraphViewModel = {
   readonly edges: readonly GraphEdge[]
   /** Nodes a kinship or ancestors result puts forward; the others are dimmed. Null: no emphasis. */
   readonly emphasis: readonly string[] | null
+}
+
+/** The active pivot's own state, carried outside the node data so the banner can read it directly. */
+export type LineagePivotViewModel = {
+  readonly memberId: string
+  readonly memberName: string
+  readonly ancestors: number
+  readonly descendants: number
+  readonly hasDescendants: boolean
+  readonly deepestDescendantShown: number
 }
 
 export function isMemberNode(

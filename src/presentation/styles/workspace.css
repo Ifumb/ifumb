@@ -56,7 +56,10 @@
     @apply relative min-h-0 min-w-0 flex-1;
   }
   .family-graph {
-    @apply relative h-full w-full;
+    @apply relative flex h-full w-full flex-col;
+  }
+  .family-graph-canvas-area {
+    @apply relative min-h-0 w-full flex-1;
   }
   .graph-canvas {
     @apply h-full w-full bg-earth-ivory;

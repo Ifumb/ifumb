@@ -3,7 +3,6 @@ import type { ReactNode } from 'react'
 import type { GraphHref } from '@/presentation/graph/graph-view-urls'
 import type { CommonAncestorsViewModel } from '@/presentation/mappers/common-ancestors-view-models'
 import type { KinshipResultViewModel } from '@/presentation/mappers/kinship-view-models'
-import type { LineageBannerViewModel } from '@/presentation/mappers/lineage-view-models'
 import { FactList } from '@/presentation/views/fact-list'
 
 type ResultSectionProps = Readonly<{ id: string; title: ReactNode; children: ReactNode }>
@@ -80,37 +79,3 @@ export function CommonAncestorsResultView({
   )
 }
 
-export function LineageBannerView({ banner }: Readonly<{ banner: LineageBannerViewModel }>) {
-  const title = (
-    <>
-      Descendance de <Link href={banner.pivot.href}>{banner.pivot.name}</Link>
-    </>
-  )
-  return (
-    <ResultSection id="lineage-title" title={title}>
-      <p role="status">{banner.rangeLabel}</p>
-      {banner.noDescendantsMessage && <p>{banner.noDescendantsMessage}</p>}
-      <LineageActions banner={banner} />
-    </ResultSection>
-  )
-}
-
-/** A change that would do nothing stays as plain text rather than a link that goes nowhere. */
-function LineageActions({ banner }: Readonly<{ banner: LineageBannerViewModel }>) {
-  return (
-    <ul className="flex flex-wrap gap-x-6 gap-y-2">
-      {banner.actions.map(({ label, href }) => (
-        <li key={label}>
-          {href ? (
-            <Link href={href}>{label}</Link>
-          ) : (
-            <span className="text-earth-bark">{label}</span>
-          )}
-        </li>
-      ))}
-      <li>
-        <Link href={banner.quitHref}>Quitter la vue descendance</Link>
-      </li>
-    </ul>
-  )
-}

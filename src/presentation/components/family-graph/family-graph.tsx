@@ -20,9 +20,12 @@ import { GraphFiltersPanel } from '@/presentation/components/family-graph/graph-
 import { GraphStatus } from '@/presentation/components/family-graph/graph-status'
 import { GraphToolbar } from '@/presentation/components/family-graph/graph-toolbar'
 import { MemberNode } from '@/presentation/components/family-graph/member-node'
+import { PivotBanner } from '@/presentation/components/family-graph/pivot-banner'
+import { PivotProvider } from '@/presentation/components/family-graph/pivot-context'
 import { UnionNode } from '@/presentation/components/family-graph/union-node'
 import { useCrossTreeBranches } from '@/presentation/components/family-graph/use-cross-tree-branches'
 import { useGraphCentring } from '@/presentation/components/family-graph/use-graph-centring'
+import { usePivot } from '@/presentation/components/family-graph/use-pivot'
 import { useFlowNodes, toFlowEdge, type NodeSets } from './flow-nodes'
 import { OVERVIEW_FIT } from '@/presentation/graph/graph-dimensions'
 import { filterOptions, NO_FILTERS, visibleNodeIds } from '@/presentation/graph/graph-filters'
@@ -69,11 +72,13 @@ function FamilyGraphCanvas({
   graph: initialGraph,
   tools,
   result,
+  initialPivot = null,
   actions,
   connections,
 }: FamilyGraphProps) {
   const branches = useCrossTreeBranches(initialGraph)
-  const graph = branches.graph
+  const pivot = usePivot(branches.graph, initialPivot)
+  const graph = pivot.graph
   const [filters, setFilters] = useState(NO_FILTERS)
   const options = useMemo(() => filterOptions(graph.nodes), [graph.nodes])
   const visible = useMemo(() => visibleNodeIds(graph.nodes, graph.edges, filters), [graph, filters])
@@ -81,42 +86,56 @@ function FamilyGraphCanvas({
 
   return (
     <div className="family-graph">
-      <GraphGuidedTour graph={graph} canCreate={Boolean(actions)} />
-      <div className="graph-primary-tools">
-        {actions}
-        <GraphToolbar nodes={graph.nodes} visible={visible} onCentre={centre} onReset={reset} />
-      </div>
-      <div className="graph-side-tools">
-        <GraphFiltersPanel options={options} filters={filters} onChange={setFilters} />
-        {tools}
-        {connections}
-      </div>
-      <div className="graph-status">
-        <GraphStatus nodes={graph.nodes} visible={visible} total={graph.memberCount} />
-      </div>
-      <div className="graph-result">{result}</div>
-      {branches.error && (
-        <p
-          role="alert"
-          className="absolute bottom-4 left-16 z-20 rounded bg-white p-3 text-brand-dark"
-        >
-          {branches.error}
-        </p>
-      )}
-      <CrossTreeBranchProvider
-        value={{
-          expandedLinkIds: branches.expandedLinkIds,
-          pendingLinkId: branches.pendingLinkId,
-          onToggle: branches.toggle,
-        }}
-      >
-        <GraphCanvas
-          key={graph.nodes.map((node) => node.id).join('|')}
-          graph={graph}
-          visible={visible}
-          inFocus={inFocus}
+      {pivot.pivot && (
+        <PivotBanner
+          pivot={pivot.pivot}
+          pending={pivot.pending}
+          onExpandAncestors={pivot.expandAncestors}
+          onExpandDescendants={pivot.expandDescendants}
+          onCollapseDescendants={pivot.collapseDescendants}
+          onQuit={pivot.quit}
         />
-      </CrossTreeBranchProvider>
+      )}
+      <div className="family-graph-canvas-area">
+        <GraphGuidedTour graph={graph} canCreate={Boolean(actions)} />
+        <div className="graph-primary-tools">
+          {actions}
+          <GraphToolbar nodes={graph.nodes} visible={visible} onCentre={centre} onReset={reset} />
+        </div>
+        <div className="graph-side-tools">
+          <GraphFiltersPanel options={options} filters={filters} onChange={setFilters} />
+          {tools}
+          {connections}
+        </div>
+        <div className="graph-status">
+          <GraphStatus nodes={graph.nodes} visible={visible} total={graph.memberCount} />
+        </div>
+        <div className="graph-result">{result}</div>
+        {(branches.error ?? pivot.error) && (
+          <p
+            role="alert"
+            className="absolute bottom-4 left-16 z-20 rounded bg-white p-3 text-brand-dark"
+          >
+            {branches.error ?? pivot.error}
+          </p>
+        )}
+        <PivotProvider value={{ activate: pivot.activate }}>
+          <CrossTreeBranchProvider
+            value={{
+              expandedLinkIds: branches.expandedLinkIds,
+              pendingLinkId: branches.pendingLinkId,
+              onToggle: branches.toggle,
+            }}
+          >
+            <GraphCanvas
+              key={graph.nodes.map((node) => node.id).join('|')}
+              graph={graph}
+              visible={visible}
+              inFocus={inFocus}
+            />
+          </CrossTreeBranchProvider>
+        </PivotProvider>
+      </div>
     </div>
   )
 }

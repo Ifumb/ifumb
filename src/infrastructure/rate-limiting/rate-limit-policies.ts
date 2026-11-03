@@ -32,6 +32,9 @@ export const RATE_LIMIT_POLICIES = {
   // Expanding a foreign branch (module 3.3): loads a whole linked tree and relays out the merged
   // graph server-side on every toggle — a brake on repeated full reloads.
   crossTreeBranchByUser: { limit: 20, windowMs: MINUTE_MS },
+  // Moving a lineage pivot's generation window: relays out the scoped graph server-side on every
+  // click, same cost profile as a cross-tree branch toggle.
+  graphLineageByUser: { limit: 20, windowMs: MINUTE_MS },
 } as const satisfies Record<string, RateLimitPolicy>
 
 export type RateLimitPolicyName = keyof typeof RATE_LIMIT_POLICIES
