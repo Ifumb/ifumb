@@ -72,6 +72,7 @@ export async function TreeWorkspacePage({ params, searchParams }: TreeWorkspaceP
           crossTreeLinks={loaded.crossTreeLinks}
           actions={tree.newMemberHref ? <TreeGraphActions tree={tree} /> : undefined}
           connections={<TreeConnections tree={tree} />}
+          canManageConnections={tree.suggestionsHref !== null}
         />
       </div>
     </section>

@@ -1,6 +1,7 @@
 import { Icon } from '@/presentation/components/ui/icon'
 import Form from 'next/form'
 import { CommonAncestorsPanel } from '@/presentation/components/family-graph/common-ancestors-panel'
+import { CrossTreeConnectionsPanel } from '@/presentation/components/family-graph/cross-tree-connections-panel'
 import { KinshipPanel } from '@/presentation/components/family-graph/kinship-panel'
 import { Button } from '@/presentation/components/ui/button'
 import { LabelledSelect } from '@/presentation/components/ui/labelled-select'
@@ -8,10 +9,14 @@ import type { GraphToolsViewModel } from '@/presentation/mappers/graph-tools-vie
 import { GRAPH_VIEW_PARAMS as P } from '@/presentation/schemas/graph-view-schema'
 
 type ToolsProps = Readonly<{ tools: GraphToolsViewModel }>
+type GraphToolsViewProps = ToolsProps &
+  Readonly<{ treeId: string; canManageConnections: boolean }>
 
-/** The graph tools: Chemin and Ancêtres are floating popovers (module: graph tools parity) —
- * Descendance is still a plain GET form, whose result is a URL, readable and shareable. */
-export function GraphToolsView({ treeId, tools }: ToolsProps & Readonly<{ treeId: string }>) {
+/** The graph tools: Chemin, Ancêtres and Connexions are floating popovers (module: graph tools
+ * parity) — Descendance is still a plain GET form, whose result is a URL, readable and shareable.
+ * Connexions writes (compute, accept, reject), so — like the legacy app — it only renders for a
+ * viewer who can contribute to the tree. */
+export function GraphToolsView({ treeId, tools, canManageConnections }: GraphToolsViewProps) {
   return (
     <div className="graph-mode-tools">
       <details
@@ -30,6 +35,7 @@ export function GraphToolsView({ treeId, tools }: ToolsProps & Readonly<{ treeId
       </details>
       <KinshipPanel treeId={treeId} people={tools.people} />
       <CommonAncestorsPanel treeId={treeId} people={tools.people} />
+      {canManageConnections && <CrossTreeConnectionsPanel treeId={treeId} />}
     </div>
   )
 }

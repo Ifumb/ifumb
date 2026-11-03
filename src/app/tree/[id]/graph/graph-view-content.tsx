@@ -19,6 +19,7 @@ type GraphViewContentProps = Readonly<{
   treeId: string
   actions?: ReactNode
   connections?: ReactNode
+  canManageConnections: boolean
   request: GraphViewRequest
   graph: FamilyGraph
   mode: GraphMode
@@ -37,6 +38,7 @@ export function GraphViewContent({
   crossTreeLinks,
   actions,
   connections,
+  canManageConnections,
 }: GraphViewContentProps) {
   const outcome = modeOutcome(treeId, graph, mode)
   const graphViewModel = toFamilyGraphViewModel(
@@ -48,7 +50,9 @@ export function GraphViewContent({
   return (
     <FamilyGraphView
       graph={{ ...graphViewModel, emphasis: outcome.emphasis }}
-      tools={<GraphToolsView treeId={treeId} tools={tools} />}
+      tools={
+        <GraphToolsView treeId={treeId} tools={tools} canManageConnections={canManageConnections} />
+      }
       result={outcome.view}
       initialPivot={toLineagePivotViewModel(treeId, graph.lineage)}
       actions={actions}

@@ -41,6 +41,10 @@ export const RATE_LIMIT_POLICIES = {
   // Computing the common ancestors of two members (module: graph tools parity): same cost
   // profile as the kinship path.
   graphAncestorsByUser: { limit: 30, windowMs: MINUTE_MS },
+  // Loading the floating "Connexions" panel's suggestions and links on open (module: graph tools
+  // parity): plain reads, same generous budget as the other graph tool panels. Computing new
+  // suggestions is the heavier operation and keeps its own stricter `computeSuggestionsByUser`.
+  graphConnectionsByUser: { limit: 30, windowMs: MINUTE_MS },
 } as const satisfies Record<string, RateLimitPolicy>
 
 export type RateLimitPolicyName = keyof typeof RATE_LIMIT_POLICIES
