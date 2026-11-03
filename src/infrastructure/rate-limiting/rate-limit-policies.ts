@@ -38,6 +38,9 @@ export const RATE_LIMIT_POLICIES = {
   // Computing the kinship path between two members (module: graph tools parity): a single
   // read-only graph walk per request, well below the pool/layout-heavy routes above.
   graphKinshipByUser: { limit: 30, windowMs: MINUTE_MS },
+  // Computing the common ancestors of two members (module: graph tools parity): same cost
+  // profile as the kinship path.
+  graphAncestorsByUser: { limit: 30, windowMs: MINUTE_MS },
 } as const satisfies Record<string, RateLimitPolicy>
 
 export type RateLimitPolicyName = keyof typeof RATE_LIMIT_POLICIES
