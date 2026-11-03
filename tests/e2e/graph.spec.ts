@@ -10,6 +10,17 @@ import { seedMember, seedUnion } from '@tests/support/seed-family'
 import { seedPendingChange } from '@tests/support/seed-pending-changes'
 import { seedTree } from '@tests/support/seed-trees'
 
+/** A custom listbox (module: graph tools parity), not a native `<select>` — scoped by the
+ * listbox's own accessible name, not just "option", which a native `<select>` elsewhere on the
+ * page also exposes for each of its own. */
+async function selectGraphToolOption(page: Page, label: string, optionLabel: string) {
+  await page.getByLabel(label, { exact: true }).click()
+  await page
+    .getByRole('listbox', { name: label })
+    .getByRole('option', { name: optionLabel, exact: true })
+    .click()
+}
+
 /** Moussa and Awa, their daughter Fatou, and Fatou's son Ibrahima; Awa has a pending change. */
 async function seedGraphFamily(page: Page, visibility: 'PRIVATE' | 'PUBLIC' = 'PRIVATE') {
   const owner = await registerThroughUi(page)
@@ -100,7 +111,7 @@ test('filters hide the members that do not match', async ({ page }) => {
   await expect(memberLinks(page)).toHaveCount(4)
 
   await page.getByText('Filtres', { exact: true }).click()
-  await page.getByLabel('Tribu', { exact: true }).selectOption('Peul')
+  await selectGraphToolOption(page, 'Tribu', 'Peul')
 
   await expect(memberLinks(page)).toHaveCount(1)
   await expect(memberLinks(page)).toHaveAccessibleName(/^Moussa Diallo/)

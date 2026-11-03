@@ -1,4 +1,4 @@
-import type { Page } from '@playwright/test'
+import type { Locator, Page } from '@playwright/test'
 import { registerThroughUi } from '@tests/e2e/support/accounts'
 import {
   expect,
@@ -66,6 +66,24 @@ async function usePairTool(
   await section.getByRole('button', { name: submit }).click()
 }
 
+/** A custom listbox (module: graph tools parity): its options portal to `document.body`, outside
+ * whichever popover its combobox button sits in — scoped by the listbox's own accessible name
+ * (not just "option", which a neighbouring native `<select>`'s `<option>`s also expose). */
+async function selectGraphToolOption(page: Page, panel: Locator, label: string, optionLabel: string) {
+  await panel.getByLabel(label).click()
+  await page.getByRole('listbox', { name: label }).getByRole('option', { name: optionLabel, exact: true }).click()
+}
+
+/** Chemin de parenté is a floating popover (module: graph tools parity), not an inline form. */
+async function useKinshipPanel(page: Page, first: string, second: string) {
+  await page.getByRole('button', { name: 'Chemin', exact: true }).click()
+  const panel = page.getByRole('region', { name: 'Chemin de parenté' })
+  await selectGraphToolOption(page, panel, 'Membre A', first)
+  await selectGraphToolOption(page, panel, 'Membre B', second)
+  await panel.getByRole('button', { name: 'Calculer' }).click()
+  return panel
+}
+
 test('the lineage of a member opens from their profile and widens on demand', async ({ page }) => {
   const { treeId, ids } = await seedFourGenerations(page)
   await page.goto(`/tree/${treeId}/member/${ids.fatou}`)
@@ -108,18 +126,32 @@ test('the kinship path names the relation and puts its people forward', async ({
   const { treeId, ids } = await seedFourGenerations(page)
   await page.goto(`/tree/${treeId}/graph`)
 
-  await usePairTool(page, 'Chemin de parenté', 'Awa Diallo', 'Ibrahima Sow', 'Calculer le chemin')
+  const panel = await useKinshipPanel(page, 'Awa Diallo', 'Ibrahima Sow')
 
-  const result = page.getByRole('region', { name: 'Chemin de parenté' })
-  await expect(result.getByRole('status')).toHaveText(
+  await expect(panel.getByRole('status')).toContainText(
     'Pour Awa Diallo, Ibrahima Sow est : petit-fils.',
   )
-  await expect(result.getByRole('list', { name: 'Étapes du chemin' }).getByRole('link')).toHaveText(
+  await expect(panel.getByRole('list', { name: 'Étapes du chemin' }).getByRole('listitem')).toHaveText(
     ['Awa Diallo', 'Fatou Sow', 'Ibrahima Sow'],
   )
   await expect(page.locator(`[data-id="member_${ids.moussa}"]`)).toHaveAttribute('inert')
   await expect(page.locator(`[data-id="member_${ids.fatou}"]`)).not.toHaveAttribute('inert')
   await expectNoAccessibilityViolations(page)
+
+  // Instant, in place: no navigation, no page reload.
+  await expect(page).toHaveURL(`/tree/${treeId}/graph`)
+
+  // Picking a member clears a previous result and removes it from the other field's choices.
+  await selectGraphToolOption(page, panel, 'Membre A', 'Fatou Sow')
+  await expect(panel.getByRole('status')).toHaveCount(0)
+  await panel.getByLabel('Membre B').click()
+  await expect(
+    page.getByRole('listbox', { name: 'Membre B' }).getByRole('option', { name: 'Fatou Sow', exact: true }),
+  ).toHaveCount(0)
+  await page.keyboard.press('Escape')
+
+  await panel.getByRole('button', { name: 'Fermer' }).click()
+  await expect(panel).toHaveCount(0)
 })
 
 test('a spouse is named as such, not as a half-sibling', async ({ page }) => {
@@ -163,12 +195,21 @@ test('the tools explain an incomplete choice', async ({ page }) => {
   const { treeId } = await seedFourGenerations(page)
   await page.goto(`/tree/${treeId}/graph`)
 
-  await usePairTool(page, 'Chemin de parenté', 'Awa Diallo', 'Awa Diallo', 'Calculer le chemin')
+  // Chemin de parenté no longer reaches this: each select now excludes the other's own choice
+  // (module: graph tools parity), the same prevention the legacy panel always had. Ancêtres
+  // communs is not converted yet and still reaches it through a real submission.
+  await usePairTool(
+    page,
+    'Ancêtres communs',
+    'Awa Diallo',
+    'Awa Diallo',
+    'Chercher les ancêtres communs',
+  )
 
-  await expect(tool(page, 'Chemin de parenté').getByRole('alert')).toHaveText(
+  await expect(tool(page, 'Ancêtres communs').getByRole('alert')).toHaveText(
     'Choisissez deux membres différents.',
   )
-  await expect(tool(page, 'Chemin de parenté').getByLabel('Membre A')).toHaveAccessibleDescription(
+  await expect(tool(page, 'Ancêtres communs').getByLabel('Membre A')).toHaveAccessibleDescription(
     'Choisissez deux membres différents.',
   )
 })
