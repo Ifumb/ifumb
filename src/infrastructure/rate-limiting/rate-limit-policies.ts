@@ -35,6 +35,9 @@ export const RATE_LIMIT_POLICIES = {
   // Moving a lineage pivot's generation window: relays out the scoped graph server-side on every
   // click, same cost profile as a cross-tree branch toggle.
   graphLineageByUser: { limit: 20, windowMs: MINUTE_MS },
+  // Computing the kinship path between two members (module: graph tools parity): a single
+  // read-only graph walk per request, well below the pool/layout-heavy routes above.
+  graphKinshipByUser: { limit: 30, windowMs: MINUTE_MS },
 } as const satisfies Record<string, RateLimitPolicy>
 
 export type RateLimitPolicyName = keyof typeof RATE_LIMIT_POLICIES

@@ -1,6 +1,7 @@
 import { Icon } from '@/presentation/components/ui/icon'
 import Form from 'next/form'
 import type { ReactNode } from 'react'
+import { KinshipPanel } from '@/presentation/components/family-graph/kinship-panel'
 import { Button } from '@/presentation/components/ui/button'
 import { LabelledSelect } from '@/presentation/components/ui/labelled-select'
 import type { GraphTool, GraphToolsViewModel } from '@/presentation/mappers/graph-tools-view-models'
@@ -14,16 +15,15 @@ const TOOL_TITLES: Readonly<Record<GraphTool, string>> = {
   ancestors: 'Ancêtres communs',
 }
 
-/** The graph tools as plain GET forms: their result is a URL, readable and shareable. */
-export function GraphToolsView({ tools }: ToolsProps) {
+/** The graph tools: Chemin is a floating popover (module: graph tools parity) — Descendance and
+ * Ancêtres are still plain GET forms, whose result is a URL, readable and shareable. */
+export function GraphToolsView({ treeId, tools }: ToolsProps & Readonly<{ treeId: string }>) {
   return (
     <div className="graph-mode-tools">
       <ToolSection tool="lineage" tools={tools}>
         <LineageForm tools={tools} />
       </ToolSection>
-      <ToolSection tool="kinship" tools={tools}>
-        <PairForm tool="kinship" tools={tools} submitLabel="Calculer le chemin" />
-      </ToolSection>
+      <KinshipPanel treeId={treeId} people={tools.people} />
       <ToolSection tool="ancestors" tools={tools}>
         <PairForm tool="ancestors" tools={tools} submitLabel="Chercher les ancêtres communs" />
       </ToolSection>

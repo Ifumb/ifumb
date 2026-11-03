@@ -48,7 +48,7 @@ export function GraphViewContent({
   return (
     <FamilyGraphView
       graph={{ ...graphViewModel, emphasis: outcome.emphasis }}
-      tools={<GraphToolsView tools={tools} />}
+      tools={<GraphToolsView treeId={treeId} tools={tools} />}
       result={outcome.view}
       initialPivot={toLineagePivotViewModel(treeId, graph.lineage)}
       actions={actions}
