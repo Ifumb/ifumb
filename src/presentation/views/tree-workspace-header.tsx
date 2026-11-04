@@ -136,10 +136,13 @@ export function TreeGraphActions({ tree }: TreeProps) {
   )
 }
 
+/** For a viewer only: an owner or editor gets the floating "Connexions" panel instead (module:
+ * graph tools parity), which covers established links and suggestions inline — `tour-btn-connections`
+ * belongs to that panel alone, not this nav menu. */
 export function TreeConnections({ tree }: TreeProps) {
   return (
     <details>
-      <summary id="tour-btn-connections" className="flex items-center gap-1">
+      <summary className="flex items-center gap-1">
         <Icon name="network" />
         Connexions
       </summary>

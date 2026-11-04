@@ -47,7 +47,10 @@ export async function TreeWorkspacePage({ params, searchParams }: TreeWorkspaceP
     .execute({ treeId: id, viewerId, query: parseMemberSearch(query) })
   if (!members.ok) return <PrivateTreeView signedIn={signedIn} />
   const tree = toTreeViewModel(result.value)
-  const counters = await loadWorkspaceCounters(id, tree.settingsHref ? viewerId : undefined)
+  // reason: tout contributeur peut consulter les modifications en attente (seul le propriétaire les
+  // approuve), donc le raccourci « Réviser » compte pour les deux, pas seulement le propriétaire.
+  const counters = await loadWorkspaceCounters(id, tree.historyHref ? viewerId : undefined)
+  const canManageConnections = tree.suggestionsHref !== null
   return (
     <section className="tree-workspace" aria-labelledby="tree-title">
       <TreeWorkspaceHeader tree={tree} signedIn={signedIn} {...counters} />
@@ -71,8 +74,8 @@ export async function TreeWorkspacePage({ params, searchParams }: TreeWorkspaceP
           mode={loaded.mode}
           crossTreeLinks={loaded.crossTreeLinks}
           actions={tree.newMemberHref ? <TreeGraphActions tree={tree} /> : undefined}
-          connections={<TreeConnections tree={tree} />}
-          canManageConnections={tree.suggestionsHref !== null}
+          connections={canManageConnections ? undefined : <TreeConnections tree={tree} />}
+          canManageConnections={canManageConnections}
         />
       </div>
     </section>
