@@ -40,9 +40,6 @@ async function seedFourGenerations(page: Page) {
 }
 
 const memberLinks = (page: Page) => page.locator('.react-flow__node-member').getByRole('link')
-/** The one remaining `<details>` tool: Descendance. */
-const tool = (page: Page, title: string) =>
-  page.locator('details').filter({ has: page.locator('summary').filter({ hasText: title }) })
 
 /** A custom listbox (module: graph tools parity): its options portal to `document.body`, outside
  * whichever popover its combobox button sits in — scoped by the listbox's own accessible name
@@ -102,10 +99,17 @@ test('the descendance tool narrows the graph to the chosen member', async ({ pag
   const { treeId } = await seedFourGenerations(page)
   await page.goto(`/tree/${treeId}/graph`)
 
-  const section = tool(page, 'Descendance')
-  await section.locator('summary').click()
-  await section.getByLabel('Membre', { exact: true }).selectOption({ label: 'Moussa Diallo' })
-  await section.getByRole('button', { name: 'Voir la descendance' }).click()
+  await page.getByRole('button', { name: 'Descendance', exact: true }).click()
+  const panel = page.getByRole('region', { name: 'Descendance' })
+  await selectGraphToolOption(page, panel, 'Membre', 'Moussa Diallo')
+
+  // Dismissible like the other graph tools (module: mobile/keyboard parity) — it used to be a
+  // plain <details> with no Escape or outside-click handling at all.
+  await page.keyboard.press('Escape')
+  await expect(panel).toHaveCount(0)
+  await page.getByRole('button', { name: 'Descendance', exact: true }).click()
+
+  await panel.getByRole('button', { name: 'Voir la descendance' }).click()
 
   await expect(page).toHaveURL(/view=lineage/)
   await expect(page.getByRole('region', { name: 'Pivot : Moussa Diallo' })).toBeVisible()

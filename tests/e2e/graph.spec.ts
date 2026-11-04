@@ -156,6 +156,22 @@ test('on a phone the graph tools collapse behind one button, leaving the canvas 
   // elements rather than resolving it — left for a dedicated pass.
 })
 
+test('a listbox never spills past the bottom of a short screen', async ({ page }) => {
+  const { treeId } = await seedGraphFamily(page)
+  await page.setViewportSize({ width: 375, height: 600 })
+  await page.goto(`/tree/${treeId}/graph`)
+
+  await page.getByRole('button', { name: 'Outils', exact: true }).click()
+  await page.getByRole('button', { name: 'Ancêtres', exact: true }).click()
+  const panel = page.getByRole('region', { name: 'Ancêtres communs' })
+  await panel.getByLabel('Membre B').click()
+
+  const listbox = page.getByRole('listbox', { name: 'Membre B' })
+  const box = await listbox.boundingBox()
+  expect(box).not.toBeNull()
+  expect(box!.y + box!.height).toBeLessThanOrEqual(600)
+})
+
 test('centring on a member makes distant relatives inert until the view is reset', async ({
   page,
 }) => {
