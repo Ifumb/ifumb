@@ -2,6 +2,7 @@
 
 import { useCallback, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { floatingPanelPosition } from '@/presentation/components/family-graph/floating-panel-position'
 import { useGraphToolEmphasis } from '@/presentation/components/family-graph/graph-tool-emphasis-context'
 import { GraphToolSelect } from '@/presentation/components/family-graph/graph-tool-select'
 import { usePopoverDismissal } from '@/presentation/components/family-graph/use-popover-dismissal'
@@ -28,12 +29,11 @@ export function CommonAncestorsPanel({ treeId, people }: CommonAncestorsPanelPro
   const [error, setError] = useState<string | null>(null)
   const buttonRef = useRef<HTMLButtonElement>(null)
   const panelRef = useRef<HTMLDivElement>(null)
-  const [position, setPosition] = useState({ top: 0, right: 0 })
+  const [position, setPosition] = useState({ top: 0, right: 0, maxHeight: 0 })
 
   useLayoutEffect(() => {
     if (!open || !buttonRef.current) return
-    const rect = buttonRef.current.getBoundingClientRect()
-    setPosition({ top: rect.bottom + 4, right: window.innerWidth - rect.right })
+    setPosition(floatingPanelPosition(buttonRef.current.getBoundingClientRect()))
   }, [open])
 
   const canSearch = firstId !== '' && secondId !== '' && firstId !== secondId
@@ -107,8 +107,8 @@ export function CommonAncestorsPanel({ treeId, people }: CommonAncestorsPanelPro
             ref={panelRef}
             role="region"
             aria-label="Ancêtres communs"
-            style={{ top: position.top, right: position.right }}
-            className="fixed z-30 w-72 space-y-3 rounded-xl border border-earth-sand bg-white p-4 shadow-lg"
+            style={{ top: position.top, right: position.right, maxHeight: position.maxHeight }}
+            className="fixed z-30 w-72 space-y-3 overflow-y-auto rounded-xl border border-earth-sand bg-white p-4 shadow-lg"
           >
             <div className="flex items-center justify-between">
               <h3 className="flex items-center gap-1.5 text-sm font-semibold text-gray-800">

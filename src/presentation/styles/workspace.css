@@ -97,28 +97,6 @@
   .graph-side-tools {
     @apply flex flex-col items-end gap-2;
   }
-  .graph-side-tools details {
-    @apply max-w-80 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs shadow-sm;
-  }
-  .graph-side-tools summary {
-    @apply cursor-pointer list-none font-normal text-gray-700;
-  }
-  .graph-side-tools summary::-webkit-details-marker {
-    display: none;
-  }
-  .graph-side-tools details[open] {
-    @apply w-72;
-  }
-  .graph-side-tools details[open] summary {
-    @apply mb-3 font-semibold;
-  }
-  .graph-side-tools fieldset,
-  .graph-side-tools form {
-    @apply flex-col items-stretch gap-3;
-  }
-  .graph-side-tools select {
-    @apply w-full min-w-0 text-sm;
-  }
   .graph-mode-tools {
     @apply flex flex-col items-end gap-2;
   }

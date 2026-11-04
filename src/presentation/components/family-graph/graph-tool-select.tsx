@@ -16,6 +16,34 @@ type GraphToolSelectProps = Readonly<{
   invalid?: boolean
 }>
 
+type ListboxPosition = {
+  readonly left: number
+  readonly width: number
+  readonly maxHeight: number
+  readonly top: number | undefined
+  readonly bottom: number | undefined
+}
+
+const PREFERRED_LIST_HEIGHT = 240
+const VIEWPORT_MARGIN = 8
+const GAP = 4
+
+/**
+ * Opens downward from the button, as usual — unless the space below is cramped (phone-sized
+ * viewport, a button low in a tall popover) and there is clearly more room above, in which case it
+ * opens upward instead. Either way `maxHeight` is clamped to the room actually available, so the
+ * list is never cut off by the edge of the screen.
+ */
+function listboxPosition(rect: DOMRect): ListboxPosition {
+  const spaceBelow = window.innerHeight - rect.bottom - GAP - VIEWPORT_MARGIN
+  const spaceAbove = rect.top - GAP - VIEWPORT_MARGIN
+  const opensUp = spaceBelow < PREFERRED_LIST_HEIGHT / 2 && spaceAbove > spaceBelow
+  const maxHeight = Math.max(100, Math.min(PREFERRED_LIST_HEIGHT, opensUp ? spaceAbove : spaceBelow))
+  return opensUp
+    ? { left: rect.left, width: rect.width, maxHeight, top: undefined, bottom: window.innerHeight - rect.top + GAP }
+    : { left: rect.left, width: rect.width, maxHeight, top: rect.bottom + GAP, bottom: undefined }
+}
+
 /**
  * A custom listbox for the graph tool popovers (module: graph tools parity): the trigger button
  * and the list both have a fixed width of their own, instead of a native `<select>` sizing its
@@ -41,7 +69,13 @@ export function GraphToolSelect({
   )
   const [open, setOpen] = useState(false)
   const [activeIndex, setActiveIndex] = useState(selectedIndex)
-  const [position, setPosition] = useState({ top: 0, left: 0, width: 0 })
+  const [position, setPosition] = useState<ListboxPosition>({
+    left: 0,
+    width: 0,
+    maxHeight: PREFERRED_LIST_HEIGHT,
+    top: 0,
+    bottom: undefined,
+  })
   const buttonRef = useRef<HTMLButtonElement>(null)
   const listRef = useRef<HTMLDivElement>(null)
   const optionRefs = useRef<Array<HTMLDivElement | null>>([])
@@ -50,8 +84,7 @@ export function GraphToolSelect({
 
   useLayoutEffect(() => {
     if (!open || !buttonRef.current) return
-    const rect = buttonRef.current.getBoundingClientRect()
-    setPosition({ top: rect.bottom + 4, left: rect.left, width: rect.width })
+    setPosition(listboxPosition(buttonRef.current.getBoundingClientRect()))
     setActiveIndex(selectedIndex)
     optionRefs.current[selectedIndex]?.focus()
     // reason: `value` (hence `selectedIndex`) only changes through `commit`, which closes the list
@@ -159,8 +192,14 @@ export function GraphToolSelect({
             id={listId}
             role="listbox"
             aria-labelledby={labelId}
-            style={{ top: position.top, left: position.left, width: position.width }}
-            className="fixed z-40 max-h-60 overflow-auto rounded-md border border-gray-300 bg-white py-1 shadow-lg"
+            style={{
+              top: position.top,
+              bottom: position.bottom,
+              left: position.left,
+              width: position.width,
+              maxHeight: position.maxHeight,
+            }}
+            className="fixed z-40 overflow-auto rounded-md border border-gray-300 bg-white py-1 shadow-lg"
           >
             {entries.map((entry, index) => (
               <div

@@ -2,6 +2,7 @@
 
 import { useCallback, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { floatingPanelPosition } from '@/presentation/components/family-graph/floating-panel-position'
 import { usePopoverDismissal } from '@/presentation/components/family-graph/use-popover-dismissal'
 import { GraphToolSelect } from '@/presentation/components/family-graph/graph-tool-select'
 import { Button } from '@/presentation/components/ui/button'
@@ -40,14 +41,13 @@ export function GraphFiltersPanel(props: GraphFiltersPanelProps) {
   const [open, setOpen] = useState(false)
   const buttonRef = useRef<HTMLButtonElement>(null)
   const panelRef = useRef<HTMLDivElement>(null)
-  const [position, setPosition] = useState({ top: 0, right: 0 })
+  const [position, setPosition] = useState({ top: 0, right: 0, maxHeight: 0 })
   const count = activeFilterCount(props.filters)
   const close = useCallback(() => setOpen(false), [])
 
   useLayoutEffect(() => {
     if (!open || !buttonRef.current) return
-    const rect = buttonRef.current.getBoundingClientRect()
-    setPosition({ top: rect.bottom + 4, right: window.innerWidth - rect.right })
+    setPosition(floatingPanelPosition(buttonRef.current.getBoundingClientRect()))
   }, [open])
 
   usePopoverDismissal(open, buttonRef, panelRef, close)
@@ -78,8 +78,8 @@ export function GraphFiltersPanel(props: GraphFiltersPanelProps) {
             ref={panelRef}
             role="region"
             aria-label="Filtres"
-            style={{ top: position.top, right: position.right }}
-            className="fixed z-30 w-60 space-y-3 rounded-xl border border-earth-sand bg-white p-4 shadow-lg"
+            style={{ top: position.top, right: position.right, maxHeight: position.maxHeight }}
+            className="fixed z-30 w-60 space-y-3 overflow-y-auto rounded-xl border border-earth-sand bg-white p-4 shadow-lg"
           >
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-semibold text-gray-800">Filtres</h3>
