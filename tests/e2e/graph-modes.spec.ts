@@ -174,7 +174,8 @@ test('common ancestors are listed with their distances', async ({ page }) => {
   await expect(ancestors.nth(2)).toContainText('Alpha Diallo')
   await expectNoAccessibilityViolations(page)
 
-  await panel.getByRole('button', { name: 'Fermer' }).click()
+  // Escape dismisses it too (module: mobile/keyboard parity) — not just its own Fermer button.
+  await page.keyboard.press('Escape')
   await expect(panel).toHaveCount(0)
 })
 
