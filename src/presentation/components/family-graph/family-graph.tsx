@@ -20,6 +20,7 @@ import { GraphFiltersPanel } from '@/presentation/components/family-graph/graph-
 import { GraphStatus } from '@/presentation/components/family-graph/graph-status'
 import { GraphToolbar } from '@/presentation/components/family-graph/graph-toolbar'
 import { GraphToolEmphasisProvider } from '@/presentation/components/family-graph/graph-tool-emphasis-context'
+import { GraphToolsToggle } from '@/presentation/components/family-graph/graph-tools-toggle'
 import { MemberNode } from '@/presentation/components/family-graph/member-node'
 import { PivotBanner } from '@/presentation/components/family-graph/pivot-banner'
 import { PivotProvider } from '@/presentation/components/family-graph/pivot-context'
@@ -115,11 +116,11 @@ function FamilyGraphCanvas({
             {actions}
             <GraphToolbar nodes={graph.nodes} visible={visible} onCentre={centre} onReset={reset} />
           </div>
-          <div className="graph-side-tools">
+          <GraphToolsToggle>
             <GraphFiltersPanel options={options} filters={filters} onChange={setFilters} />
             {tools}
             {connections}
-          </div>
+          </GraphToolsToggle>
           <div className="graph-status">
             <GraphStatus nodes={graph.nodes} visible={visible} total={graph.memberCount} />
           </div>

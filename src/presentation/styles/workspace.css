@@ -88,8 +88,14 @@
   .graph-centre button {
     @apply size-7 min-h-7 p-1 text-xs;
   }
-  .graph-side-tools {
+  .graph-tools-toggle {
     @apply absolute right-4 top-4 z-20 flex max-h-[calc(100%-4rem)] max-w-[calc(100%-2rem)] flex-col items-end gap-2 overflow-y-auto;
+  }
+  .graph-tools-toggle-button {
+    @apply hidden;
+  }
+  .graph-side-tools {
+    @apply flex flex-col items-end gap-2;
   }
   .graph-side-tools details {
     @apply max-w-80 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs shadow-sm;
@@ -153,8 +159,14 @@
     .graph-primary-tools {
       @apply left-2;
     }
-    .graph-side-tools {
-      @apply right-2 top-24;
+    .graph-tools-toggle {
+      @apply right-2 top-32;
+    }
+    .graph-tools-toggle-button {
+      @apply flex min-h-10 cursor-pointer items-center gap-1.5 rounded-lg border border-earth-sand bg-white px-3 py-1.5 text-xs font-medium text-gray-700 shadow-sm;
+    }
+    .graph-side-tools-collapsed {
+      @apply hidden;
     }
     .tree-header-action span {
       @apply sr-only;

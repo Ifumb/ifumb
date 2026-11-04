@@ -1,9 +1,11 @@
 'use client'
 
-import { useLayoutEffect, useRef, useState } from 'react'
+import { useCallback, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { usePopoverDismissal } from '@/presentation/components/family-graph/use-popover-dismissal'
 import { GraphToolSelect } from '@/presentation/components/family-graph/graph-tool-select'
 import { Button } from '@/presentation/components/ui/button'
+import { Icon } from '@/presentation/components/ui/icon'
 import type { SelectOption } from '@/presentation/components/ui/labelled-select'
 import {
   activeFilterCount,
@@ -37,14 +39,18 @@ const GENDER_OPTIONS = GENDERS.map((gender) => ({ value: gender, label: GENDER_L
 export function GraphFiltersPanel(props: GraphFiltersPanelProps) {
   const [open, setOpen] = useState(false)
   const buttonRef = useRef<HTMLButtonElement>(null)
+  const panelRef = useRef<HTMLDivElement>(null)
   const [position, setPosition] = useState({ top: 0, right: 0 })
   const count = activeFilterCount(props.filters)
+  const close = useCallback(() => setOpen(false), [])
 
   useLayoutEffect(() => {
     if (!open || !buttonRef.current) return
     const rect = buttonRef.current.getBoundingClientRect()
     setPosition({ top: rect.bottom + 4, right: window.innerWidth - rect.right })
   }, [open])
+
+  usePopoverDismissal(open, buttonRef, panelRef, close)
 
   return (
     <div className="relative">
@@ -69,9 +75,23 @@ export function GraphFiltersPanel(props: GraphFiltersPanelProps) {
       {open &&
         createPortal(
           <div
+            ref={panelRef}
+            role="region"
+            aria-label="Filtres"
             style={{ top: position.top, right: position.right }}
-            className="fixed z-30 w-60 rounded-xl border border-earth-sand bg-white p-4 shadow-lg"
+            className="fixed z-30 w-60 space-y-3 rounded-xl border border-earth-sand bg-white p-4 shadow-lg"
           >
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-gray-800">Filtres</h3>
+              <button
+                type="button"
+                onClick={close}
+                aria-label="Fermer"
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <Icon name="close" size={15} />
+              </button>
+            </div>
             <FilterFieldset {...props} />
           </div>,
           document.body,

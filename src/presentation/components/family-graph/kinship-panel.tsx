@@ -1,9 +1,10 @@
 'use client'
 
-import { useLayoutEffect, useRef, useState } from 'react'
+import { useCallback, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useGraphToolEmphasis } from '@/presentation/components/family-graph/graph-tool-emphasis-context'
 import { GraphToolSelect } from '@/presentation/components/family-graph/graph-tool-select'
+import { usePopoverDismissal } from '@/presentation/components/family-graph/use-popover-dismissal'
 import { Button } from '@/presentation/components/ui/button'
 import { Icon } from '@/presentation/components/ui/icon'
 import type { SelectOption } from '@/presentation/components/ui/labelled-select'
@@ -27,6 +28,7 @@ export function KinshipPanel({ treeId, people }: KinshipPanelProps) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const buttonRef = useRef<HTMLButtonElement>(null)
+  const panelRef = useRef<HTMLDivElement>(null)
   const [position, setPosition] = useState({ top: 0, right: 0 })
 
   useLayoutEffect(() => {
@@ -67,18 +69,20 @@ export function KinshipPanel({ treeId, people }: KinshipPanelProps) {
     setEmphasis(null)
   }
 
-  function reset() {
+  const reset = useCallback(() => {
     setFirstId('')
     setSecondId('')
     setResult(null)
     setError(null)
     setEmphasis(null)
-  }
+  }, [setEmphasis])
 
-  function close() {
+  const close = useCallback(() => {
     reset()
     setOpen(false)
-  }
+  }, [reset])
+
+  usePopoverDismissal(open, buttonRef, panelRef, close)
 
   return (
     <div className="relative">
@@ -101,6 +105,7 @@ export function KinshipPanel({ treeId, people }: KinshipPanelProps) {
       {open &&
         createPortal(
           <div
+            ref={panelRef}
             role="region"
             aria-label="Chemin de parenté"
             style={{ top: position.top, right: position.right }}

@@ -1,7 +1,8 @@
 'use client'
 
-import { useLayoutEffect, useRef, useState } from 'react'
+import { useCallback, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { usePopoverDismissal } from '@/presentation/components/family-graph/use-popover-dismissal'
 import { Icon } from '@/presentation/components/ui/icon'
 import type { CrossTreeLinkItemViewModel } from '@/presentation/mappers/cross-tree-link-view-models'
 import type { SuggestionItemViewModel } from '@/presentation/mappers/suggestion-view-models'
@@ -40,6 +41,7 @@ export function CrossTreeConnectionsPanel({ treeId }: CrossTreeConnectionsPanelP
   const [actionErrors, setActionErrors] = useState<Readonly<Record<string, string>>>({})
   const [computeError, setComputeError] = useState<string | null>(null)
   const buttonRef = useRef<HTMLButtonElement>(null)
+  const panelRef = useRef<HTMLDivElement>(null)
   const [position, setPosition] = useState({ top: 0, right: 0 })
 
   useLayoutEffect(() => {
@@ -101,14 +103,16 @@ export function CrossTreeConnectionsPanel({ treeId }: CrossTreeConnectionsPanelP
     }
   }
 
-  function close() {
+  const close = useCallback(() => {
     setOpen(false)
     setComputed(false)
     setSuggestions([])
     setDismissed(new Set())
     setActionErrors({})
     setComputeError(null)
-  }
+  }, [])
+
+  usePopoverDismissal(open, buttonRef, panelRef, close)
 
   const visible = suggestions.filter((suggestion) => !dismissed.has(suggestion.id))
 
@@ -133,6 +137,7 @@ export function CrossTreeConnectionsPanel({ treeId }: CrossTreeConnectionsPanelP
       {open &&
         createPortal(
           <div
+            ref={panelRef}
             role="region"
             aria-label="Connexions inter-arbres"
             style={{ top: position.top, right: position.right }}
