@@ -43,9 +43,12 @@ test('an anonymous visitor explores public trees, never private ones', async ({
   const visitorContext = await newVisitorContext(browser)
   const visitor = await visitorContext.newPage()
   await visitor.goto('/')
+  // The landing page now offers more than one way in: any link whose name starts with
+  // "Explorer" leads to the same public listing, so the first one is a valid entry point.
   await visitor
     .getByRole('main')
     .getByRole('link', { name: /Explorer/ })
+    .first()
     .click()
   await expect(visitor.getByRole('heading', { level: 1, name: 'Explorer' })).toBeVisible()
   await expectNoAccessibilityViolations(visitor)
