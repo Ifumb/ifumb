@@ -5,26 +5,12 @@
   .landing-container {
     @apply mx-auto w-full max-w-7xl px-6 sm:px-10 lg:px-16;
   }
-  .landing-header {
-    @apply flex min-h-24 flex-wrap items-center justify-between gap-5 border-b border-earth-sand/50 py-5;
-  }
-  .landing-wordmark {
-    @apply inline-flex items-center gap-2 text-2xl font-bold tracking-tight text-landing-ink no-underline;
-  }
-  .landing-wordmark-dot {
-    @apply text-brand;
-  }
-  .landing-section-nav,
-  .landing-account-nav {
+  .landing-section-nav {
     @apply flex items-center gap-7 text-sm font-medium;
   }
   .landing-section-nav a,
-  .landing-account-nav a:not(.landing-header-action),
   .landing-footer nav a {
     @apply inline-flex min-h-11 items-center text-landing-ink no-underline transition-colors hover:text-brand;
-  }
-  .landing-header-action {
-    @apply inline-flex min-h-11 items-center gap-3 rounded-lg border border-landing-ink px-4 text-landing-ink no-underline transition-colors hover:bg-landing-sage;
   }
   .landing-hero {
     @apply grid items-center gap-12 pt-14 pb-20 lg:grid-cols-2 lg:gap-16 lg:pt-16 lg:pb-24;
@@ -172,21 +158,6 @@
     }
   }
   @media (max-width: 479px) {
-    .landing-header {
-      @apply gap-3;
-    }
-    .landing-account-nav {
-      @apply gap-3 text-xs;
-    }
-    .landing-header-action {
-      @apply gap-1 px-3;
-    }
-    .landing-wordmark {
-      @apply gap-1 text-xl;
-    }
-    .landing-wordmark > svg {
-      @apply size-5;
-    }
     .landing h1 {
       @apply text-4xl;
     }

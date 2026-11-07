@@ -1,17 +1,12 @@
 import Link from 'next/link'
-import { Icon } from '@/presentation/components/ui/icon'
+import { BrandLogo } from '@/presentation/components/ui/brand-logo'
 
 // reason: le pied de page reprend le même état de connexion que les autres accès de la page.
 export function LandingFooterView({ signedIn }: Readonly<{ signedIn: boolean }>) {
   return (
     <footer className="landing-footer landing-container">
       <div>
-        <Link href="/" className="landing-wordmark" aria-label="IFUMB — Accueil">
-          <Icon name="branch" size={24} />
-          <span>
-            IFUMB<span className="landing-wordmark-dot">.</span>
-          </span>
-        </Link>
+        <BrandLogo href="/" withSubtitle={false} />
         <p>Les racines d’ici. Les liens de partout.</p>
       </div>
       <nav aria-label="Pied de page">

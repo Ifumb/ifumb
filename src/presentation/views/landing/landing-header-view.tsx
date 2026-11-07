@@ -1,30 +1,31 @@
 import Link from 'next/link'
-import { Icon } from '@/presentation/components/ui/icon'
+import { BrandLogo } from '@/presentation/components/ui/brand-logo'
 
 type LandingHeaderViewProps = Readonly<{ signedIn: boolean }>
 
-// reason: les deux navigations ont des noms distincts et restent accessibles sans menu JavaScript.
+// reason: reprend le logo, la hauteur et le style des boutons du header global (site-header),
+// pour que passer de la landing a une page connectee ne change pas de produit a l'oeil.
 export function LandingHeaderView({ signedIn }: LandingHeaderViewProps) {
   return (
-    <header className="landing-header landing-container">
-      <Link href="/" className="landing-wordmark" aria-label="IFUMB — Accueil">
-        <Icon name="branch" size={28} />
-        <span>
-          IFUMB<span className="landing-wordmark-dot">.</span>
-        </span>
-      </Link>
-      <nav aria-label="Découvrir IFUMB" className="landing-section-nav">
-        <a href="#pourquoi-ifumb">Pourquoi IFUMB ?</a>
-        <a href="#comment-ca-marche">Comment ça marche</a>
-        <Link href="/explore">Explorer</Link>
-      </nav>
-      <nav aria-label="Votre compte" className="landing-account-nav">
-        {!signedIn && <Link href="/login">Se connecter</Link>}
-        <Link href={signedIn ? '/dashboard' : '/register'} className="landing-header-action">
-          {signedIn ? 'Mes arbres' : 'Créer mon arbre'}
-          <Icon name="next" />
-        </Link>
-      </nav>
+    <header className="site-header">
+      <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-4 px-4">
+        <BrandLogo href="/" />
+        <nav aria-label="Découvrir IFUMB" className="landing-section-nav">
+          <a href="#pourquoi-ifumb">Pourquoi IFUMB ?</a>
+          <a href="#comment-ca-marche">Comment ça marche</a>
+          <Link href="/explore">Explorer</Link>
+        </nav>
+        <nav aria-label="Votre compte" className="flex items-center gap-3 text-sm">
+          {!signedIn && (
+            <Link href="/login" className="header-action">
+              Se connecter
+            </Link>
+          )}
+          <Link href={signedIn ? '/dashboard' : '/register'} className="rounded-lg bg-brand px-3 py-2 text-white">
+            {signedIn ? 'Mes arbres' : 'Créer un compte'}
+          </Link>
+        </nav>
+      </div>
     </header>
   )
 }
