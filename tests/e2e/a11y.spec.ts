@@ -8,6 +8,10 @@ const PUBLIC_PAGES = [
   { name: 'register', path: '/register' },
   { name: 'forgot password', path: '/forgot-password' },
   { name: 'reset password', path: '/reset-password?token=sample-token' },
+  { name: 'legal notice', path: '/legal/mentions-legales' },
+  { name: 'privacy policy', path: '/legal/confidentialite' },
+  { name: 'terms of use', path: '/legal/cgu' },
+  { name: 'third-party credits', path: '/legal/credits' },
 ] as const
 
 for (const { name, path } of PUBLIC_PAGES) {

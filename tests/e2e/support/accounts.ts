@@ -24,6 +24,10 @@ export async function registerThroughUi(page: Page): Promise<TestAccount> {
   await page.getByLabel('Nom', { exact: true }).fill('Diallo')
   await page.getByLabel('Email', { exact: true }).fill(email)
   await page.getByLabel('Mot de passe', { exact: true }).fill(E2E_PASSWORD)
+  await page.getByLabel('Je confirme avoir 16 ans ou plus.').check()
+  await page
+    .getByLabel(/J.accepte les conditions d.utilisation et la politique de confidentialité/)
+    .check()
   await page.getByRole('button', { name: 'Créer mon compte' }).click()
   await expect(page).toHaveURL(/\/dashboard$/, { timeout: SIGN_UP_TIMEOUT_MS })
   return { email, fullName: 'Awa Diallo' }

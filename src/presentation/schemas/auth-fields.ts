@@ -24,6 +24,11 @@ export function requiredText(message: string) {
     .max(NAME_MAX_LENGTH, `Maximum ${NAME_MAX_LENGTH} caractères`)
 }
 
+// reason: un input checkbox HTML envoie "on" quand il est coche, et est absent du formulaire sinon.
+export function requiredCheckbox(message: string) {
+  return z.literal('on', { error: message })
+}
+
 type PasswordConfirmation = { newPassword: string; confirmPassword: string }
 
 export function isPasswordConfirmed(data: PasswordConfirmation): boolean {

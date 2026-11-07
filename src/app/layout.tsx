@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import type { ReactNode } from 'react'
 import '@/app/globals.css'
 import { appBaseUrl } from '@/infrastructure/config/app-url'
+import { AppFooter } from '@/presentation/views/app-footer'
 import { SiteHeader } from '@/presentation/views/site-header'
 
 export const metadata: Metadata = {
@@ -26,6 +27,7 @@ export default function RootLayout({ children, overlay }: RootLayoutProps) {
         <main id="main" tabIndex={-1} className="page-shell">
           {children}
         </main>
+        <AppFooter />
         {overlay}
       </body>
     </html>

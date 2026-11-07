@@ -1,6 +1,44 @@
 import { expect, test } from '@tests/e2e/support/fixtures'
 import { E2E_PASSWORD, registerThroughUi, uniqueEmail } from '@tests/e2e/support/accounts'
 
+test('registration is refused without confirming the age and accepting the terms', async ({
+  page,
+}) => {
+  const email = uniqueEmail()
+  await page.goto('/register')
+  await page.getByLabel('Prénom', { exact: true }).fill('Awa')
+  await page.getByLabel('Nom', { exact: true }).fill('Diallo')
+  await page.getByLabel('Email', { exact: true }).fill(email)
+  await page.getByLabel('Mot de passe', { exact: true }).fill(E2E_PASSWORD)
+  await page.getByRole('button', { name: 'Créer mon compte' }).click()
+
+  const summary = page.getByRole('alert').filter({ hasText: 'Le formulaire contient' })
+  await expect(summary).toBeVisible()
+  await expect(summary).toContainText("Déclaration d'âge")
+  await expect(summary).toContainText('Acceptation des conditions')
+  await expect(page).toHaveURL(/\/register$/)
+
+  // reason: le navigateur vide le champ mot de passe apres une tentative de soumission.
+  await page.getByLabel('Mot de passe', { exact: true }).fill(E2E_PASSWORD)
+  await page.getByLabel('Je confirme avoir 16 ans ou plus.').check()
+  await page
+    .getByLabel(/J.accepte les conditions d.utilisation et la politique de confidentialité/)
+    .check()
+  await page.getByRole('button', { name: 'Créer mon compte' }).click()
+  await expect(page).toHaveURL(/\/dashboard$/)
+})
+
+test('the registration consent checkboxes link to the real legal pages', async ({ page }) => {
+  await page.goto('/register')
+
+  await page.getByRole('link', { name: 'conditions d’utilisation' }).click()
+  await expect(page).toHaveURL(/\/legal\/cgu$/)
+
+  await page.goBack()
+  await page.getByRole('link', { name: 'politique de confidentialité' }).click()
+  await expect(page).toHaveURL(/\/legal\/confidentialite$/)
+})
+
 test('a visitor registers, signs out, then signs back in', async ({ page }) => {
   const account = await registerThroughUi(page)
   await expect(page.getByRole('heading', { level: 1, name: 'Mes arbres' })).toBeVisible()

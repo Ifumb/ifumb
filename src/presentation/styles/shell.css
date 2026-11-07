@@ -11,6 +11,19 @@
   .site-header nav a[aria-current='page'] {
     @apply font-medium text-brand;
   }
+  .app-footer {
+    @apply border-t border-earth-sand/40 bg-white px-4 py-4 text-sm;
+  }
+  .app-footer nav {
+    @apply mx-auto flex max-w-7xl flex-wrap gap-x-6 gap-y-2;
+  }
+  .app-footer nav a {
+    @apply text-gray-600 no-underline hover:text-brand;
+  }
+  body:has(.auth-shell) > .app-footer,
+  body:has(.landing) > .app-footer {
+    display: none;
+  }
   .header-action {
     @apply inline-flex min-h-8 items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm text-gray-600 transition-colors hover:bg-brand/5 hover:text-brand;
   }

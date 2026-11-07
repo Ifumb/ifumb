@@ -1,7 +1,6 @@
 import type { Metadata } from 'next'
 import { registerAction } from '@/app/actions/auth-actions'
-import { ActionForm } from '@/presentation/components/forms/action-form'
-import { REGISTER_FORM } from '@/presentation/forms/auth-forms'
+import { RegisterForm } from '@/presentation/components/forms/register-form'
 import { LinkList } from '@/presentation/views/link-list'
 
 export const metadata: Metadata = {
@@ -22,11 +21,7 @@ export default async function RegisterPage({ searchParams }: RegisterPageProps) 
     <>
       <h1 className="text-3xl font-bold">Créer un compte</h1>
       <p>Rejoignez IFUMB et construisez votre réseau familial.</p>
-      <ActionForm
-        action={registerAction}
-        {...REGISTER_FORM}
-        hiddenValues={redirect ? { redirect } : {}}
-      />
+      <RegisterForm action={registerAction} hiddenValues={redirect ? { redirect } : {}} />
       <LinkList links={[{ href: login, label: 'Déjà inscrit ? Se connecter' }]} />
     </>
   )

@@ -26,7 +26,15 @@ const HOME_AFTER_SIGN_IN = '/dashboard'
 
 export async function registerAction(_previous: FormState, formData: FormData): Promise<FormState> {
   const values = registrationValues(formData)
-  const parsed = registerSchema.safeParse({ ...values, password: textEntry(formData, 'password') })
+  const parsed = registerSchema.safeParse({
+    ...values,
+    password: textEntry(formData, 'password'),
+    // reason: non persiste - une case a cocher coche vaut "on", absente sinon ; voir
+    // docs/legal/legal-register.md (preuve de consentement datee reportee, pas de migration de
+    // schema pendant la cohabitation avec la base Supabase partagee du legacy).
+    ageConfirmed: textEntry(formData, 'ageConfirmed'),
+    termsAccepted: textEntry(formData, 'termsAccepted'),
+  })
   if (!parsed.success) return validationFailed(parsed.error, values)
   if (!(await isRegistrationAllowed())) return failed(TOO_MANY_ATTEMPTS_MESSAGE, values)
 
