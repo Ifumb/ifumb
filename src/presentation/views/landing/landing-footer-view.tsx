@@ -6,8 +6,7 @@ export function LandingFooterView({ signedIn }: Readonly<{ signedIn: boolean }>)
   return (
     <footer className="landing-footer landing-container">
       <div>
-        <BrandLogo href="/" withSubtitle={false} />
-        <p>Les racines d’ici. Les liens de partout.</p>
+        <BrandLogo href="/" />
       </div>
       <nav aria-label="Pied de page">
         <Link href="/explore">Arbres publics</Link>
