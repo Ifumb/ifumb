@@ -138,16 +138,19 @@
     @apply outline-earth-sand;
   }
   .landing-footer {
-    @apply flex flex-col gap-6 py-10 text-sm md:flex-row md:items-center md:justify-between;
+    @apply space-y-8 py-10 text-sm;
   }
-  .landing-footer p {
-    @apply mt-2 text-xs leading-6 text-landing-muted;
+  .landing-footer-columns {
+    @apply grid gap-8 sm:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr];
   }
-  .landing-footer nav {
-    @apply flex flex-wrap gap-x-6;
+  .landing-footer-columns h3 {
+    @apply mb-3 text-xs font-semibold tracking-widest text-landing-muted uppercase;
   }
-  .landing-footer-note {
-    @apply md:text-right;
+  .landing-footer-columns nav {
+    @apply flex flex-col items-start gap-1;
+  }
+  .landing-footer-legal {
+    @apply flex flex-wrap gap-x-6 gap-y-2 border-t border-earth-sand/50 pt-6 text-xs;
   }
   @media (max-width: 1023px) {
     .landing-section-nav {

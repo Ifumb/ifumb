@@ -5,21 +5,33 @@ import { BrandLogo } from '@/presentation/components/ui/brand-logo'
 export function LandingFooterView({ signedIn }: Readonly<{ signedIn: boolean }>) {
   return (
     <footer className="landing-footer landing-container">
-      <div>
-        <BrandLogo href="/" />
+      <div className="landing-footer-columns">
+        <div>
+          <BrandLogo href="/" />
+        </div>
+        <nav aria-label="Découvrir">
+          <h3>Découvrir</h3>
+          <Link href="/explore">Arbres publics</Link>
+          <a href="#comment-ca-marche">Comment ça marche</a>
+        </nav>
+        <nav aria-label="Votre compte">
+          <h3>Votre compte</h3>
+          {signedIn ? (
+            <Link href="/dashboard">Mes arbres</Link>
+          ) : (
+            <>
+              <Link href="/login">Se connecter</Link>
+              <Link href="/register">Créer un compte</Link>
+            </>
+          )}
+        </nav>
       </div>
-      <nav aria-label="Pied de page">
-        <Link href="/explore">Arbres publics</Link>
-        <a href="#comment-ca-marche">Comment ça marche</a>
-        <Link href={signedIn ? '/dashboard' : '/login'}>
-          {signedIn ? 'Mes arbres' : 'Se connecter'}
-        </Link>
+      <nav aria-label="Informations légales" className="landing-footer-legal">
+        <Link href="/legal/mentions-legales">Mentions légales</Link>
+        <Link href="/legal/confidentialite">Confidentialité</Link>
+        <Link href="/legal/cgu">CGU</Link>
+        <Link href="/legal/credits">Crédits</Link>
       </nav>
-      <p className="landing-footer-note">
-        Pour les familles africaines
-        <br />
-        et leur diaspora.
-      </p>
     </footer>
   )
 }
