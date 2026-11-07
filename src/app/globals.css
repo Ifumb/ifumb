@@ -5,6 +5,8 @@
 @import '../presentation/styles/overlays.css';
 @import '../presentation/styles/workspace.css';
 @import '../presentation/styles/tours.css';
+@import '../presentation/styles/landing-preview.css';
+@import '../presentation/styles/landing.css';
 
 /* IFUMB palette — terracotta, gold, ivory, forest green (ported from the legacy Tailwind config). */
 @theme {
@@ -25,6 +27,13 @@
 
   --color-forest: #2d5a27;
   --color-forest-light: #4a8c42;
+
+  --color-landing-paper: #fcfaf6;
+  --color-landing-ink: #263d32;
+  --color-landing-muted: #62685f;
+  --color-landing-sage: #e9ede5;
+  --font-editorial: Georgia, 'Times New Roman', serif;
+  --shadow-landing: 0 20px 60px -20px rgb(54 47 31 / 22%);
 
   --color-tour-surface: #faf7f2;
   --color-tour-border: #d4a847;

@@ -1,0 +1,194 @@
+@layer components {
+  .landing {
+    @apply bg-landing-paper text-landing-ink;
+  }
+  .landing-container {
+    @apply mx-auto w-full max-w-7xl px-6 sm:px-10 lg:px-16;
+  }
+  .landing-header {
+    @apply flex min-h-24 flex-wrap items-center justify-between gap-5 border-b border-earth-sand/50 py-5;
+  }
+  .landing-wordmark {
+    @apply inline-flex items-center gap-2 text-2xl font-bold tracking-tight text-landing-ink no-underline;
+  }
+  .landing-wordmark-dot {
+    @apply text-brand;
+  }
+  .landing-section-nav,
+  .landing-account-nav {
+    @apply flex items-center gap-7 text-sm font-medium;
+  }
+  .landing-section-nav a,
+  .landing-account-nav a:not(.landing-header-action),
+  .landing-footer nav a {
+    @apply inline-flex min-h-11 items-center text-landing-ink no-underline transition-colors hover:text-brand;
+  }
+  .landing-header-action {
+    @apply inline-flex min-h-11 items-center gap-3 rounded-lg border border-landing-ink px-4 text-landing-ink no-underline transition-colors hover:bg-landing-sage;
+  }
+  .landing-hero {
+    @apply grid items-center gap-12 pt-14 pb-20 lg:grid-cols-2 lg:gap-16 lg:pt-16 lg:pb-24;
+  }
+  .landing-eyebrow {
+    @apply mb-5 flex items-center gap-2 text-xs font-semibold tracking-widest uppercase;
+  }
+  .landing-eyebrow > span {
+    @apply size-2 rounded-full bg-brand;
+  }
+  .landing h1,
+  .landing h2 {
+    @apply font-editorial font-normal tracking-tight;
+    text-wrap: balance;
+  }
+  .landing h1 {
+    @apply text-5xl leading-[1.08] sm:text-6xl xl:text-7xl;
+  }
+  .landing h1 em {
+    @apply text-brand;
+  }
+  .landing h2 {
+    @apply text-4xl leading-[1.15] sm:text-5xl;
+  }
+  .landing-intro {
+    @apply mt-7 max-w-lg text-base leading-relaxed text-landing-muted sm:text-lg;
+  }
+  .landing-hero-actions {
+    @apply mt-8 flex flex-wrap items-center gap-x-5 gap-y-3;
+  }
+  .landing-primary-action {
+    @apply inline-flex min-h-13 items-center justify-center gap-4 rounded-lg border border-transparent bg-brand px-6 py-3 text-sm font-semibold text-white no-underline transition-colors hover:bg-brand-dark;
+  }
+  .landing-text-link {
+    @apply inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-landing-ink no-underline hover:text-brand;
+  }
+  .landing-reassurance {
+    @apply mt-6 flex max-w-sm items-start gap-2 text-xs leading-relaxed text-landing-muted;
+  }
+  .landing-reassurance svg {
+    @apply mt-0.5 shrink-0;
+  }
+  .landing-section {
+    @apply scroll-mt-8 py-16 sm:py-20 lg:py-24;
+  }
+  .landing-features {
+    @apply border-t border-earth-sand/50 bg-white;
+  }
+  .landing-section-heading {
+    @apply mb-12 flex flex-col justify-between gap-6 md:flex-row md:items-end;
+  }
+  .landing-section-heading > p {
+    @apply max-w-sm leading-relaxed text-landing-muted;
+  }
+  .landing-feature-grid {
+    @apply grid gap-8 sm:grid-cols-2 lg:grid-cols-4 lg:gap-7;
+  }
+  .landing-feature {
+    @apply flex flex-col items-start border-t border-earth-sand/70 pt-7;
+  }
+  .landing-feature-icon {
+    @apply mb-5 inline-flex size-12 items-center justify-center rounded-xl bg-earth-ivory text-brand;
+  }
+  .landing h3 {
+    @apply text-base font-semibold;
+  }
+  .landing-feature > p {
+    @apply mt-3 mb-6 text-sm leading-7 text-landing-muted;
+  }
+  .landing-feature-detail {
+    @apply mt-auto text-xs font-medium text-brand-dark;
+  }
+  .landing-how {
+    @apply bg-landing-sage;
+  }
+  .landing-step-grid {
+    @apply mt-12 grid gap-8 md:grid-cols-3 md:gap-12;
+  }
+  .landing-step-grid li {
+    @apply border-t border-landing-ink/20 pt-5;
+  }
+  .landing-step-number {
+    @apply mb-6 block font-editorial text-4xl text-forest;
+  }
+  .landing-step-grid p {
+    @apply mt-3 max-w-sm text-sm leading-7 text-landing-muted;
+  }
+  .landing-questions {
+    @apply grid gap-10 md:grid-cols-2 md:gap-16;
+  }
+  .landing-question-list details {
+    @apply border-b border-earth-sand;
+  }
+  .landing-question-list details:first-child {
+    @apply border-t;
+  }
+  .landing-question-list summary {
+    @apply flex min-h-20 list-none items-center justify-between gap-6 py-5 text-sm font-semibold;
+  }
+  .landing-question-list summary::-webkit-details-marker {
+    display: none;
+  }
+  .landing-question-list svg {
+    @apply shrink-0 text-brand transition-transform;
+  }
+  .landing-question-list [open] svg {
+    @apply rotate-45;
+  }
+  .landing-question-list details p {
+    @apply pb-6 pr-7 text-sm leading-7 text-landing-muted;
+  }
+  .landing-invitation {
+    @apply bg-landing-ink py-16 text-center text-landing-paper sm:py-20;
+  }
+  .landing-invitation .landing-eyebrow {
+    @apply justify-center text-earth-sand;
+  }
+  .landing-invitation h2 + p {
+    @apply mt-5 mb-8 text-earth-ivory;
+  }
+  .landing-invitation .landing-primary-action {
+    @apply bg-earth-ivory text-landing-ink hover:bg-white;
+  }
+  .landing-invitation :focus-visible {
+    @apply outline-earth-sand;
+  }
+  .landing-footer {
+    @apply flex flex-col gap-6 py-10 text-sm md:flex-row md:items-center md:justify-between;
+  }
+  .landing-footer p {
+    @apply mt-2 text-xs leading-6 text-landing-muted;
+  }
+  .landing-footer nav {
+    @apply flex flex-wrap gap-x-6;
+  }
+  .landing-footer-note {
+    @apply md:text-right;
+  }
+  @media (max-width: 1023px) {
+    .landing-section-nav {
+      display: none;
+    }
+    .landing-hero-copy {
+      @apply mx-auto w-full max-w-xl;
+    }
+  }
+  @media (max-width: 479px) {
+    .landing-header {
+      @apply gap-3;
+    }
+    .landing-account-nav {
+      @apply gap-3 text-xs;
+    }
+    .landing-header-action {
+      @apply gap-1 px-3;
+    }
+    .landing-wordmark {
+      @apply gap-1 text-xl;
+    }
+    .landing-wordmark > svg {
+      @apply size-5;
+    }
+    .landing h1 {
+      @apply text-4xl;
+    }
+  }
+}

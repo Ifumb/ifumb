@@ -1,41 +1,32 @@
 import type { Metadata } from 'next'
-import Link from 'next/link'
+import { currentUserOrNull } from '@/infrastructure/auth/current-user'
+import { LandingFeaturesView } from '@/presentation/views/landing/landing-features-view'
+import { LandingFooterView } from '@/presentation/views/landing/landing-footer-view'
+import { LandingHeroView } from '@/presentation/views/landing/landing-hero-view'
+import { LandingHowItWorksView } from '@/presentation/views/landing/landing-how-it-works-view'
+import { LandingHeaderView } from '@/presentation/views/landing/landing-header-view'
+import { LandingQuestionsView } from '@/presentation/views/landing/landing-questions-view'
+import { LandingInvitationView } from '@/presentation/views/landing/landing-invitation-view'
 
 export const metadata: Metadata = {
-  description: 'Reliez votre famille par les unions et préservez tribus, clans et ethnies.',
+  title: 'Votre histoire familiale, à transmettre',
+  description:
+    'Construisez votre arbre généalogique avec unions multiples, tribus, clans et ethnies au premier plan — pensé pour les familles africaines, partout dans le monde.',
+  alternates: { canonical: '/' },
 }
 
-// reason: le JSX garde ensemble la structure sémantique, ses libellés et les états de ce composant.
-export default function HomePage() {
+// reason: la composition par sections garde chaque bloc de contenu dans sa propre vue nommée.
+export default async function HomePage() {
+  const user = await currentUserOrNull()
   return (
-    <section
-      aria-labelledby="home-title"
-      className="landing flex min-h-dvh flex-col items-center justify-center p-6 text-center"
-    >
-      <h1 id="home-title" className="mb-3 text-5xl font-bold text-brand">
-        IFUMB
-      </h1>
-      <p className="mb-2 text-xl text-earth-bark">
-        Votre réseau généalogique, sans frontières culturelles
-      </p>
-      <p className="mb-8 max-w-lg text-gray-500">
-        Construisez, consultez et enrichissez votre réseau généalogique — unions multiples, identité
-        culturelle, collaboration familiale.
-      </p>
-      <div className="flex flex-wrap justify-center gap-4">
-        <Link href="/register" className="primary-action !px-6 !py-3 !text-base">
-          Commencer gratuitement
-        </Link>
-        <Link
-          href="/login"
-          className="rounded-lg border border-brand px-6 py-3 font-medium text-brand hover:bg-brand/5"
-        >
-          Se connecter
-        </Link>
-      </div>
-      <Link href="/explore" className="mt-6 text-sm text-gray-600 hover:text-brand">
-        Explorer les arbres publics
-      </Link>
-    </section>
+    <div className="landing">
+      <LandingHeaderView signedIn={!!user} />
+      <LandingHeroView signedIn={!!user} />
+      <LandingFeaturesView />
+      <LandingHowItWorksView />
+      <LandingQuestionsView />
+      <LandingInvitationView signedIn={!!user} />
+      <LandingFooterView signedIn={!!user} />
+    </div>
   )
 }
