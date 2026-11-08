@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { DEATH_DIRECTIVE_MAX_LENGTH } from '@/core/entities/user'
 import { DomainError } from '@/core/shared/errors/domain-error'
 import { aUser } from '@tests/support/user-fixtures'
 
@@ -55,5 +56,23 @@ describe('User entity', () => {
     const user = aUser().withPasswordReset('token-1', EXPIRES_AT).clearPasswordReset()
 
     expect(user.passwordReset).toBeNull()
+  })
+
+  it('stores a trimmed death directive', () => {
+    const user = aUser().withDeathDirective('  Gardez mon arbre accessible.  ')
+
+    expect(user.deathDirective).toBe('Gardez mon arbre accessible.')
+  })
+
+  it('stores a blank death directive as none', () => {
+    const user = aUser().withDeathDirective('   ')
+
+    expect(user.deathDirective).toBeNull()
+  })
+
+  it('rejects a death directive longer than the limit', () => {
+    const tooLong = 'a'.repeat(DEATH_DIRECTIVE_MAX_LENGTH + 1)
+
+    expect(() => aUser().withDeathDirective(tooLong)).toThrow(DomainError)
   })
 })

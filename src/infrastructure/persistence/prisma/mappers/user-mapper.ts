@@ -19,6 +19,7 @@ export function toDomainUser(row: UserRow): User {
       row.resetToken && row.resetTokenExpiry
         ? { token: row.resetToken, expiresAt: row.resetTokenExpiry }
         : null,
+    deathDirective: row.deathDirective,
     createdAt: row.createdAt,
   })
 }
@@ -33,6 +34,7 @@ export function toUserWriteData(user: User): UserWriteData {
     avatarUrl: user.avatarUrl,
     resetToken: user.passwordReset?.token ?? null,
     resetTokenExpiry: user.passwordReset?.expiresAt ?? null,
+    deathDirective: user.deathDirective,
     createdAt: user.createdAt,
   }
 }

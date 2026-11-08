@@ -65,6 +65,7 @@ export class RegisterUserUseCase {
       lastName: draft.lastName,
       avatarUrl: null,
       passwordReset: null,
+      deathDirective: null,
       createdAt: this.deps.clock.now(),
     }
   }

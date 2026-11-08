@@ -19,6 +19,7 @@ export function aUser(overrides: Partial<UserProps> = {}): User {
     lastName: 'Martin',
     avatarUrl: null,
     passwordReset: null,
+    deathDirective: null,
     createdAt: new Date('2026-01-01T00:00:00Z'),
     ...overrides,
   })

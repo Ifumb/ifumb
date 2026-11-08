@@ -7,6 +7,9 @@ export type PasswordReset = {
   readonly expiresAt: Date
 }
 
+/** Longest a death directive message may be. */
+export const DEATH_DIRECTIVE_MAX_LENGTH = 2000
+
 export type UserProps = {
   readonly id: UserId
   readonly email: Email
@@ -15,6 +18,9 @@ export type UserProps = {
   readonly lastName: string
   readonly avatarUrl: string | null
   readonly passwordReset: PasswordReset | null
+  /** What this account holder wishes for their owned trees after their death, if they said
+   * anything at all. Purely informative: nothing currently acts on it automatically. */
+  readonly deathDirective: string | null
   readonly createdAt: Date
 }
 
@@ -63,6 +69,10 @@ export class User {
     return this.props.passwordReset
   }
 
+  get deathDirective(): string | null {
+    return this.props.deathDirective
+  }
+
   get createdAt(): Date {
     return this.props.createdAt
   }
@@ -77,6 +87,15 @@ export class User {
 
   clearPasswordReset(): User {
     return new User({ ...this.props, passwordReset: null })
+  }
+
+  /** A blank directive is stored as no directive at all, same as any other optional text field. */
+  withDeathDirective(directive: string | null): User {
+    const trimmed = directive?.trim() || null
+    if (trimmed && trimmed.length > DEATH_DIRECTIVE_MAX_LENGTH) {
+      throw new DomainError('User.deathDirective is too long', { userId: this.props.id.value })
+    }
+    return new User({ ...this.props, deathDirective: trimmed })
   }
 
   /** The reset stays usable up to and including its expiry instant, as in the legacy app. */

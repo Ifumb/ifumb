@@ -1,6 +1,8 @@
 import 'server-only'
 import { AuthenticateUserUseCase } from '@/core/use-cases/authenticate-user'
 import { ChangePasswordUseCase } from '@/core/use-cases/change-password'
+import { GetDeathDirectiveUseCase } from '@/core/use-cases/get-death-directive'
+import { UpdateDeathDirectiveUseCase } from '@/core/use-cases/update-death-directive'
 import { GetAuditLogUseCase } from '@/core/use-cases/get-audit-log'
 import { ApprovePendingChangeUseCase } from '@/core/use-cases/approve-pending-change'
 import { GetNotificationsUseCase } from '@/core/use-cases/get-notifications'
@@ -238,6 +240,8 @@ export const container = {
   ),
   authenticateUser: lazy(() => new AuthenticateUserUseCase({ users: users(), hasher: hasher() })),
   changePassword: lazy(() => new ChangePasswordUseCase({ users: users(), hasher: hasher() })),
+  updateDeathDirective: lazy(() => new UpdateDeathDirectiveUseCase({ users: users() })),
+  getDeathDirective: lazy(() => new GetDeathDirectiveUseCase({ users: users() })),
   requestPasswordReset: lazy(
     () =>
       new RequestPasswordResetUseCase({

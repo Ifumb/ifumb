@@ -44,6 +44,14 @@ describe('PrismaUserRepository', () => {
     expect(stored?.passwordReset).toEqual({ token: 'token-1', expiresAt: EXPIRES_AT })
   })
 
+  it('round-trips a death directive', async () => {
+    await repository.save(aUser().withDeathDirective('Gardez mon arbre accessible.'))
+
+    const stored = await repository.findById(UserId.fromString('usr_alice'))
+
+    expect(stored?.deathDirective).toBe('Gardez mon arbre accessible.')
+  })
+
   it('updates the stored user when saved again with the same id', async () => {
     const user = aUser().withPasswordReset('token-1', EXPIRES_AT)
     await repository.save(user)
