@@ -54,7 +54,7 @@
 
 @layer base {
   body {
-    @apply bg-earth-ivory font-sans text-gray-900 antialiased;
+    @apply flex min-h-dvh flex-col bg-earth-ivory font-sans text-gray-900 antialiased;
   }
 
   /* Visible focus everywhere; brand-dark keeps a contrast above 3:1 on ivory (WCAG 1.4.11). */
