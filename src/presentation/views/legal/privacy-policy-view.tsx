@@ -221,19 +221,19 @@ export function PrivacyPolicyView() {
           </li>
           <li>
             <strong>Décès du titulaire du compte</strong> (à distinguer du décès d’une personne
-            simplement décrite dans un arbre, ci-dessus) :{' '}
-            <DraftMarker kind="a-completer">
-              aucun mécanisme n’existe aujourd’hui pour déclarer ce que devient un arbre après le
-              décès de son propriétaire — à construire comme fonctionnalité produit, pas seulement
-              comme texte juridique
-            </DraftMarker>
-            . Par défaut, l’arbre reste accessible comme avant.
+            simplement décrite dans un arbre, ci-dessus) : vous pouvez indiquer vos souhaits dans
+            les réglages de votre compte. Ce message reste informatif — en son absence, ou tant
+            qu’aucun proche ne nous contacte, l’arbre reste accessible comme avant.
           </li>
         </ul>
         <p className="mt-2 text-sm text-gray-600">
-          Piste d’amélioration produit identifiée mais non retenue pour cette version : permettre
-          de masquer certains champs (dates, photos, notes) d’une personne vivante décrite par un
-          tiers, en plus du choix actuel « arbre public/privé » applicable à l’arbre entier.
+          Depuis le 2026-11-08 : au-delà du choix « arbre public/privé » applicable à l’arbre
+          entier, le propriétaire d’un arbre (ou la personne elle-même si elle a revendiqué sa
+          fiche) peut aussi masquer, champ par champ, les dates, le lieu de naissance, la photo et
+          la biographie d’une personne vivante décrite dans un arbre public — pour les seuls
+          visiteurs qui ne collaborent pas sur cet arbre. Le nom, le genre et les informations
+          culturelles (tribu/clan/ethnie) restent visibles pour que la recherche continue de
+          fonctionner.
         </p>
       </Section>
 
