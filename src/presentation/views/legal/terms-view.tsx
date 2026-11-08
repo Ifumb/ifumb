@@ -99,7 +99,52 @@ export function TermsView() {
         </p>
       </Section>
 
-      <Section title="10. Droit applicable et modification des conditions">
+      <Section title="10. Propriété du contenu généalogique">
+        <p>
+          Un fait généalogique (un nom, une date, un lien de filiation) n’appartient à personne :
+          IFUMB ne revendique aucun droit sur les faits que vous transcrivez. Ce qui relève de la
+          propriété intellectuelle, c’est votre sélection et votre mise en forme de ces faits dans
+          un arbre — la compilation, pas l’information brute qu’elle contient. Vous en restez
+          l’auteur ; IFUMB n’en détient qu’une licence d’exploitation technique (§ 5). IFUMB ne
+          revendique de droit propre que sur l’index agrégé résultant de l’ensemble des arbres
+          publics (droit voisin de producteur de base de données, distinct du droit d’auteur sur
+          votre contenu).
+        </p>
+        <p>
+          IFUMB ne vend aucune donnée généalogique à un tiers. Reproduire, copier ou extraire les
+          arbres ou données dont vous n’êtes pas l’auteur, à des fins autres que généalogiques, est
+          interdit.
+        </p>
+      </Section>
+
+      <Section title="11. Export de vos données et réutilisation du service">
+        <p>
+          Export complet de votre arbre (GEDCOM ou autre format standard) :{' '}
+          <DraftMarker kind="a-completer">
+            non disponible à ce jour — fonctionnalité à construire, pas encore un choix de
+            conception
+          </DraftMarker>
+          . L’extraction automatisée ou en masse du contenu d’IFUMB (aspiration, « scraping ») à
+          des fins commerciales ou de constitution d’une base concurrente est interdite, qu’il
+          s’agisse de vos propres données ou de celles d’arbres publics.
+        </p>
+      </Section>
+
+      <Section title="12. Portée géographique du service">
+        <p>
+          IFUMB est accessible dans le monde entier, le marché de lancement étant le Gabon. Les
+          présentes conditions et la politique de confidentialité couvrent en détail le Gabon et la
+          Belgique/l’Union européenne, les deux zones où une présence d’utilisateurs réels est
+          avérée à ce jour.{' '}
+          <DraftMarker kind="choix">
+            à mesure que des utilisateurs réels apparaissent dans d’autres pays, revoir cette
+            section avec un juriste local plutôt que supposer qu’aucune règle locale ne s’applique
+          </DraftMarker>
+          .
+        </p>
+      </Section>
+
+      <Section title="13. Droit applicable et modification des conditions">
         <p>
           <DraftMarker kind="a-completer">
             droit applicable et juridiction, préavis en cas de modification substantielle

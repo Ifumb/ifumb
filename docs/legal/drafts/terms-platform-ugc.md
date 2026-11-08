@@ -44,6 +44,17 @@ IFUMB peut suspendre ou clôturer un compte en cas de manquement grave ou répé
 ## 9. Droit de réponse d'une personne décrite
 Une personne décrite dans un arbre (y compris de manière inexacte ou sans son accord) peut demander la rectification ou le retrait des informations la concernant, en s'adressant au propriétaire de l'arbre ou directement à IFUMB — voir la politique de confidentialité § 9.
 
+## 9bis. Propriété du contenu généalogique
+Un fait généalogique (nom, date, lien de filiation) n'appartient à personne : IFUMB ne revendique aucun droit sur les faits transcrits. Ce qui relève de la propriété intellectuelle, c'est la sélection et la mise en forme de ces faits dans un arbre — la compilation, pas l'information brute. L'utilisateur reste auteur de sa compilation ; IFUMB n'en détient qu'une licence d'exploitation technique (§ 5). IFUMB ne revendique de droit propre que sur l'index agrégé résultant de l'ensemble des arbres publics (droit voisin de producteur de base de données, distinct du droit d'auteur sur le contenu de l'utilisateur — précédent : Geneanet opère la même distinction dans ses CGU § 8 et § 13).
+
+IFUMB ne vend aucune donnée généalogique à un tiers (voir aussi `privacy-policy.md` § 3). Reproduire, copier ou extraire les arbres ou données dont l'utilisateur n'est pas l'auteur, à des fins autres que généalogiques, est interdit.
+
+## 9ter. Export des données et réutilisation du service
+Export complet d'un arbre (GEDCOM ou autre format standard) : [À COMPLÉTER — non disponible à ce jour, fonctionnalité à construire, pas encore un choix de conception]. L'extraction automatisée ou en masse du contenu d'IFUMB (« scraping ») à des fins commerciales ou de constitution d'une base concurrente est interdite, que ce soit sur les données propres de l'utilisateur ou sur celles d'arbres publics.
+
+## 9quater. Portée géographique du service
+IFUMB est accessible dans le monde entier, le marché de lancement étant le Gabon. Les présentes conditions et la politique de confidentialité couvrent en détail le Gabon et la Belgique/l'Union européenne — les deux zones où une présence d'utilisateurs réels est avérée à ce jour. [CHOIX : à mesure que des utilisateurs réels apparaissent dans d'autres pays, revoir cette section avec un juriste local plutôt que supposer qu'aucune règle locale ne s'applique].
+
 ## 10. Transparence
 IFUMB publiera, lorsque son volume d'utilisateurs le justifiera, le nombre de destinataires actifs dans l'Union européenne (obligation DSA applicable tous les six mois aux plateformes en ligne, y compris les micro/petites entreprises). [À COMPLÉTER ou « non applicable — seuil » tant que ce volume n'est pas atteint].
 

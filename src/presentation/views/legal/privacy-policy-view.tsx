@@ -131,6 +131,19 @@ export function PrivacyPolicyView() {
         </p>
       </Section>
 
+      <Section title="4bis. Portée géographique de cette politique">
+        <p>
+          IFUMB est accessible dans le monde entier, le marché de lancement étant le Gabon. Cette
+          politique couvre en détail les deux zones où une présence d’utilisateurs réels est
+          avérée à ce jour — le Gabon et la Belgique/l’Union européenne.{' '}
+          <DraftMarker kind="choix">
+            à mesure que des utilisateurs réels apparaissent dans d’autres pays, revoir cette
+            section avec un juriste local plutôt que supposer qu’aucune règle locale ne s’applique
+          </DraftMarker>
+          .
+        </p>
+      </Section>
+
       <Section title="5. Combien de temps conservons-nous vos données ?">
         <p>
           <DraftMarker kind="a-completer">
@@ -198,13 +211,30 @@ export function PrivacyPolicyView() {
           </li>
           <li>
             <strong>Donnée sensible (tribu/clan/ethnicité) sur un tiers :</strong> en la saisissant,
-            le déclarant certifie agir légitimement pour documenter l’histoire familiale.{' '}
+            le déclarant certifie agir légitimement pour documenter l’histoire familiale. La base
+            légale envisagée est l’intérêt légitime — une pratique répandue chez les plateformes
+            généalogiques comparables pour ce cas précis —{' '}
             <DraftMarker kind="choix">
-              base légale et mécanisme de certification à arbitrer avec un DPO
+              reste à faire confirmer par un DPO avant publication, pas encore un fait acquis
             </DraftMarker>
             .
           </li>
+          <li>
+            <strong>Décès du titulaire du compte</strong> (à distinguer du décès d’une personne
+            simplement décrite dans un arbre, ci-dessus) :{' '}
+            <DraftMarker kind="a-completer">
+              aucun mécanisme n’existe aujourd’hui pour déclarer ce que devient un arbre après le
+              décès de son propriétaire — à construire comme fonctionnalité produit, pas seulement
+              comme texte juridique
+            </DraftMarker>
+            . Par défaut, l’arbre reste accessible comme avant.
+          </li>
         </ul>
+        <p className="mt-2 text-sm text-gray-600">
+          Piste d’amélioration produit identifiée mais non retenue pour cette version : permettre
+          de masquer certains champs (dates, photos, notes) d’une personne vivante décrite par un
+          tiers, en plus du choix actuel « arbre public/privé » applicable à l’arbre entier.
+        </p>
       </Section>
 
       <Section title="10. Cookies et traceurs">
