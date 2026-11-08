@@ -15,27 +15,28 @@ datasource db {
 // USER
 // ─────────────────────────────────────────────
 model User {
-  id           String   @id @default(cuid())
-  email        String   @unique
-  passwordHash String
-  firstName    String
-  lastName     String
+  id               String    @id @default(cuid())
+  email            String    @unique
+  passwordHash     String
+  firstName        String
+  lastName         String
   avatarUrl        String?
   resetToken       String?   @unique
   resetTokenExpiry DateTime?
+  deathDirective   String?
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 
-  ownedTrees              Tree[]
-  invitations             Invitation[]
-  refreshTokens           RefreshToken[]
-  claimedMember           Member?         @relation("ClaimedBy")
-  pendingChangesAuthored  PendingChange[] @relation("PendingChangeAuthor")
-  pendingChangesResolved  PendingChange[] @relation("PendingChangeResolver")
-  auditLogsAuthored       AuditLog[]      @relation("AuditLogAuthor")
-  notifications           Notification[]
-  initiatedRequests       CrossTreeConnectionRequest[] @relation("RequestInitiator")
-  sentContactRequests     ContactRequest[]             @relation("SentContactRequests")
+  ownedTrees             Tree[]
+  invitations            Invitation[]
+  refreshTokens          RefreshToken[]
+  claimedMember          Member?                      @relation("ClaimedBy")
+  pendingChangesAuthored PendingChange[]              @relation("PendingChangeAuthor")
+  pendingChangesResolved PendingChange[]              @relation("PendingChangeResolver")
+  auditLogsAuthored      AuditLog[]                   @relation("AuditLogAuthor")
+  notifications          Notification[]
+  initiatedRequests      CrossTreeConnectionRequest[] @relation("RequestInitiator")
+  sentContactRequests    ContactRequest[]             @relation("SentContactRequests")
 }
 
 // ─────────────────────────────────────────────
@@ -51,7 +52,7 @@ model Tree {
   updatedAt   DateTime   @updatedAt
 
   ownerId                String
-  owner                  User             @relation(fields: [ownerId], references: [id])
+  owner                  User            @relation(fields: [ownerId], references: [id])
   members                Member[]
   unions                 Union[]
   invitations            Invitation[]
@@ -59,26 +60,26 @@ model Tree {
   auditLogs              AuditLog[]
   pendingNotifLastSentAt DateTime?
 
-  suggestionsAsSource  CrossTreeSuggestion[]        @relation("SuggestionSourceTree")
-  suggestionsAsTarget  CrossTreeSuggestion[]        @relation("SuggestionTargetTree")
-  requestsAsRequester  CrossTreeConnectionRequest[] @relation("RequestRequesterTree")
-  requestsAsTarget     CrossTreeConnectionRequest[] @relation("RequestTargetTree")
-  linksAsTree1         CrossTreeLink[]              @relation("LinkTree1")
-  linksAsTree2         CrossTreeLink[]              @relation("LinkTree2")
-  contactRequests      ContactRequest[]
+  suggestionsAsSource CrossTreeSuggestion[]        @relation("SuggestionSourceTree")
+  suggestionsAsTarget CrossTreeSuggestion[]        @relation("SuggestionTargetTree")
+  requestsAsRequester CrossTreeConnectionRequest[] @relation("RequestRequesterTree")
+  requestsAsTarget    CrossTreeConnectionRequest[] @relation("RequestTargetTree")
+  linksAsTree1        CrossTreeLink[]              @relation("LinkTree1")
+  linksAsTree2        CrossTreeLink[]              @relation("LinkTree2")
+  contactRequests     ContactRequest[]
 }
 
 // ─────────────────────────────────────────────
 // MEMBER
 // ─────────────────────────────────────────────
 model Member {
-  id              String    @id @default(cuid())
+  id              String               @id @default(cuid())
   firstName       String
   lastName        String?
   nickname        String?
   gender          Gender?
   birthDate       String?
-  birthDateApprox Boolean   @default(false)
+  birthDateApprox Boolean              @default(false)
   deathDate       String?
   birthPlace      String?
   tribe           String?
@@ -87,16 +88,17 @@ model Member {
   originRegion    String?
   photoUrl        String?
   biography       String?
-  certainty       Certainty @default(CONFIRMED)
-  discoverable    Boolean   @default(false)
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  certainty       Certainty            @default(CONFIRMED)
+  discoverable    Boolean              @default(false)
+  visibilityMask  MemberVisibilityMask @default(STANDARD)
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
 
-  treeId          String
-  tree            Tree      @relation(fields: [treeId], references: [id], onDelete: Cascade)
+  treeId String
+  tree   Tree   @relation(fields: [treeId], references: [id], onDelete: Cascade)
 
-  claimedByUserId String?   @unique
-  claimedBy       User?     @relation("ClaimedBy", fields: [claimedByUserId], references: [id], onDelete: SetNull)
+  claimedByUserId String? @unique
+  claimedBy       User?   @relation("ClaimedBy", fields: [claimedByUserId], references: [id], onDelete: SetNull)
 
   unionsAsParent1 Union[]          @relation("Parent1")
   unionsAsParent2 Union[]          @relation("Parent2")
@@ -116,15 +118,15 @@ model Union {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 
-  treeId    String
-  tree      Tree      @relation(fields: [treeId], references: [id], onDelete: Cascade)
+  treeId String
+  tree   Tree   @relation(fields: [treeId], references: [id], onDelete: Cascade)
 
   parent1Id String?
-  parent1   Member?   @relation("Parent1", fields: [parent1Id], references: [id])
+  parent1   Member? @relation("Parent1", fields: [parent1Id], references: [id])
   parent2Id String?
-  parent2   Member?   @relation("Parent2", fields: [parent2Id], references: [id])
+  parent2   Member? @relation("Parent2", fields: [parent2Id], references: [id])
 
-  children  UnionChild[]
+  children UnionChild[]
 }
 
 // ─────────────────────────────────────────────
@@ -156,10 +158,10 @@ model Invitation {
   createdAt DateTime         @default(now())
   updatedAt DateTime         @updatedAt
 
-  treeId  String
-  tree    Tree   @relation(fields: [treeId], references: [id], onDelete: Cascade)
-  userId  String?
-  user    User?  @relation(fields: [userId], references: [id])
+  treeId String
+  tree   Tree    @relation(fields: [treeId], references: [id], onDelete: Cascade)
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id])
 
   @@unique([treeId, email])
 }
@@ -199,6 +201,15 @@ enum Visibility {
   PRIVATE
   SHARED
   PUBLIC
+}
+
+/**
+ * Whether a living member's non-identifying details (dates, places, photo, biography) stay
+ * hidden from a public tree's non-collaborator viewers. Name and cultural fields stay visible.
+ */
+enum MemberVisibilityMask {
+  STANDARD
+  MASKED
 }
 
 enum Gender {
@@ -327,11 +338,11 @@ enum AuditAction {
 // CONTACT REQUEST — demande de contact inter-arbres
 // ─────────────────────────────────────────────
 model ContactRequest {
-  id          String               @id @default(cuid())
-  message     String?
-  status      ContactRequestStatus @default(PENDING)
-  createdAt   DateTime             @default(now())
-  updatedAt   DateTime             @updatedAt
+  id        String               @id @default(cuid())
+  message   String?
+  status    ContactRequestStatus @default(PENDING)
+  createdAt DateTime             @default(now())
+  updatedAt DateTime             @updatedAt
 
   requesterId String
   requester   User   @relation("SentContactRequests", fields: [requesterId], references: [id], onDelete: Cascade)
@@ -356,10 +367,10 @@ enum ContactRequestStatus {
 // NOTIFICATION — alerte in-app
 // ─────────────────────────────────────────────
 model Notification {
-  id              String           @id @default(cuid())
-  userId          String
-  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  type            NotificationType
+  id               String           @id @default(cuid())
+  userId           String
+  user             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type             NotificationType
   pendingChangeId  String?
   pendingChange    PendingChange?   @relation(fields: [pendingChangeId], references: [id], onDelete: SetNull)
   contactRequestId String?
