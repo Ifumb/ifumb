@@ -49,6 +49,10 @@ test('the owner invites by email; a new visitor registers, is sent back, and acc
   await visitor.getByLabel('Nom', { exact: true }).fill('Sow')
   await visitor.getByLabel('Email', { exact: true }).fill('fatou@example.com')
   await visitor.getByLabel('Mot de passe', { exact: true }).fill('E2e-password-123')
+  await visitor.getByLabel('Je confirme avoir 16 ans ou plus.').check()
+  await visitor
+    .getByLabel(/J.accepte les conditions d.utilisation et la politique de confidentialité/)
+    .check()
   await visitor.getByRole('button', { name: 'Créer mon compte' }).click()
 
   // The redirect parameter sent the freshly registered visitor straight back to the invitation.
