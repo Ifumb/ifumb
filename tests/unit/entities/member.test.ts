@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { DomainError } from '@/core/shared/errors/domain-error'
-import { aMember } from '@tests/support/family-fixtures'
+import { aMember, dateOf } from '@tests/support/family-fixtures'
 
 describe('Member entity', () => {
   it('rejects a blank first name', () => {
@@ -38,5 +38,59 @@ describe('Member entity', () => {
 
   it('cannot be mutated', () => {
     expect(Object.isFrozen(aMember())).toBe(true)
+  })
+
+  it('masks a living member on request', () => {
+    const { member, changed } = aMember().setVisibilityMask('MASKED')
+
+    expect([changed, member.visibilityMask]).toEqual([true, 'MASKED'])
+  })
+
+  it('refuses to mask a deceased member', () => {
+    const deceased = aMember({ deathDate: dateOf('2020') })
+
+    expect(() => deceased.setVisibilityMask('MASKED')).toThrow(DomainError)
+  })
+
+  it('is a no-op when the mask does not change', () => {
+    const { changed } = aMember().setVisibilityMask('STANDARD')
+
+    expect(changed).toBe(false)
+  })
+
+  it('withholds dates, places, photo and biography once masked, keeping name and culture', () => {
+    const member = aMember({
+      birthDate: dateOf('1932-05'),
+      birthPlace: 'Conakry',
+      originRegion: 'Fouta-Djalon',
+      biography: 'Une vie bien remplie.',
+      photoUrl: 'https://example.com/awa.jpg',
+      tribe: 'Peul',
+    }).setVisibilityMask('MASKED').member
+
+    expect(member.publicFacts()).toMatchObject({
+      firstName: 'Awa',
+      tribe: 'Peul',
+      birthDate: null,
+      birthPlace: null,
+      originRegion: null,
+      biography: null,
+      photoUrl: null,
+    })
+  })
+
+  it('reveals every fact again through publicFacts once unmasked', () => {
+    const masked = aMember({ birthPlace: 'Conakry' }).setVisibilityMask('MASKED').member
+    const unmasked = masked.setVisibilityMask('STANDARD').member
+
+    expect(unmasked.publicFacts().birthPlace).toBe('Conakry')
+  })
+
+  it('resets the mask to standard once a living member is recorded as deceased', () => {
+    const masked = aMember().setVisibilityMask('MASKED').member
+
+    const { member } = masked.revise({ ...masked.details, deathDate: dateOf('2020') })
+
+    expect(member.visibilityMask).toBe('STANDARD')
   })
 })

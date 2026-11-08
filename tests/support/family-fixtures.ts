@@ -33,6 +33,7 @@ export function aMember(overrides: Partial<MemberProps> = {}): Member {
     photoUrl: null,
     claimedById: null,
     discoverable: false,
+    visibilityMask: 'STANDARD',
     ...overrides,
   })
 }

@@ -41,6 +41,8 @@ const profile: MemberProfile = {
     photoUrl: null,
   },
   discoverable: false,
+  visibilityMask: 'STANDARD',
+  canMask: false,
   parentUnions: [],
   partnerUnions: [
     {

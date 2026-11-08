@@ -1,8 +1,10 @@
 import Link from 'next/link'
 import { claimMemberAction } from '@/app/actions/claim-actions'
 import { toggleMemberDiscoverableAction } from '@/app/actions/discoverable-actions'
+import { setMemberVisibilityMaskAction } from '@/app/actions/visibility-mask-actions'
 import { ClaimMemberForm } from '@/presentation/components/forms/claim-member-form'
 import { DiscoverableToggleForm } from '@/presentation/components/forms/discoverable-toggle-form'
+import { VisibilityMaskToggleForm } from '@/presentation/components/forms/visibility-mask-toggle-form'
 import { ContentTabs } from '@/presentation/components/ui/content-tabs'
 import { MemberPortrait } from '@/presentation/components/ui/member-portrait'
 import type { Fact } from '@/presentation/mappers/fact'
@@ -60,6 +62,7 @@ function ProfileHeader({ profile }: ProfileProps) {
       <ProfileLinks profile={profile} />
       <ClaimSection profile={profile} />
       <DiscoverableSection profile={profile} />
+      <MaskSection profile={profile} />
     </header>
   )
 }
@@ -90,6 +93,28 @@ function DiscoverableSection({ profile }: ProfileProps) {
           !profile.discoverable,
         )}
         discoverable={profile.discoverable}
+      />
+    </div>
+  )
+}
+
+function MaskSection({ profile }: ProfileProps) {
+  if (!profile.canMask) return null
+  const masked = profile.visibilityMask === 'MASKED'
+  return (
+    <div className="space-y-1">
+      <p className="text-sm text-earth-bark">
+        {masked
+          ? 'Dates, lieux, photo et biographie sont masqués pour les visiteurs d’un arbre public.'
+          : 'Cette fiche est entièrement visible pour les visiteurs d’un arbre public.'}
+      </p>
+      <VisibilityMaskToggleForm
+        action={setMemberVisibilityMaskAction.bind(
+          null,
+          { treeId: profile.treeId, memberId: profile.memberId },
+          masked ? 'STANDARD' : 'MASKED',
+        )}
+        masked={masked}
       />
     </div>
   )

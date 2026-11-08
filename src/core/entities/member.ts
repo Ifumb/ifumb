@@ -6,6 +6,9 @@ import type { PartialDate } from '@/core/shared/value-objects/partial-date'
 
 export type Gender = 'MALE' | 'FEMALE' | 'OTHER' | 'UNKNOWN'
 export type Certainty = 'CONFIRMED' | 'APPROXIMATE' | 'UNKNOWN'
+/** Whether a living member's dates, places, photo and biography stay hidden from a public tree's
+ * non-collaborator viewers. Name and cultural fields (tribe/clan/ethnicity) always stay visible. */
+export type VisibilityMask = 'STANDARD' | 'MASKED'
 
 /** What a form may change on a member; text fields arrive raw and are trimmed here. */
 export type MemberDetailsInput = {
@@ -32,10 +35,14 @@ export type MemberProps = MemberDetailsInput & {
   readonly claimedById: string | null
   /** Whether this member may be found by strangers through global search (module 3.1). */
   readonly discoverable: boolean
+  /** Whether a living member's non-identifying details stay hidden from public, non-collaborator
+   * viewers (module death-directive/visibility-mask). */
+  readonly visibilityMask: VisibilityMask
 }
 
-/** Every recorded fact of a member, without who claimed it or whether it is discoverable. */
-export type MemberFacts = Omit<MemberProps, 'claimedById' | 'discoverable'>
+/** Every recorded fact of a member, without who claimed it, whether it is discoverable, or its
+ * visibility mask. */
+export type MemberFacts = Omit<MemberProps, 'claimedById' | 'discoverable' | 'visibilityMask'>
 
 export type MemberField = keyof MemberDetailsInput
 
@@ -98,11 +105,14 @@ export class Member {
   /** Kept apart from the facts shown to readers, like `claimedById`: it is a privacy setting, not
    * a genealogical fact. */
   readonly discoverable: boolean
+  /** Kept apart from the facts shown to readers, like `discoverable`. */
+  readonly visibilityMask: VisibilityMask
 
-  private constructor({ claimedById, discoverable, ...props }: MemberProps) {
+  private constructor({ claimedById, discoverable, visibilityMask, ...props }: MemberProps) {
     this.props = props
     this.claimedById = claimedById
     this.discoverable = discoverable
+    this.visibilityMask = visibilityMask
     Object.freeze(this)
   }
 
@@ -123,6 +133,7 @@ export class Member {
       photoUrl: null,
       claimedById: null,
       discoverable: false,
+      visibilityMask: 'STANDARD',
     })
   }
 
@@ -134,6 +145,7 @@ export class Member {
       ...details,
       claimedById: this.claimedById,
       discoverable: this.discoverable,
+      visibilityMask: details.deathDate ? 'STANDARD' : this.visibilityMask,
     })
     const [before, after] = [this.recordedValues, next.recordedValues]
     const changes = MEMBER_FIELDS.flatMap((field) =>
@@ -151,6 +163,7 @@ export class Member {
         photoUrl,
         claimedById: this.claimedById,
         discoverable: this.discoverable,
+        visibilityMask: this.visibilityMask,
       }),
       changed: true,
     }
@@ -163,7 +176,12 @@ export class Member {
    */
   claim(userId: string): Member {
     if (userId === this.claimedById) return this
-    return new Member({ ...this.props, claimedById: userId, discoverable: this.discoverable })
+    return new Member({
+      ...this.props,
+      claimedById: userId,
+      discoverable: this.discoverable,
+      visibilityMask: this.visibilityMask,
+    })
   }
 
   /**
@@ -174,7 +192,38 @@ export class Member {
   setDiscoverable(discoverable: boolean): { member: Member; changed: boolean } {
     if (discoverable === this.discoverable) return { member: this, changed: false }
     return {
-      member: new Member({ ...this.props, claimedById: this.claimedById, discoverable }),
+      member: new Member({
+        ...this.props,
+        claimedById: this.claimedById,
+        discoverable,
+        visibilityMask: this.visibilityMask,
+      }),
+      changed: true,
+    }
+  }
+
+  /**
+   * Hides this living member's dates, places, photo and biography from a public tree's
+   * non-collaborator viewers (name and cultural fields stay visible either way) — or reveals them
+   * again. Only meaningful for someone still alive: masking a deceased member's record has no
+   * privacy purpose, so it is refused. Whether the viewer may change this at all is decided by
+   * `SetMemberVisibilityMaskUseCase`, the same way `setDiscoverable` leaves cross-cutting checks
+   * out.
+   */
+  setVisibilityMask(mask: VisibilityMask): { member: Member; changed: boolean } {
+    if (mask === this.visibilityMask) return { member: this, changed: false }
+    if (mask === 'MASKED' && this.props.deathDate) {
+      throw new DomainError('Member.visibilityMask cannot mask a deceased member', {
+        memberId: this.props.id.value,
+      })
+    }
+    return {
+      member: new Member({
+        ...this.props,
+        claimedById: this.claimedById,
+        discoverable: this.discoverable,
+        visibilityMask: mask,
+      }),
       changed: true,
     }
   }
@@ -182,6 +231,26 @@ export class Member {
   /** Every recorded fact, read-only. */
   get details(): MemberFacts {
     return this.props
+  }
+
+  /**
+   * What a public tree's non-collaborator visitor may see: every fact, unless `visibilityMask` is
+   * `'MASKED'`, in which case dates, places, the photo and the biography are withheld — name and
+   * cultural fields (tribe/clan/ethnicity) stay visible either way, so search and filiation keep
+   * working. The caller decides whether the viewer even qualifies for this (collaborator vs not,
+   * tree visibility) — this method only knows the member's own setting.
+   */
+  publicFacts(): MemberFacts {
+    if (this.visibilityMask === 'STANDARD') return this.props
+    return {
+      ...this.props,
+      birthDate: null,
+      birthDateApprox: false,
+      birthPlace: null,
+      originRegion: null,
+      biography: null,
+      photoUrl: null,
+    }
   }
 
   /** Each editable field as the history records it: dates as their stored text. */

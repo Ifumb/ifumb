@@ -30,6 +30,7 @@ import { RequestPasswordResetUseCase } from '@/core/use-cases/request-password-r
 import type { RateLimiter } from '@/core/use-cases/ports/rate-limiter'
 import { SearchPublicMembersUseCase } from '@/core/use-cases/search-public-members'
 import { ToggleMemberDiscoverableUseCase } from '@/core/use-cases/toggle-member-discoverable'
+import { SetMemberVisibilityMaskUseCase } from '@/core/use-cases/set-member-visibility-mask'
 import { UpdateMemberUseCase } from '@/core/use-cases/update-member'
 import { UpdateTreeUseCase } from '@/core/use-cases/update-tree'
 import { ResetPasswordUseCase } from '@/core/use-cases/reset-password'
@@ -289,6 +290,7 @@ export const container = {
   // reason: `treeContentWrites()` already carries everything this needs (and more, unused,
   // structurally harmless) — passed straight through, like `approvePendingChange` below.
   toggleMemberDiscoverable: lazy(() => new ToggleMemberDiscoverableUseCase(treeContentWrites())),
+  setMemberVisibilityMask: lazy(() => new SetMemberVisibilityMaskUseCase(treeContentWrites())),
   ...unionUseCases(treeContentWrites),
   // reason: Object.assign, not a spread — treeContentWrites()'s `mailer` is a getter (see there),
   // and `{ ...treeContentWrites(), photos: photoProcessor() }` would read it eagerly while copying

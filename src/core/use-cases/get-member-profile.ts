@@ -1,5 +1,5 @@
 import 'server-only'
-import type { Member } from '@/core/entities/member'
+import type { Member, VisibilityMask } from '@/core/entities/member'
 import { canDeleteMember, canEditMember } from '@/core/entities/member-access'
 import type { TreeRole } from '@/core/entities/tree'
 import { canManageUnions } from '@/core/entities/union-access'
@@ -33,6 +33,10 @@ export type MemberProfile = {
   /** Whether strangers may find this member through global search (module 3.1) — kept apart from
    * `member`, like the entity itself keeps it apart from its facts. */
   readonly discoverable: boolean
+  /** Whether dates, places, photo and biography are hidden from the current viewer. Always `false`
+   * for a collaborator: the mask only ever hides anything from a public tree's other visitors. */
+  readonly visibilityMask: VisibilityMask
+  readonly canMask: boolean
   /** What the viewer may do with this member, so that only those actions are offered. */
   readonly permissions: {
     readonly canEdit: boolean
@@ -65,13 +69,19 @@ export class GetMemberProfileUseCase {
     const member = family.findMember(memberId)
     if (!member) return err({ kind: 'MEMBER_NOT_FOUND' })
 
+    const isCollaborator = role === 'OWNER' || listing.invitationRole !== undefined
+    const masked = !isCollaborator && member.visibilityMask === 'MASKED'
+    const permissions = permissionsOf(role, member, input.viewerId)
+
     return ok({
       tree: { id: tree.id.value, name: tree.name, isPublic: tree.visibility === 'PUBLIC' },
-      member: toMemberDetails(member),
+      member: toMemberDetails(member, masked),
       parentUnions: family.parentUnionsOf(memberId).map(toParentUnionView),
       partnerUnions: family.partnerUnionsOf(memberId).map(toPartnerUnionView),
       discoverable: member.discoverable,
-      permissions: permissionsOf(role, member, input.viewerId),
+      visibilityMask: member.visibilityMask,
+      canMask: permissions.canEdit && !member.details.deathDate,
+      permissions,
     })
   }
 }

@@ -4,7 +4,7 @@ import type { CrossTreeConnectionRequest } from '@/core/entities/connection-requ
 import type { CrossTreeLink } from '@/core/entities/cross-tree-link'
 import type { CrossTreeSuggestion } from '@/core/entities/cross-tree-suggestion'
 import type { Invitation } from '@/core/entities/invitation'
-import type { Member } from '@/core/entities/member'
+import type { Member, VisibilityMask } from '@/core/entities/member'
 import type { PendingChange } from '@/core/entities/pending-change'
 import type { Tree } from '@/core/entities/tree'
 import type { Filiation, Union } from '@/core/entities/union'
@@ -24,6 +24,7 @@ type UpdatedPhoto = { readonly memberId: string; readonly photoUrl: string | nul
 type RemovedUnionChild = { readonly unionId: string; readonly childId: string }
 type ClaimedMember = { readonly memberId: string; readonly userId: string }
 type UpdatedDiscoverable = { readonly memberId: string; readonly discoverable: boolean }
+type UpdatedVisibilityMask = { readonly memberId: string; readonly mask: VisibilityMask }
 type RejectedAllByAuthor = { readonly treeId: string; readonly authorId: string; readonly now: Date }
 type ExpiredStaleConnectionRequests = { readonly targetTreeId: string; readonly now: Date }
 
@@ -36,6 +37,7 @@ type Writes = {
   updatedPhotos: UpdatedPhoto[]
   claimedMembers: ClaimedMember[]
   updatedDiscoverable: UpdatedDiscoverable[]
+  updatedVisibilityMasks: UpdatedVisibilityMask[]
   insertedUnions: InsertedUnion[]
   updatedUnions: Union[]
   deletedUnionIds: string[]
@@ -69,6 +71,7 @@ const noWrites = (): Writes => ({
   updatedPhotos: [],
   claimedMembers: [],
   updatedDiscoverable: [],
+  updatedVisibilityMasks: [],
   insertedUnions: [],
   updatedUnions: [],
   deletedUnionIds: [],
@@ -129,6 +132,9 @@ export class InMemoryUnitOfWork implements UnitOfWork, Readonly<Writes> {
   }
   get updatedDiscoverable() {
     return this.committed.updatedDiscoverable
+  }
+  get updatedVisibilityMasks() {
+    return this.committed.updatedVisibilityMasks
   }
   get insertedUnions() {
     return this.committed.insertedUnions
@@ -234,6 +240,8 @@ export class InMemoryUnitOfWork implements UnitOfWork, Readonly<Writes> {
           void staged.claimedMembers.push({ memberId: memberId.value, userId }),
         updateDiscoverable: async (memberId, discoverable) =>
           void staged.updatedDiscoverable.push({ memberId: memberId.value, discoverable }),
+        updateVisibilityMask: async (memberId, mask) =>
+          void staged.updatedVisibilityMasks.push({ memberId: memberId.value, mask }),
       },
       unions: unionWriterFor(staged),
       auditLog: { record: async (entry) => this.stageRecord(staged, entry) },

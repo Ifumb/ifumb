@@ -1,5 +1,5 @@
 import 'server-only'
-import type { Member } from '@/core/entities/member'
+import type { Member, VisibilityMask } from '@/core/entities/member'
 import type { MemberId } from '@/core/shared/value-objects/member-id'
 
 /** Write side of members. */
@@ -15,4 +15,7 @@ export interface MemberWriter {
   claim(memberId: MemberId, userId: string): Promise<void>
   /** Records whether strangers may find this member through global search (module 3.1). */
   updateDiscoverable(memberId: MemberId, discoverable: boolean): Promise<void>
+  /** Records whether a living member's non-identifying details stay hidden from a public tree's
+   * non-collaborator viewers. */
+  updateVisibilityMask(memberId: MemberId, mask: VisibilityMask): Promise<void>
 }

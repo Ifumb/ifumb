@@ -1,5 +1,5 @@
 import 'server-only'
-import type { Member } from '@/core/entities/member'
+import type { Member, VisibilityMask } from '@/core/entities/member'
 import type { MemberId } from '@/core/shared/value-objects/member-id'
 import type { MemberWriter } from '@/core/use-cases/ports/member-writer'
 import type { Prisma, PrismaClient } from '@/infrastructure/persistence/prisma/generated/client'
@@ -37,6 +37,10 @@ export class PrismaMemberWriter implements MemberWriter {
 
   async updateDiscoverable(memberId: MemberId, discoverable: boolean): Promise<void> {
     await this.db.member.update({ where: { id: memberId.value }, data: { discoverable } })
+  }
+
+  async updateVisibilityMask(memberId: MemberId, visibilityMask: VisibilityMask): Promise<void> {
+    await this.db.member.update({ where: { id: memberId.value }, data: { visibilityMask } })
   }
 }
 

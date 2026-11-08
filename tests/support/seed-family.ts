@@ -7,6 +7,8 @@ export type SeedMemberInput = {
   readonly gender?: 'MALE' | 'FEMALE' | 'OTHER' | 'UNKNOWN'
   readonly birthDate?: string
   readonly birthDateApprox?: boolean
+  readonly deathDate?: string
+  readonly birthPlace?: string
   readonly tribe?: string
   readonly ethnicity?: string
   readonly photoUrl?: string
@@ -31,9 +33,10 @@ export async function seedMember(treeId: string, input: SeedMemberInput): Promis
   await withTestClient((client) =>
     client.query(
       `INSERT INTO "Member" (id, "firstName", "lastName", gender, "birthDate", "birthDateApprox",
-         tribe, ethnicity, "photoUrl", "treeId", "claimedByUserId", discoverable, "updatedAt")
-       VALUES ($1, $2, $3, $4::"Gender", $5, $6, $7, $8, $9, $10,
-         (SELECT id FROM "User" WHERE email = $11), $12, now())`,
+         "deathDate", "birthPlace", tribe, ethnicity, "photoUrl", "treeId", "claimedByUserId",
+         discoverable, "updatedAt")
+       VALUES ($1, $2, $3, $4::"Gender", $5, $6, $7, $8, $9, $10, $11, $12,
+         (SELECT id FROM "User" WHERE email = $13), $14, now())`,
       [
         memberId,
         input.firstName,
@@ -41,6 +44,8 @@ export async function seedMember(treeId: string, input: SeedMemberInput): Promis
         input.gender ?? null,
         input.birthDate ?? null,
         input.birthDateApprox ?? false,
+        input.deathDate ?? null,
+        input.birthPlace ?? null,
         input.tribe ?? null,
         input.ethnicity ?? null,
         input.photoUrl ?? null,

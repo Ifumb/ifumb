@@ -56,9 +56,13 @@ export function toMemberSummary(member: Member): MemberSummary {
   }
 }
 
-/** Every fact of a member, without who claimed it: that stays a matter of access rules. */
-export function toMemberDetails(member: Member): MemberDetails {
-  return { ...member.details, id: member.id.value }
+/**
+ * Every fact of a member, without who claimed it: that stays a matter of access rules. `masked`
+ * withholds dates, places, photo and biography - the caller decides when that applies (a
+ * non-collaborator viewing a public tree), this function only knows how to apply it.
+ */
+export function toMemberDetails(member: Member, masked = false): MemberDetails {
+  return { ...(masked ? member.publicFacts() : member.details), id: member.id.value }
 }
 
 export function toParentUnionView({ union, parents, filiation }: ParentUnion): ParentUnionView {

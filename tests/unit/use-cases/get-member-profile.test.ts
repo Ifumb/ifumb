@@ -4,7 +4,7 @@ import { GetMemberProfileUseCase } from '@/core/use-cases/get-member-profile'
 import { InMemoryFamilyReader } from '@/infrastructure/persistence/in-memory/in-memory-family-reader'
 import { InMemoryTreeReader } from '@/infrastructure/persistence/in-memory/in-memory-tree-reader'
 import { aMember, aUnion, memberId } from '@tests/support/family-fixtures'
-import { aStoredTree, aTree, OWNER_ID, STRANGER_ID } from '@tests/support/tree-fixtures'
+import { aStoredTree, aTree, EDITOR_ID, OWNER_ID, STRANGER_ID } from '@tests/support/tree-fixtures'
 
 describe('GetMemberProfileUseCase', () => {
   let getMemberProfile: GetMemberProfileUseCase
@@ -92,5 +92,76 @@ describe('GetMemberProfileUseCase', () => {
     const result = await getMemberProfile.execute({ ...input, memberId: 'mbr_awa' })
 
     expect(result).toEqual({ ok: false, error: { kind } })
+  })
+})
+
+describe('GetMemberProfileUseCase masking a public tree for non-collaborators', () => {
+  function worldWithMaskedMember() {
+    const trees = new InMemoryTreeReader()
+    trees.seed(
+      aStoredTree({
+        tree: aTree({ visibility: 'PUBLIC' }),
+        acceptedInvitations: [{ userId: EDITOR_ID, role: 'VIEWER' }],
+      }),
+    )
+    const families = new InMemoryFamilyReader()
+    families.seed('tree_diallo', {
+      members: [
+        aMember({
+          id: memberId('mbr_awa'),
+          birthPlace: 'Conakry',
+          biography: 'Une vie bien remplie.',
+          photoUrl: 'https://example.com/awa.jpg',
+          tribe: 'Peul',
+          visibilityMask: 'MASKED',
+        }),
+      ],
+      unions: [],
+    })
+    return new GetMemberProfileUseCase({ trees, families })
+  }
+
+  it('withholds dates, places, photo and biography from an anonymous public visitor', async () => {
+    const result = await worldWithMaskedMember().execute({ treeId: 'tree_diallo', memberId: 'mbr_awa' })
+
+    expect(result.ok && result.value.member).toMatchObject({
+      tribe: 'Peul',
+      birthPlace: null,
+      biography: null,
+      photoUrl: null,
+    })
+    expect(result.ok && result.value.canMask).toBe(false)
+  })
+
+  it('withholds the same facts from a signed-in stranger with no invitation', async () => {
+    const result = await worldWithMaskedMember().execute({
+      treeId: 'tree_diallo',
+      memberId: 'mbr_awa',
+      viewerId: STRANGER_ID,
+    })
+
+    expect(result.ok && result.value.member.birthPlace).toBeNull()
+  })
+
+  it('keeps every fact visible to an invited collaborator, even one with the VIEWER role', async () => {
+    const result = await worldWithMaskedMember().execute({
+      treeId: 'tree_diallo',
+      memberId: 'mbr_awa',
+      viewerId: EDITOR_ID,
+    })
+
+    expect(result.ok && result.value.member.birthPlace).toBe('Conakry')
+  })
+
+  it('keeps every fact visible to the owner, who may also toggle the mask', async () => {
+    const result = await worldWithMaskedMember().execute({
+      treeId: 'tree_diallo',
+      memberId: 'mbr_awa',
+      viewerId: OWNER_ID,
+    })
+
+    expect([result.ok && result.value.member.birthPlace, result.ok && result.value.canMask]).toEqual(
+      ['Conakry', true],
+    )
   })
 })

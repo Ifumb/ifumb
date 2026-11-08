@@ -1,5 +1,6 @@
 import type { TreeRole } from '@/core/entities/tree'
 import type { PartialDate } from '@/core/shared/value-objects/partial-date'
+import type { VisibilityMask } from '@/core/entities/member'
 import type { MemberDetails, MemberSummary } from '@/core/use-cases/member-views'
 import type { MemberProfile } from '@/core/use-cases/get-member-profile'
 import { formatPartialDate, lifespanLabel } from '@/presentation/formatting/partial-date-format'
@@ -50,6 +51,11 @@ export type MemberProfileViewModel = {
    * viewer may change that — the owner, or the account that claimed this member. */
   readonly discoverable: boolean
   readonly canToggleDiscoverable: boolean
+  /** Whether dates, places, photo and biography are hidden from the current viewer, and whether
+   * that viewer may change the setting (the owner, or the account that claimed this member, and
+   * only while the member is alive). */
+  readonly visibilityMask: VisibilityMask
+  readonly canMask: boolean
   readonly identity: readonly Fact[]
   readonly datesAndPlaces: readonly Fact[]
   readonly culture: readonly Fact[]
@@ -87,6 +93,8 @@ export function toMemberProfileViewModel(
     ...claimPermissions(profile),
     discoverable: profile.discoverable,
     canToggleDiscoverable: profile.permissions.canEdit,
+    visibilityMask: profile.visibilityMask,
+    canMask: profile.canMask,
     portrait: toPortrait(member, member.photoUrl, photos),
     identity: identityFacts(member),
     datesAndPlaces: datesAndPlacesFacts(member),

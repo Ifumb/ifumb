@@ -5,6 +5,7 @@ import { TreeId } from '@/core/shared/value-objects/tree-id'
 import { ChangeMemberPhotoUseCase } from '@/core/use-cases/change-member-photo'
 import { CreateMemberUseCase } from '@/core/use-cases/create-member'
 import { DeleteMemberUseCase } from '@/core/use-cases/delete-member'
+import { SetMemberVisibilityMaskUseCase } from '@/core/use-cases/set-member-visibility-mask'
 import { ToggleMemberDiscoverableUseCase } from '@/core/use-cases/toggle-member-discoverable'
 import { UpdateMemberUseCase } from '@/core/use-cases/update-member'
 import { PrismaClient } from '@/infrastructure/persistence/prisma/generated/client'
@@ -152,6 +153,46 @@ describe('member discoverability through Prisma', () => {
       before: { discoverable: false },
       after: { discoverable: true },
     })
+  })
+})
+
+describe('member visibility mask through Prisma', () => {
+  it('records the visibility mask of a living member, with its history entry', async () => {
+    const memberId = await addMember('Awa')
+
+    const result = await new SetMemberVisibilityMaskUseCase(deps).execute({
+      ...byOwner,
+      memberId,
+      mask: 'MASKED',
+    })
+
+    const row = await prisma.member.findUniqueOrThrow({ where: { id: memberId } })
+    const entry = await prisma.auditLog.findFirstOrThrow({
+      where: { targetId: memberId, action: 'MEMBER_UPDATED' },
+    })
+    expect(result).toEqual({ ok: true, value: { changed: true } })
+    expect(row.visibilityMask).toBe('MASKED')
+    expect(entry.diff).toEqual({
+      before: { visibilityMask: 'STANDARD' },
+      after: { visibilityMask: 'MASKED' },
+    })
+  })
+
+  it('refuses to mask a deceased member', async () => {
+    const memberId = await addMember('Awa')
+    await new UpdateMemberUseCase(deps).execute({
+      ...byOwner,
+      memberId,
+      ...memberInput({ deathDate: dateOf('2020') }),
+    })
+
+    const result = await new SetMemberVisibilityMaskUseCase(deps).execute({
+      ...byOwner,
+      memberId,
+      mask: 'MASKED',
+    })
+
+    expect(result).toEqual({ ok: false, error: { kind: 'MEMBER_IS_DECEASED' } })
   })
 })
 

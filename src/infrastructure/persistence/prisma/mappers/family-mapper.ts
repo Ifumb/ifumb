@@ -33,6 +33,7 @@ export function toDomainMember(row: MemberRow): Member {
     photoUrl: row.photoUrl,
     claimedById: row.claimedByUserId,
     discoverable: row.discoverable,
+    visibilityMask: row.visibilityMask,
   })
 }
 
